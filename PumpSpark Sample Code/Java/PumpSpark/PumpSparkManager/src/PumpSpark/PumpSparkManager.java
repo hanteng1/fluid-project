@@ -24,7 +24,7 @@ public class PumpSparkManager {
 		PumpSparkManager pumpSpark = new PumpSparkManager();
 		
 		// Configure serial port and specify COM port
-		pumpSpark.configurePort("COM4");
+		pumpSpark.configurePort("COM7");
 		
 		// Open the serial port
 		pumpSpark.connectPort();
