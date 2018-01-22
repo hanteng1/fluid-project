@@ -26,6 +26,8 @@ public class PumpSparkPlay extends PApplet {
 	
 	String[] buttonTexts;
 	
+	boolean threading = false;
+	
 	public void settings()
 	{
 		windowWidth = 1000;
@@ -112,16 +114,115 @@ public class PumpSparkPlay extends PApplet {
 			{
 				if(mouseTriggered == rectOverIndex)
 				{
-					mouseTriggered = -1;
+					//switch off
+					switchTask(mouseTriggered, 0);
+					
+					
+					mouseTriggered = -1; 
+					
 				}
 				
 			}else
 			{
 				mouseTriggered = rectOverIndex;
+				println("action: " + buttonTexts[mouseTriggered]);
 				
-				println("" + mouseTriggered);
+				//switch on
+				switchTask(mouseTriggered, 1);
 			}
 		}
+	}
+	
+	
+	private void switchTask(int task, int onoff)
+	{
+		if(onoff == 0)
+		{
+			
+			//clear threads
+			threading = false;
+			
+			
+			if(oneOn == true || twoOn == true || threeOn == true)
+			{
+				//turn off
+				pumpSpark.actuatePump((byte)0, (byte)0);
+				pumpSpark.actuatePump((byte)1, (byte)0);
+				pumpSpark.actuatePump((byte)2, (byte)0);
+				
+				oneOn = false;
+				twoOn = false;
+				threeOn = false;
+				println("pump 1 is off");
+				println("pump 2 is off");
+				println("pump 3 is off");
+			}
+			
+			
+			
+		}else
+		{
+			switch (task) {
+				case 0:  //beating
+					thread("beating");
+					break;
+				case 1:  // vibrating
+					
+					break;
+				case 2:
+					
+					break;
+				case 3:
+					
+					break;
+				case 4:
+					
+					break;
+					
+				
+			}
+		}
+		
+		
+			
+				
+	}
+	
+	
+	public void beating()
+	{
+		println("threading beating starts");
+		threading = true;
+		while(threading)
+		{
+			pumpSpark.actuatePump((byte)0, (byte)254);
+			pumpSpark.actuatePump((byte)1, (byte)254);
+			pumpSpark.actuatePump((byte)2, (byte)254);
+			println("pump 1 is on");
+			println("pump 2 is on");
+			println("pump 3 is on");
+			oneOn = true;
+			twoOn = true;
+			threeOn = true;
+			println("2 seconds");
+			delay(2000);
+			
+			
+			pumpSpark.actuatePump((byte)0, (byte)0);
+			pumpSpark.actuatePump((byte)1, (byte)0);
+			pumpSpark.actuatePump((byte)2, (byte)0);
+			println("pump 1 is off");
+			println("pump 2 is off");
+			println("pump 3 is off");
+			oneOn = false;
+			twoOn = false;
+			threeOn = false;
+			println("6 seconds");
+			delay(6000);
+			
+		}
+		
+		println("threading beating end");
 	}
 	
 	
