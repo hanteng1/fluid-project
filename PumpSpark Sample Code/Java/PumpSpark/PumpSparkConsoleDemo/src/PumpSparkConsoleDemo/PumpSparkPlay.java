@@ -167,7 +167,16 @@ public class PumpSparkPlay extends PApplet {
 					thread("beating");
 					break;
 				case 1:  // vibrating
+					pumpSpark.actuatePump((byte)0, (byte)254);
+					pumpSpark.actuatePump((byte)1, (byte)254);
+					pumpSpark.actuatePump((byte)2, (byte)254);
 					
+					oneOn = true;
+					twoOn = true;
+					threeOn = true;
+					println("pump 1 is on");
+					println("pump 2 is on");
+					println("pump 3 is on");
 					break;
 				case 2:
 					
@@ -182,10 +191,7 @@ public class PumpSparkPlay extends PApplet {
 				
 			}
 		}
-		
-		
-			
-				
+					
 	}
 	
 	
