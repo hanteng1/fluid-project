@@ -35,14 +35,14 @@ void setup() {
 }
 
 void loop() {
-
-  myMotor->run(BACKWARD);
-
-  delay(5000);
-
-  myMotor->run(RELEASE);
-
-  delay(2000);
+//
+//  myMotor->run(BACKWARD);
+//
+//  delay(5000);
+//
+//  myMotor->run(RELEASE);
+//
+//  delay(2000);
 
   
 //  uint8_t i;
