@@ -54,7 +54,7 @@ public class PumpSparkPlay extends PApplet {
 		rectHeight = 100;
 		rectYs = new int[] {(int)(rectHeight * 1.5), (int)(rectHeight * 3.0), (int)(rectHeight * 4.5), (int)(rectHeight * 6.0), (int)(rectHeight * 7.5)};
 		
-		buttonTexts = new String[] {"Beating", "Vibration", "x", "x", "x"};
+		buttonTexts = new String[] {"Beating", "Vibration", "Weight", "x", "x"};
 	}
 	
 	public void draw()
@@ -178,8 +178,8 @@ public class PumpSparkPlay extends PApplet {
 					println("pump 2 is on");
 					println("pump 3 is on");
 					break;
-				case 2:
-					
+				case 2:  //weight
+					thread("weight");
 					break;
 				case 3:
 					
@@ -210,8 +210,8 @@ public class PumpSparkPlay extends PApplet {
 			oneOn = true;
 			twoOn = true;
 			threeOn = true;
-			println("2 seconds");
-			delay(2000);
+			println("1 seconds");
+			delay(1000);
 			
 			
 			pumpSpark.actuatePump((byte)0, (byte)0);
@@ -223,12 +223,47 @@ public class PumpSparkPlay extends PApplet {
 			oneOn = false;
 			twoOn = false;
 			threeOn = false;
-			println("6 seconds");
-			delay(6000);
+			println("1 seconds");
+			delay(1000);
 			
 		}
 		
 		println("threading beating end");
+	}
+	
+	public void weight()
+	{
+		println("threading weight starts");
+		threading = true;
+	
+		pumpSpark.actuatePump((byte)0, (byte)254);
+		pumpSpark.actuatePump((byte)1, (byte)254);
+		pumpSpark.actuatePump((byte)2, (byte)254);
+		println("pump 1 is on");
+		println("pump 2 is on");
+		println("pump 3 is on");
+		oneOn = true;
+		twoOn = true;
+		threeOn = true;
+		println("1 seconds");
+		delay(1000);
+		
+		
+		pumpSpark.actuatePump((byte)0, (byte)0);
+		pumpSpark.actuatePump((byte)1, (byte)0);
+		pumpSpark.actuatePump((byte)2, (byte)0);
+		println("pump 1 is off");
+		println("pump 2 is off");
+		println("pump 3 is off");
+		oneOn = false;
+		twoOn = false;
+		threeOn = false;
+
+		delay(6000);
+			
+	
+		
+		println("threading weigtht end");
 	}
 	
 	
