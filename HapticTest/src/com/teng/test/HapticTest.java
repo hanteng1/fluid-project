@@ -34,6 +34,9 @@ public class HapticTest extends PApplet {
 	
 	boolean threading = false;
 	
+	int pumpVelocity = 0;  // 0 - 255
+	int velocityStep = 5;
+	
 	public void settings()
 	{
 		windowWidth = 1000;
@@ -64,9 +67,12 @@ public class HapticTest extends PApplet {
 	
 	public void draw()
 	{
+		
+		background(225, 225, 225);
+		
 		update(mouseX, mouseY);
 		
-		for(int itrr = 0; itrr < numButtons; itrr++)
+		for(int itrr = 0; itrr < 2; itrr++)
 		{
 			if(mouseTriggered == itrr)
 			{
@@ -84,6 +90,16 @@ public class HapticTest extends PApplet {
 			text(buttonTexts[itrr], rectXs[itrr] + rectWidth / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
 			
 		}
+		
+		
+		//show the velocity
+		textSize(64);
+		String showText = "" + pumpVelocity;
+		text(showText, windowWidth / 2 - textWidth(showText) / 2, windowHeight * 4 / 5);
+		
+		
+		
+		
 	}
 	
 	private void update(int x, int y)
@@ -143,22 +159,26 @@ public class HapticTest extends PApplet {
 			//task stop 
 			try {
 				serialOutput.write('s');
+				pumpVelocity = 0;
 			} catch (Exception ex) {
 				return;
 			}
 		}else
 		{
 			switch (task) {
-			case 0:  //vibrating
+			case 0:  //left vibrating
 				try {
 					serialOutput.write('l');
+					pumpVelocity = 255;
+					
 				} catch (Exception ex) {
 					return;
 				}
 				break;
-			case 1:  // right
+			case 1:  // right vibrating
 				try {
 					serialOutput.write('r');
+					pumpVelocity = 255;
 				} catch (Exception ex) {
 					return;
 				}
@@ -238,6 +258,23 @@ public class HapticTest extends PApplet {
 			}else if(keyCode == RIGHT)
 			{
 				thread("rightPump");
+			}else if(keyCode == UP)
+			{
+				if(pumpVelocity + velocityStep <= 255)
+				{
+					pumpVelocity += velocityStep;
+					
+					thread("fasterVelocity");
+					
+				}
+			}else if(keyCode == DOWN)
+			{
+				if(pumpVelocity - velocityStep >= 0)
+				{
+					pumpVelocity -= velocityStep;
+					
+					thread("slowerVelocity");
+				}
 			}
 		}
 		
@@ -289,6 +326,33 @@ public class HapticTest extends PApplet {
 		threading = false;
 		
 	}
+	
+	public void fasterVelocity()
+	{
+		threading = true;
+		
+		try {
+			serialOutput.write('i');
+		}catch(Exception ex){
+			return;
+		}
+		
+		threading = false;
+	}
+	
+	public void slowerVelocity()
+	{
+		threading = true;
+		
+		try {
+			serialOutput.write('d');
+		}catch(Exception ex){
+			return;
+		}
+		
+		threading = false;
+	}
+	
 	
 	
 	public static void main(String[] args){

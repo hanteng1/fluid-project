@@ -22,6 +22,8 @@ Adafruit_DCMotor *myMotor = AFMS.getMotor(1);
 
 
 int state = -1;
+int vStep = 5;
+int curVelocity = 0;
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
@@ -44,21 +46,26 @@ void loop() {
     state = Serial.read();          
 
     switch(state){                   // different state to switch  
-      case 'p':           
-      keepPumping();
-      break;
-
-      case 's':     
+      case 's':  //stop   
       stopPumping();
       break;
 
-      case 'l':
+      case 'l':  //left pump
       leftPump();
       break;
 
-      case 'r':
+      case 'r':  //right pump
       rightPump();
       break;
+
+      case 'i': //increase speed
+      faster();
+      break;
+
+      case 'd': //decrease speed
+      slower();
+      break;
+      
     }
   }
 
@@ -73,7 +80,7 @@ void loop() {
 //  delay(2000);
 
   
-//  uint8_t i;
+  uint8_t i;
 //  
 //  Serial.print("tick");
 //
@@ -105,27 +112,42 @@ void loop() {
 }
 
 
-void keepPumping()
-{
-  myMotor->setSpeed(255);
-  myMotor->run(BACKWARD);
-}
-
 void stopPumping()
 {
   myMotor->run(RELEASE);
+  curVelocity = 0;
 }
 
 void leftPump()
 {
   myMotor->setSpeed(255);
+  curVelocity = 255;
   myMotor->run(BACKWARD);
 }
 
 void rightPump()
 {
   myMotor->setSpeed(255);
+  curVelocity = 255;
   myMotor->run(FORWARD);
+}
+
+void faster()
+{
+  if(curVelocity + vStep <= 255)
+  {
+    curVelocity += vStep;
+    myMotor->setSpeed(curVelocity);
+  }
+}
+
+void slower()
+{
+  if(curVelocity - vStep >= 0)
+  {
+    curVelocity -= vStep;
+    myMotor->setSpeed(curVelocity);
+  }
 }
 
 
