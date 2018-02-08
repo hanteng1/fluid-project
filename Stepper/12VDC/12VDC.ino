@@ -20,6 +20,9 @@ Adafruit_DCMotor *myMotor = AFMS.getMotor(1);
 // You can also make another motor on port M2
 //Adafruit_DCMotor *myOtherMotor = AFMS.getMotor(2);
 
+
+int state = -1;
+
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
   Serial.println("Adafruit Motorshield v2 - DC Motor test!");
@@ -28,6 +31,7 @@ void setup() {
   //AFMS.begin(1000);  // OR with a different frequency, say 1KHz
   
   // Set the speed to start, from 0 (off) to 255 (max speed)
+  //initialize 
   myMotor->setSpeed(255);
   myMotor->run(FORWARD);
   // turn on motor
@@ -35,6 +39,30 @@ void setup() {
 }
 
 void loop() {
+
+  if(Serial.available()>0){
+    state = Serial.read();          
+
+    switch(state){                   // different state to switch  
+      case 'p':           
+      keepPumping();
+      break;
+
+      case 's':     
+      stopPumping();
+      break;
+
+      case 'l':
+      leftPump();
+      break;
+
+      case 'r':
+      rightPump();
+      break;
+    }
+  }
+
+  
 //
 //  myMotor->run(BACKWARD);
 //
@@ -75,3 +103,30 @@ void loop() {
 //  myMotor->run(RELEASE);
 //  delay(1000);
 }
+
+
+void keepPumping()
+{
+  myMotor->setSpeed(255);
+  myMotor->run(BACKWARD);
+}
+
+void stopPumping()
+{
+  myMotor->run(RELEASE);
+}
+
+void leftPump()
+{
+  myMotor->setSpeed(255);
+  myMotor->run(BACKWARD);
+}
+
+void rightPump()
+{
+  myMotor->setSpeed(255);
+  myMotor->run(FORWARD);
+}
+
+
+
