@@ -9,6 +9,7 @@ For use with the Adafruit Motor Shield v2
 
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
+#include <Servo.h>
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
@@ -20,10 +21,15 @@ Adafruit_DCMotor *myMotor = AFMS.getMotor(1);
 // You can also make another motor on port M2
 //Adafruit_DCMotor *myOtherMotor = AFMS.getMotor(2);
 
-
 int state = -1;
 int vStep = 5;
 int curVelocity = 0;
+
+//servo motor
+Servo myservo;
+int servoPos = 0;
+int servoStep = 5;
+int servoDelayUnit = 15;
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
@@ -38,37 +44,16 @@ void setup() {
   myMotor->run(FORWARD);
   // turn on motor
   myMotor->run(RELEASE);
+
+
+  //servo
+  myservo.attach(9);
+  servoPos = 50;
+  myservo.write(servoPos);
+  delay(servoDelayUnit * servoPos);
 }
 
 void loop() {
-
-  if(Serial.available()>0){
-    state = Serial.read();          
-
-    switch(state){                   // different state to switch  
-      case 's':  //stop   
-      stopPumping();
-      break;
-
-      case 'l':  //left pump
-      leftPump();
-      break;
-
-      case 'r':  //right pump
-      rightPump();
-      break;
-
-      case 'i': //increase speed
-      faster();
-      break;
-
-      case 'd': //decrease speed
-      slower();
-      break;
-      
-    }
-  }
-
   
 //
 //  myMotor->run(BACKWARD);
@@ -80,7 +65,7 @@ void loop() {
 //  delay(2000);
 
   
-  uint8_t i;
+//  uint8_t i;
 //  
 //  Serial.print("tick");
 //
@@ -109,6 +94,50 @@ void loop() {
 //  Serial.print("tech");
 //  myMotor->run(RELEASE);
 //  delay(1000);
+
+
+
+
+
+  if(Serial.available()>0){
+    state = Serial.read();          
+
+    switch(state){                   // different state to switch  
+      
+      //////////////pump////////////
+      case 's':  //stop   
+      stopPumping();
+      break;
+
+      case 'l':  //left pump
+      leftPump();
+      break;
+
+      case 'r':  //right pump
+      rightPump();
+      break;
+
+      case 'i': //increase speed
+      faster();
+      break;
+
+      case 'd': //decrease speed
+      slower();
+      break;
+
+
+      /////////////servo motor////////////
+      case 'o':  //pos - 5
+      moveDown();
+      break;
+
+      case 'p':  //pos + 5
+      moveUp();
+      break;
+      
+      
+    }
+  }
 }
 
 
@@ -148,6 +177,20 @@ void slower()
     curVelocity -= vStep;
     myMotor->setSpeed(curVelocity);
   }
+}
+
+void moveUp()
+{
+  servoPos += servoStep;
+  myservo.write(servoPos);
+  delay(servoDelayUnit * servoStep);
+}
+
+void moveDown()
+{
+  servoPos -= servoStep;
+  myservo.write(servoPos);
+  delay(servoDelayUnit * servoStep);
 }
 
 

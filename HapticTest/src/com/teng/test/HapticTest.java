@@ -58,7 +58,7 @@ public class HapticTest extends PApplet {
 		rectHeight = 100;
 		rectYs = new int[] {(int)(rectHeight * 1.5), (int)(rectHeight * 3.0), (int)(rectHeight * 4.5), (int)(rectHeight * 6.0), (int)(rectHeight * 7.5)};
 	
-		buttonTexts = new String[] {"Left Vibration", "Right Vibration", "x", "x", "x"};
+		buttonTexts = new String[] {"Left Vibration", "Right Vibration", "Valve Up + 5", "Valve Down - 5", "x"};
 		
 		configurePort("COM8");
 		connectPort();
@@ -72,7 +72,7 @@ public class HapticTest extends PApplet {
 		
 		update(mouseX, mouseY);
 		
-		for(int itrr = 0; itrr < 2; itrr++)
+		for(int itrr = 0; itrr < 4; itrr++)
 		{
 			if(mouseTriggered == itrr)
 			{
@@ -153,7 +153,7 @@ public class HapticTest extends PApplet {
 	
 	private void switchTask(int task, int onoff)
 	{
-		if(onoff == 0)
+		if(onoff == 0)  //turn off tasks
 		{
 			threading = false;
 			//task stop 
@@ -163,7 +163,7 @@ public class HapticTest extends PApplet {
 			} catch (Exception ex) {
 				return;
 			}
-		}else
+		}else  //turn on tasks
 		{
 			switch (task) {
 			case 0:  //left vibrating
@@ -175,7 +175,7 @@ public class HapticTest extends PApplet {
 					return;
 				}
 				break;
-			case 1:  // right vibrating
+			case 1:  // right vibrating, will not be used for now
 				try {
 					serialOutput.write('r');
 					pumpVelocity = 255;
@@ -183,10 +183,12 @@ public class HapticTest extends PApplet {
 					return;
 				}
 				break;
-			case 2:  //weight
+			case 2:  //valve up
+				thread("valveUp");				
 				
 				break;
-			case 3:
+			case 3: //valve down
+				thread("valveDown");
 				
 				break;
 			case 4:
@@ -252,6 +254,7 @@ public class HapticTest extends PApplet {
 			exit();
 		}else if(key == CODED)
 		{
+			//try not using these
 			if(keyCode == LEFT)
 			{
 				thread("leftPump");
@@ -350,6 +353,39 @@ public class HapticTest extends PApplet {
 			return;
 		}
 		
+		threading = false;
+	}
+	
+	
+	public void valveUp()
+	{
+		threading = true;
+		//give some delay
+		delay(100);
+		
+		try {
+			serialOutput.write('p');
+		} catch (Exception ex) {
+			return;
+		}
+
+		mouseTriggered = -1; 
+		threading = false;
+	}
+	
+	public void valveDown()
+	{
+		threading = true;
+		//give some delay
+		delay(100);
+		
+		try {
+			serialOutput.write('o');
+		} catch (Exception ex) {
+			return;
+		}
+		
+		mouseTriggered = -1; 
 		threading = false;
 	}
 	
