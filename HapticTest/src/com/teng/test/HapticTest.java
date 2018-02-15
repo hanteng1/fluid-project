@@ -24,7 +24,7 @@ public class HapticTest extends PApplet {
 	int rectColor, rectHighlight;
 	int rectOverIndex = -1;
 	
-	int mouseTriggered = -1;
+	int[] mouseTriggered;
 	
 	//serial
 	static SerialPort serialPort;
@@ -60,6 +60,9 @@ public class HapticTest extends PApplet {
 	
 		buttonTexts = new String[] {"Left Vibration", "Right Vibration", "Valve Up + 5", "Valve Down - 5", "x"};
 		
+		mouseTriggered = new int[] {0, 0, 0, 0, 0};  //0 - not active, 1 - active
+		
+		
 		configurePort("COM8");
 		connectPort();
 		
@@ -74,7 +77,7 @@ public class HapticTest extends PApplet {
 		
 		for(int itrr = 0; itrr < 4; itrr++)
 		{
-			if(mouseTriggered == itrr)
+			if(mouseTriggered[itrr] == 1)
 			{
 				fill(rectHighlight);
 			}else
@@ -131,21 +134,20 @@ public class HapticTest extends PApplet {
 	{
 		if(rectOverIndex >= 0)
 		{
-			if(mouseTriggered >= 0)
+			if(mouseTriggered[rectOverIndex] == 1)  //if active
 			{
-				if(mouseTriggered == rectOverIndex)
-				{
-					//switch off
-					switchTask(mouseTriggered, 0);
-					mouseTriggered = -1; 
-				}
+				
+				//switch off
+				switchTask(rectOverIndex, 0);
+				mouseTriggered[rectOverIndex] = 0; 
+				
 			}else
 			{
-				mouseTriggered = rectOverIndex;
-				println("action: " + buttonTexts[mouseTriggered]);
+				mouseTriggered[rectOverIndex] = 1;
+				println("action: " + buttonTexts[rectOverIndex]);
 				
 				//switch on
-				switchTask(mouseTriggered, 1);
+				switchTask(rectOverIndex, 1);
 			}
 		}
 	}
@@ -369,7 +371,7 @@ public class HapticTest extends PApplet {
 			return;
 		}
 
-		mouseTriggered = -1; 
+		mouseTriggered[2] = -1; 
 		threading = false;
 	}
 	
@@ -385,7 +387,7 @@ public class HapticTest extends PApplet {
 			return;
 		}
 		
-		mouseTriggered = -1; 
+		mouseTriggered[3] = -1; 
 		threading = false;
 	}
 	
