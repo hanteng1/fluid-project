@@ -48,7 +48,7 @@ void setup() {
 
   //servo
   myservo.attach(9);
-  servoPos = 50;
+  servoPos = 40;
   myservo.write(servoPos);
   delay(servoDelayUnit * servoPos);
 }
@@ -181,16 +181,22 @@ void slower()
 
 void moveUp()
 {
-  servoPos += servoStep;
-  myservo.write(servoPos);
-  delay(servoDelayUnit * servoStep);
+  if(servoPos + servoStep <= 180)
+  {
+    servoPos += servoStep;
+    myservo.write(servoPos);
+    delay(servoDelayUnit * servoStep);
+  } 
 }
 
 void moveDown()
 {
-  servoPos -= servoStep;
-  myservo.write(servoPos);
-  delay(servoDelayUnit * servoStep);
+  if(servoPos - servoStep >= 0)
+  {
+    servoPos -= servoStep;
+    myservo.write(servoPos);
+    delay(servoDelayUnit * servoStep);
+  }
 }
 
 

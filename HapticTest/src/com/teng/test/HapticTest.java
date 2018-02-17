@@ -37,6 +37,14 @@ public class HapticTest extends PApplet {
 	int pumpVelocity = 0;  // 0 - 255
 	int velocityStep = 5;
 	
+	//for leapmotion
+	int indexHeight = 20;
+	float leapX = 100;
+	float leapY = 500;
+	
+	Leap leap;
+	
+	
 	public void settings()
 	{
 		windowWidth = 1000;
@@ -55,16 +63,18 @@ public class HapticTest extends PApplet {
 		//5 buttons
 		numButtons = 5;
 		rectXs = new int[] {rectX, rectX, rectX, rectX, rectX};
-		rectHeight = 100;
+		rectHeight = 50;
 		rectYs = new int[] {(int)(rectHeight * 1.5), (int)(rectHeight * 3.0), (int)(rectHeight * 4.5), (int)(rectHeight * 6.0), (int)(rectHeight * 7.5)};
 	
 		buttonTexts = new String[] {"Left Vibration", "Right Vibration", "Valve Up + 5", "Valve Down - 5", "x"};
 		
 		mouseTriggered = new int[] {0, 0, 0, 0, 0};  //0 - not active, 1 - active
 		
-		
-		configurePort("COM8");
+		configurePort("COM10");
 		connectPort();
+		
+		
+		leap = new Leap();
 		
 	}
 	
@@ -98,9 +108,23 @@ public class HapticTest extends PApplet {
 		//show the velocity
 		textSize(64);
 		String showText = "" + pumpVelocity;
-		text(showText, windowWidth / 2 - textWidth(showText) / 2, windowHeight * 4 / 5);
+		text(showText, windowWidth / 2 - textWidth(showText) / 2, windowHeight * 9 / 10);
 		
 		
+		//left finger button
+		fill(255, 128, 0);
+		noStroke();
+		rect(450, 700, 100, 50);
+		fill(255, 178, 102);
+		rect(475, 700 - indexHeight, 50, indexHeight);
+		
+		//finger
+		leapX = leap.indexTipX * 2 + windowWidth / 2;
+		leapY = windowHeight - leap.indexTipY * 2;
+		
+		stroke(153);
+		noFill();
+		arc(leapX, leapY - 25, 100, 50, 0, PI);
 		
 		
 	}
@@ -253,6 +277,7 @@ public class HapticTest extends PApplet {
 	public void keyPressed() {
 		if (key == 'q') {
 			disconnectPort();
+			leap.end();
 			exit();
 		}else if(key == CODED)
 		{
