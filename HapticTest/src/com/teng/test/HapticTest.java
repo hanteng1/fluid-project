@@ -38,12 +38,33 @@ public class HapticTest extends PApplet {
 	int velocityStep = 5;
 	
 	//for leapmotion
-	int indexHeight = 20;
+	int buttonHeight = 100;
+	float buttonY = 700 - 100;
 	float leapX = 100;
 	float leapY = 500;
+	float prev_leapX;
+	float prev_leapY;
 	
 	Leap leap;
 	
+	//button
+	Button button;
+	
+	//spring
+	
+	
+	
+	
+	public static HapticTest instance;
+	public static HapticTest getInstance()
+	{
+		if(instance == null)
+		{
+			instance = new HapticTest();
+		}
+		return instance;
+	}
+		
 	
 	public void settings()
 	{
@@ -54,6 +75,9 @@ public class HapticTest extends PApplet {
 	
 	public void setup()
 	{
+		
+		instance = this;
+		
 		fill(120, 50, 240);
 		rectColor = color(211, 211, 211);
 		rectHighlight = color(105, 105, 105);
@@ -73,8 +97,13 @@ public class HapticTest extends PApplet {
 		configurePort("COM10");
 		connectPort();
 		
+		delay(1000);
 		
 		leap = new Leap();
+		
+		
+		delay(1000);
+		button = new Button(this, 500, 700);
 		
 	}
 	
@@ -111,13 +140,6 @@ public class HapticTest extends PApplet {
 		text(showText, windowWidth / 2 - textWidth(showText) / 2, windowHeight * 9 / 10);
 		
 		
-		//left finger button
-		fill(255, 128, 0);
-		noStroke();
-		rect(450, 700, 100, 50);
-		fill(255, 178, 102);
-		rect(475, 700 - indexHeight, 50, indexHeight);
-		
 		//finger
 		leapX = leap.indexTipX * 2 + windowWidth / 2;
 		leapY = windowHeight - leap.indexTipY * 2;
@@ -126,8 +148,17 @@ public class HapticTest extends PApplet {
 		noFill();
 		arc(leapX, leapY - 25, 100, 50, 0, PI);
 		
+		//new button position
+		button.detectTouch(leapX, leapY, prev_leapX, prev_leapY);
+
+		prev_leapX = leapX;
+		prev_leapY = leapY;
+		
+		
+		button.draw();
 		
 	}
+
 	
 	private void update(int x, int y)
 	{
@@ -177,7 +208,7 @@ public class HapticTest extends PApplet {
 	}
 	
 	
-	private void switchTask(int task, int onoff)
+	void switchTask(int task, int onoff)
 	{
 		if(onoff == 0)  //turn off tasks
 		{
