@@ -50,7 +50,8 @@ public class HapticTest extends PApplet {
 	//button
 	Button button;
 	
-	//spring
+	//slider
+	Slider slider;
 	
 	
 	
@@ -85,16 +86,16 @@ public class HapticTest extends PApplet {
 		rectWidth = (int) (windowWidth * 0.8);
 		rectX = (windowWidth - rectWidth) / 2;
 		//5 buttons
-		numButtons = 5;
-		rectXs = new int[] {rectX, rectX, rectX, rectX, rectX};
+		numButtons = 6;
+		rectXs = new int[] {rectX, rectX, rectX, rectX, rectX, rectX};
 		rectHeight = 50;
-		rectYs = new int[] {(int)(rectHeight * 1.5), (int)(rectHeight * 3.0), (int)(rectHeight * 4.5), (int)(rectHeight * 6.0), (int)(rectHeight * 7.5)};
+		rectYs = new int[] {(int)(rectHeight * 1.5), (int)(rectHeight * 3.0), (int)(rectHeight * 4.5), (int)(rectHeight * 6.0), (int)(rectHeight * 7.5), (int)(rectHeight * 9.0)};
 	
-		buttonTexts = new String[] {"Left Vibration", "Right Vibration", "Valve Up + 5", "Valve Down - 5", "x"};
+		buttonTexts = new String[] {"Left Vibration", "Right Vibration", "Valve Up + 5", "Valve Down - 5", "Valve 0", "Valve 180"};
 		
-		mouseTriggered = new int[] {0, 0, 0, 0, 0};  //0 - not active, 1 - active
+		mouseTriggered = new int[] {0, 0, 0, 0, 0, 0};  //0 - not active, 1 - active
 		
-		configurePort("COM10");
+		configurePort("COM8");
 		connectPort();
 		
 		delay(1000);
@@ -103,7 +104,11 @@ public class HapticTest extends PApplet {
 		
 		
 		delay(1000);
-		button = new Button(this, 500, 700);
+		button = new Button(this, 400, 700);
+		thread("initializeButton");
+		
+		slider = new Slider(this, 600, 700);
+		
 		
 	}
 	
@@ -114,7 +119,7 @@ public class HapticTest extends PApplet {
 		
 		update(mouseX, mouseY);
 		
-		for(int itrr = 0; itrr < 4; itrr++)
+		for(int itrr = 0; itrr < 6; itrr++)
 		{
 			if(mouseTriggered[itrr] == 1)
 			{
@@ -156,6 +161,8 @@ public class HapticTest extends PApplet {
 		
 		
 		button.draw();
+		
+		slider.draw();
 		
 	}
 
@@ -248,8 +255,12 @@ public class HapticTest extends PApplet {
 				thread("valveDown");
 				
 				break;
-			case 4:
+			case 4:  //zero
+				thread("valveZero");
+				break;
 				
+			case 5:  //max
+				thread("valveMax");
 				break;
 				
 			
@@ -307,6 +318,18 @@ public class HapticTest extends PApplet {
 	
 	public void keyPressed() {
 		if (key == 'q') {
+			
+			valveZero();
+			
+			//stop pop and reset valve
+			try {
+				serialOutput.write('s');
+				pumpVelocity = 0;
+			} catch (Exception ex) {
+				return;
+			}
+		
+			
 			disconnectPort();
 			leap.end();
 			exit();
@@ -445,6 +468,61 @@ public class HapticTest extends PApplet {
 		
 		mouseTriggered[3] = -1; 
 		threading = false;
+	}
+	
+	public void valveZero()
+	{
+		threading = true;
+		//give some delay
+		delay(100);
+		
+		try {
+			serialOutput.write('z');
+		} catch (Exception ex) {
+			return;
+		}
+		
+		mouseTriggered[4] = -1; 
+		threading = false;
+	}
+	
+	public void valveMax()
+	{
+		threading = true;
+		//give some delay
+		delay(100);
+				
+		try {
+			serialOutput.write('m');
+		} catch (Exception ex) {
+			return;
+		}
+		
+		mouseTriggered[5] = -1; 
+		threading = false;
+	}
+	
+	
+	public void initializeButton()
+	{
+		valveMax();
+		
+		//switch on the flow
+		switchTask(0, 1);
+		mouseTriggered[0] = 1;
+		
+		
+		//schedule a stop in 2 secs
+		sheduleStop(3000);
+	}
+	
+	
+	public void sheduleStop(int duration)
+	{
+		delay(duration);
+		
+		switchTask(0, 0);
+		mouseTriggered[0] = 0;
 	}
 	
 	

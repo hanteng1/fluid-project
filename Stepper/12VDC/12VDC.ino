@@ -48,7 +48,7 @@ void setup() {
 
   //servo
   myservo.attach(9);
-  servoPos = 40;
+  servoPos = 0;
   myservo.write(servoPos);
   delay(servoDelayUnit * servoPos);
 }
@@ -134,6 +134,15 @@ void loop() {
       case 'p':  //pos + 5
       moveUp();
       break;
+
+
+      case 'z':  //pos = 0
+      moveZero();
+      break;
+
+      case 'm':  //pos = 180
+      moveMax();
+      break;
       
       
     }
@@ -198,6 +207,24 @@ void moveDown()
     delay(servoDelayUnit * servoStep);
   }
 }
+
+void moveZero()
+{
+  servoPos = 0;
+  myservo.write(servoPos);
+  delay(1000);
+}
+
+
+
+void moveMax()
+{
+  servoPos = 180;
+  myservo.write(servoPos);
+  delay(1000);
+}
+
+
 
 
 

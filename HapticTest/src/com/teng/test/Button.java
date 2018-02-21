@@ -18,9 +18,12 @@ public class Button {
 	float topX = 0;
 	float topY = 0;
 	float topWidth = 50;
-	float topHeight = 20;
+	float topHeight = 50;
 	
 	float pressDistance = 0;
+	
+	
+	float returnForce = 0;
 	
 	public Button(PApplet ap, int cx, int cy)
 	{
@@ -32,11 +35,7 @@ public class Button {
 		baseY = centerY;
 		topX = centerX - topWidth / 2;
 		topY = centerY - topHeight;
-		
-				
-		HapticTest.getInstance().switchTask(0, 1);
-		HapticTest.getInstance().mouseTriggered[0] = 1;
-		
+	
 	}
 	
 	
@@ -58,14 +57,56 @@ public class Button {
 			{
 				if(ly > topY && ply <= topY)
 				{
-					pressDistance += (ly - topY);
-					topY = ly;					
 					
-					//app.println("press distance: "+ pressDistance);
-					mapTouch2Pressure(pressDistance);
+					if(ly > centerY)
+					{
+						topY = centerY;
+						pressDistance = topHeight;
+					}else
+					{
+						pressDistance += (ly - topY);
+						topY = ly;					
+						
+						
+						mapTouch2Pressure(pressDistance);
+						
+						returnForce = 0;
+					}
+					
+					app.println("down / distance: "+ pressDistance);
+					
+				}else
+				{
+					//apply a return force
+					if(topY - ly <= topHeight && topY - ly > 0 && pressDistance >= 0)
+					{
+						//approach to finger ly
+						returnForce = (topY - ly) * 0.5f;
+						pressDistance -= returnForce;
+						
+						if(pressDistance < 0)
+						{
+							pressDistance = 0;
+							topY = centerY - topHeight;
+						}else
+						{
+							topY -= returnForce;
+							
+						}
+						
+						
+					}
+					
+					app.println("up / distance: "+ pressDistance);
 				}
 			}
 		}
+	}
+	
+	
+	public void calculateReturnForce()
+	{
+		
 	}
 	
 	public void mapTouch2Pressure(float pressure)
