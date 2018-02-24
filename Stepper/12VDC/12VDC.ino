@@ -19,7 +19,7 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 // Select which 'port' M1, M2, M3 or M4. In this case, M1
 Adafruit_DCMotor *myMotor = AFMS.getMotor(1);
 // You can also make another motor on port M2
-//Adafruit_DCMotor *myOtherMotor = AFMS.getMotor(2);
+Adafruit_DCMotor *myPeltier = AFMS.getMotor(2);
 
 int state = -1;
 int vStep = 5;
@@ -30,6 +30,10 @@ Servo myservo;
 int servoPos = 0;
 int servoStep = 5;
 int servoDelayUnit = 15;
+
+
+//valve 1
+int solenoidPin = 4; 
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
@@ -45,12 +49,21 @@ void setup() {
   // turn on motor
   myMotor->run(RELEASE);
 
+  //peltier
+  myPeltier->setSpeed(150);
+  myPeltier->run(FORWARD);
+  // turn on peltier
+  myPeltier->run(RELEASE);
 
+  
+  
   //servo
   myservo.attach(9);
   servoPos = 0;
   myservo.write(servoPos);
   delay(servoDelayUnit * servoPos);
+
+  pinMode(solenoidPin, OUTPUT);           //Sets the pin as an output
 }
 
 void loop() {
@@ -143,7 +156,15 @@ void loop() {
       case 'm':  //pos = 180
       moveMax();
       break;
-      
+
+
+      case 'v':
+      closeValve();
+      break;
+
+      case 'b':
+      openValve();
+      break;
       
     }
   }
@@ -222,6 +243,16 @@ void moveMax()
   servoPos = 180;
   myservo.write(servoPos);
   delay(1000);
+}
+
+void closeValve()
+{
+  digitalWrite(solenoidPin, HIGH);    //Switch Solenoid ON
+}
+
+void openValve()
+{
+  digitalWrite(solenoidPin, LOW);     //Switch Solenoid OFF
 }
 
 

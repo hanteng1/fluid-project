@@ -19,6 +19,7 @@ public class HapticTest extends PApplet {
 	int rectX, rectY;
 	int numButtons;
 	String[] buttonTexts;
+	String[] buttonTextsBackup;
 	int rectWidth;
 	int rectHeight;
 	int rectColor, rectHighlight;
@@ -91,7 +92,8 @@ public class HapticTest extends PApplet {
 		rectHeight = 50;
 		rectYs = new int[] {(int)(rectHeight * 1.5), (int)(rectHeight * 3.0), (int)(rectHeight * 4.5), (int)(rectHeight * 6.0), (int)(rectHeight * 7.5), (int)(rectHeight * 9.0)};
 	
-		buttonTexts = new String[] {"Left Vibration", "Right Vibration", "Valve Up + 5", "Valve Down - 5", "Valve 0", "Valve 180"};
+		buttonTexts = new String[] {"Left Vibration", "Right Vibration", "Valve 1 : Open", "Valve 2 : Open", "Valve 0", "Valve 180"};
+		buttonTextsBackup = new String[] {"Left Vibration", "Right Vibration", "Valve 1 : Close", "Valve 2 : Close", "Valve 0", "Valve 180"};
 		
 		mouseTriggered = new int[] {0, 0, 0, 0, 0, 0};  //0 - not active, 1 - active
 		
@@ -105,7 +107,7 @@ public class HapticTest extends PApplet {
 		
 		delay(1000);
 		button = new Button(this, 400, 700);
-		thread("initializeButton");
+		//thread("initializeButton");
 		
 		slider = new Slider(this, 600, 700);
 		
@@ -134,7 +136,13 @@ public class HapticTest extends PApplet {
 			textSize(32);
 			fill(0, 102, 153);
 			
-			text(buttonTexts[itrr], rectXs[itrr] + rectWidth / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+			if(mouseTriggered[itrr] == 1)
+			{
+				text(buttonTexts[itrr], rectXs[itrr] + rectWidth / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+			}else
+			{
+				text(buttonTextsBackup[itrr], rectXs[itrr] + rectWidth / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+			}
 			
 		}
 		
@@ -219,14 +227,36 @@ public class HapticTest extends PApplet {
 	{
 		if(onoff == 0)  //turn off tasks
 		{
-			threading = false;
-			//task stop 
-			try {
-				serialOutput.write('s');
-				pumpVelocity = 0;
-			} catch (Exception ex) {
-				return;
+			
+			switch(task) {
+			case 0:
+				
+				threading = false;
+				//task stop 
+				try {
+					serialOutput.write('s');
+					pumpVelocity = 0;
+				} catch (Exception ex) {
+					return;
+				}
+				break;
+			case 1:
+				threading = false;
+				//task stop 
+				try {
+					serialOutput.write('s');
+					pumpVelocity = 0;
+				} catch (Exception ex) {
+					return;
+				}
+				break;
+			case 2:  //valve 1 to close
+				thread("valve1Close");
+				break;
+				
+							
 			}
+
 		}else  //turn on tasks
 		{
 			switch (task) {
@@ -247,12 +277,10 @@ public class HapticTest extends PApplet {
 					return;
 				}
 				break;
-			case 2:  //valve up
-				thread("valveUp");				
-				
+			case 2:  //valve 1 to open
+				thread("valve1Open");				
 				break;
 			case 3: //valve down
-				thread("valveDown");
 				
 				break;
 			case 4:  //zero
@@ -450,7 +478,7 @@ public class HapticTest extends PApplet {
 			return;
 		}
 
-		mouseTriggered[2] = -1; 
+		mouseTriggered[2] = 0; 
 		threading = false;
 	}
 	
@@ -466,7 +494,33 @@ public class HapticTest extends PApplet {
 			return;
 		}
 		
-		mouseTriggered[3] = -1; 
+		mouseTriggered[3] = 0; 
+		threading = false;
+	}
+	
+	public void valve1Open()
+	{
+		threading = true;
+		
+		try {
+			serialOutput.write('v');
+		} catch (Exception ex) {
+			return;
+		}
+
+		threading = false;
+	}
+	
+	public void valve1Close()
+	{
+		threading = true;
+		
+		try {
+			serialOutput.write('b');
+		} catch (Exception ex) {
+			return;
+		}
+		
 		threading = false;
 	}
 	
@@ -482,7 +536,7 @@ public class HapticTest extends PApplet {
 			return;
 		}
 		
-		mouseTriggered[4] = -1; 
+		mouseTriggered[4] = 0; 
 		threading = false;
 	}
 	
@@ -498,7 +552,7 @@ public class HapticTest extends PApplet {
 			return;
 		}
 		
-		mouseTriggered[5] = -1; 
+		mouseTriggered[5] = 0; 
 		threading = false;
 	}
 	
@@ -513,7 +567,7 @@ public class HapticTest extends PApplet {
 		
 		
 		//schedule a stop in 2 secs
-		sheduleStop(3000);
+		sheduleStop(2000);
 	}
 	
 	
