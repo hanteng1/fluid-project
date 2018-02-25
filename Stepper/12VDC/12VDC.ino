@@ -10,6 +10,7 @@ For use with the Adafruit Motor Shield v2
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include <Servo.h>
+#include <SparkFun_MS5803_I2C.h>
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
@@ -33,7 +34,16 @@ int servoDelayUnit = 15;
 
 
 //valve 1
-int solenoidPin = 4; 
+int solenoid1Pin = 4; 
+int solenoid2Pin = 6;
+
+//pressure
+MS5803 pressureSensor(ADDRESS_HIGH);
+
+//Create variables to store results
+double pressure_abs, pressure_relative, altitude_delta, pressure_baseline;
+double base_altitude = 1655.0; 
+
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
@@ -63,58 +73,31 @@ void setup() {
   myservo.write(servoPos);
   delay(servoDelayUnit * servoPos);
 
-  pinMode(solenoidPin, OUTPUT);           //Sets the pin as an output
+  pinMode(solenoid1Pin, OUTPUT);           //Sets the pin as an 
+  pinMode(solenoid2Pin, OUTPUT);
+
+
+  //Retrieve calibration constants for conversion math.
+  pressureSensor.reset();
+  pressureSensor.begin();  
+  pressure_baseline = pressureSensor.getPressure(ADC_4096);
+
+
+  
 }
 
 void loop() {
-  
-//
-//  myMotor->run(BACKWARD);
-//
-//  delay(5000);
-//
-//  myMotor->run(RELEASE);
-//
-//  delay(2000);
 
-  
-//  uint8_t i;
-//  
-//  Serial.print("tick");
-//
-//  myMotor->run(FORWARD);
-//  for (i=0; i<255; i++) {
-//    myMotor->setSpeed(i);  
-//    delay(10);
-//  }
-//  for (i=255; i!=0; i--) {
-//    myMotor->setSpeed(i);  
-//    delay(10);
-//  }
-//  
-//  Serial.print("tock");
-//
-//  myMotor->run(BACKWARD);
-//  for (i=0; i<255; i++) {
-//    myMotor->setSpeed(i);  
-//    delay(10);
-//  }
-//  for (i=255; i!=0; i--) {
-//    myMotor->setSpeed(i);  
-//    delay(10);
-//  }
-//
-//  Serial.print("tech");
-//  myMotor->run(RELEASE);
-//  delay(1000);
+   //read pressure
+   pressure_abs = pressureSensor.getPressure(ADC_4096);
+   //pressure_relative = sealevel(pressure_abs, base_altitude);
+   //altitude_delta = altitude(pressure_abs , pressure_baseline);
+   //send the data to serial
+   Serial.println(pressure_abs);
 
-
-
-
-
+  //wait for input
   if(Serial.available()>0){
     state = Serial.read();          
-
     switch(state){                   // different state to switch  
       
       //////////////pump////////////
@@ -159,13 +142,20 @@ void loop() {
 
 
       case 'v':
-      closeValve();
+      close1Valve();
       break;
 
       case 'b':
-      openValve();
+      open1Valve();
       break;
-      
+
+      case 'f':
+      close2Valve();
+      break;
+
+      case 'g':
+      open2Valve();
+      break;
     }
   }
 }
@@ -245,14 +235,35 @@ void moveMax()
   delay(1000);
 }
 
-void closeValve()
+void close1Valve()
 {
-  digitalWrite(solenoidPin, HIGH);    //Switch Solenoid ON
+  digitalWrite(solenoid1Pin, HIGH);    //Switch Solenoid ON
 }
 
-void openValve()
+void open1Valve()
 {
-  digitalWrite(solenoidPin, LOW);     //Switch Solenoid OFF
+  digitalWrite(solenoid1Pin, LOW);     //Switch Solenoid OFF
+}
+
+void close2Valve()
+{
+  digitalWrite(solenoid2Pin, HIGH);    //Switch Solenoid ON
+}
+
+void open2Valve()
+{
+  digitalWrite(solenoid2Pin, LOW);     //Switch Solenoid OFF
+}
+
+double sealevel(double P, double A)
+{
+  return(P/pow(1-(A/44330.0),5.255));
+}
+
+
+double altitude(double P, double P0)
+{
+  return(44330.0*(1-pow(P/P0,1/5.255)));
 }
 
 

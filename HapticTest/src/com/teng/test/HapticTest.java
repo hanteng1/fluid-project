@@ -1,15 +1,19 @@
 package com.teng.test;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
+import gnu.io.SerialPortEventListener;
 import processing.core.PApplet;
 
-public class HapticTest extends PApplet {
+public class HapticTest extends PApplet implements SerialPortEventListener{
 
 	int windowWidth, windowHeight;
 	
@@ -30,6 +34,7 @@ public class HapticTest extends PApplet {
 	//serial
 	static SerialPort serialPort;
 	static InputStream serialInput;
+	static BufferedReader input;
 	static OutputStream serialOutput;
 	static String portName;
 	
@@ -54,7 +59,8 @@ public class HapticTest extends PApplet {
 	//slider
 	Slider slider;
 	
-	
+	//presure
+	float pressureValue;
 	
 	
 	public static HapticTest instance;
@@ -151,6 +157,9 @@ public class HapticTest extends PApplet {
 		textSize(64);
 		String showText = "" + pumpVelocity;
 		text(showText, windowWidth / 2 - textWidth(showText) / 2, windowHeight * 9 / 10);
+		
+		//read and show the pressure value
+		
 		
 		
 		//finger
@@ -254,6 +263,10 @@ public class HapticTest extends PApplet {
 				thread("valve1Close");
 				break;
 				
+			case 3:  //valve 1 to close
+				thread("valve2Close");
+				break;
+				
 							
 			}
 
@@ -281,7 +294,7 @@ public class HapticTest extends PApplet {
 				thread("valve1Open");				
 				break;
 			case 3: //valve down
-				
+				thread("valve2Open");	
 				break;
 			case 4:  //zero
 				thread("valveZero");
@@ -320,7 +333,13 @@ public class HapticTest extends PApplet {
 							SerialPort.PARITY_NONE);
 
 					serialInput = serialPort.getInputStream();
+					input = new BufferedReader(new InputStreamReader(serialInput));				
 					serialOutput = serialPort.getOutputStream();
+					
+					serialPort.addEventListener(this);
+			        serialPort.notifyOnDataAvailable(true);
+			        
+			        
 					System.out.println("Connected to port: " + portName);
 				} else {
 					System.out.println("Error: Only serial ports are handled by this example.");
@@ -342,6 +361,22 @@ public class HapticTest extends PApplet {
 			ex.printStackTrace();
 		}
 	}
+	
+	public synchronized void serialEvent(SerialPortEvent oEvent) {
+		 if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
+		    try {
+		        String inputLine=null;
+		        if (input.ready()) {
+		            inputLine = input.readLine();
+		            System.out.println(inputLine);
+		        }
+
+		    } catch (Exception e) {
+		        System.err.println(e.toString());
+		    }
+		 }
+		// Ignore all the other eventTypes, but you should consider the other ones.
+		}
 	
 	
 	public void keyPressed() {
@@ -517,6 +552,32 @@ public class HapticTest extends PApplet {
 		
 		try {
 			serialOutput.write('b');
+		} catch (Exception ex) {
+			return;
+		}
+		
+		threading = false;
+	}
+	
+	public void valve2Open()
+	{
+		threading = true;
+		
+		try {
+			serialOutput.write('f');
+		} catch (Exception ex) {
+			return;
+		}
+
+		threading = false;
+	}
+	
+	public void valve2Close()
+	{
+		threading = true;
+		
+		try {
+			serialOutput.write('g');
 		} catch (Exception ex) {
 			return;
 		}
