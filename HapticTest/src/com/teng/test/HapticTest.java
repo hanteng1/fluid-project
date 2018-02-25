@@ -61,6 +61,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	
 	//presure
 	float pressureValue;
+	TimeSeriesPlot timeSeriesPlot;
 	
 	
 	public static HapticTest instance;
@@ -117,7 +118,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		
 		slider = new Slider(this, 600, 700);
 		
-		
+		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 600, windowWidth, 200, 500);
 	}
 	
 	public void draw()
@@ -158,10 +159,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		String showText = "" + pumpVelocity;
 		text(showText, windowWidth / 2 - textWidth(showText) / 2, windowHeight * 9 / 10);
 		
-		//read and show the pressure value
-		
-		
-		
+						
 		//finger
 		leapX = leap.indexTipX * 2 + windowWidth / 2;
 		leapY = windowHeight - leap.indexTipY * 2;
@@ -180,6 +178,8 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		button.draw();
 		
 		slider.draw();
+		
+		timeSeriesPlot.draw();
 		
 	}
 
@@ -368,7 +368,14 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		        String inputLine=null;
 		        if (input.ready()) {
 		            inputLine = input.readLine();
-		            System.out.println(inputLine);
+		            //System.out.println(inputLine);
+		            try {
+		            	timeSeriesPlot.addValue(Float.parseFloat(inputLine));
+		            }catch(Exception ex)
+		            {
+		            	return;
+		            }
+		            
 		        }
 
 		    } catch (Exception e) {

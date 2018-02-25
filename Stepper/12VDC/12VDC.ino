@@ -47,7 +47,7 @@ double base_altitude = 1655.0;
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
-  Serial.println("Adafruit Motorshield v2 - DC Motor test!");
+  //Serial.println("Adafruit Motorshield v2 - DC Motor test!");
 
   AFMS.begin();  // create with the default frequency 1.6KHz
   //AFMS.begin(1000);  // OR with a different frequency, say 1KHz
