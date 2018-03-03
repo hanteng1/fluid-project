@@ -24,19 +24,29 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	int numButtons;
 	String[] buttonTexts;
 	String[] buttonTextsBackup;
-	int rectWidth;
+	int[] rectWidth;
 	int rectHeight;
 	int rectColor, rectHighlight;
 	int rectOverIndex = -1;
 	
 	int[] mouseTriggered;
 	
-	//serial
-	static SerialPort serialPort;
-	static InputStream serialInput;
-	static BufferedReader input;
-	static OutputStream serialOutput;
-	static String portName;
+	//serial - for pump and valves
+	static SerialPort serialPort_One;
+	static InputStream serialInput_One;
+	static BufferedReader input_One;
+	static OutputStream serialOutput_One;
+	static String portName_One;
+	
+	//serial - for sensors
+	static SerialPort serialPort_Two;
+	static InputStream serialInput_Two;
+	static BufferedReader input_Two;
+	static OutputStream serialOutput_Two;
+	static String portName_Two;
+	
+	
+	
 	
 	boolean threading = false;
 	
@@ -63,6 +73,9 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	float pressureValue;
 	TimeSeriesPlot timeSeriesPlot;
 	
+	//temperature value
+	float temperatureValue;
+	
 	
 	public static HapticTest instance;
 	public static HapticTest getInstance()
@@ -78,7 +91,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	public void settings()
 	{
 		windowWidth = 1000;
-		windowHeight = 1000;
+		windowHeight = 1500;
 		size(windowWidth, windowHeight);
 	}
 	
@@ -91,23 +104,32 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		rectColor = color(211, 211, 211);
 		rectHighlight = color(105, 105, 105);
 		
-		rectWidth = (int) (windowWidth * 0.8);
-		rectX = (windowWidth - rectWidth) / 2;
+		
 		//5 buttons
 		numButtons = 6;
-		rectXs = new int[] {rectX, rectX, rectX, rectX, rectX, rectX};
+		rectXs = new int[] {100, 100, 600, 100, 100, 100, 100};
+		rectWidth = new int[] {200, 200, 200, 500, 500, 500, 500};
 		rectHeight = 50;
-		rectYs = new int[] {(int)(rectHeight * 1.5), (int)(rectHeight * 3.0), (int)(rectHeight * 4.5), (int)(rectHeight * 6.0), (int)(rectHeight * 7.5), (int)(rectHeight * 9.0)};
+		rectYs = new int[] {(int)(rectHeight * 1.5), (int)(rectHeight * 3.0), (int)(rectHeight * 1.5), (int)(rectHeight * 4.5), (int)(rectHeight * 6.0), (int)(rectHeight * 7.5), (int)(rectHeight * 9.0)};
 	
-		buttonTexts = new String[] {"Left Vibration", "Right Vibration", "Valve 1 : Open", "Valve 2 : Open", "Valve 0", "Valve 180"};
-		buttonTextsBackup = new String[] {"Left Vibration", "Right Vibration", "Valve 1 : Close", "Valve 2 : Close", "Valve 0", "Valve 180"};
+		
+		buttonTexts = new String[] {"Cold", "Hot", "On", "Valve 1 : Open", "Valve 2 : Open", "Valve 3: Open"};
+		buttonTextsBackup = new String[] {"Cold", "Hot", "Off", "Valve 1 : Close", "Valve 2 : Close", "Valve 3: Close"};
 		
 		mouseTriggered = new int[] {0, 0, 0, 0, 0, 0};  //0 - not active, 1 - active
 		
-		configurePort("COM8");
-		connectPort();
+		//control
+		configurePort_One("COM10");
+		connectPort_One();
+			
+		delay(1000);
+		
+		//sensor
+		configurePort_Two("COM8");
+		connectPort_Two();
 		
 		delay(1000);
+		
 		
 		leap = new Leap();
 		
@@ -118,7 +140,27 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		
 		slider = new Slider(this, 600, 700);
 		
-		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 600, windowWidth, 200, 500);
+		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 900, windowWidth, 200, 500);
+		
+//		//open at least one valve
+//		mouseTriggered[2] = 1;
+//		println("action: " + buttonTexts[2]);
+//		//valve 1 open
+//		switchTask(2, 1);
+//		
+//		delay(200);
+//		mouseTriggered[3] = 0;
+//		println("action: " + buttonTextsBackup[3]);
+//		//valve 2 close
+//		switchTask(3, 0);
+//		
+//				
+//		delay(200);
+//		//valve 3 open
+//		mouseTriggered[4] = 1;
+//		println("action: " + buttonTexts[4]);
+//		switchTask(4, 1);
+		
 	}
 	
 	public void draw()
@@ -138,17 +180,17 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 				fill(rectColor);
 			}
 			
-			rect(rectXs[itrr], rectYs[itrr], rectWidth, rectHeight);
+			rect(rectXs[itrr], rectYs[itrr], rectWidth[itrr], rectHeight);
 			
 			textSize(32);
 			fill(0, 102, 153);
 			
 			if(mouseTriggered[itrr] == 1)
 			{
-				text(buttonTexts[itrr], rectXs[itrr] + rectWidth / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+				text(buttonTexts[itrr], rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
 			}else
 			{
-				text(buttonTextsBackup[itrr], rectXs[itrr] + rectWidth / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+				text(buttonTextsBackup[itrr], rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
 			}
 			
 		}
@@ -181,6 +223,12 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		
 		timeSeriesPlot.draw();
 		
+		//draw temperature
+		//show the velocity
+		textSize(64);
+		String temperatureText = "" + temperatureValue + " C";
+		text(temperatureText, 80, 750);
+		
 	}
 
 	
@@ -188,7 +236,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	{
 		for(int itrr = 0; itrr < numButtons; itrr++)
 		{
-			if(overRect(rectXs[itrr], rectYs[itrr], rectWidth, rectHeight))
+			if(overRect(rectXs[itrr], rectYs[itrr], rectWidth[itrr], rectHeight))
 			{
 				rectOverIndex = itrr;
 				return;
@@ -238,71 +286,98 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		{
 			
 			switch(task) {
+//			case 0:
+//				threading = false;
+//				//task stop 
+//				try {
+//					serialOutput_One.write('s');
+//					pumpVelocity = 0;
+//				} catch (Exception ex) {
+//					return;
+//				}
+//				break;
+//			case 1:
+//				threading = false;
+//				//task stop 
+//				try {
+//					serialOutput_One.write('s');
+//					pumpVelocity = 0;
+//				} catch (Exception ex) {
+//					return;
+//				}
+//				break;
+			
 			case 0:
-				
-				threading = false;
-				//task stop 
-				try {
-					serialOutput.write('s');
-					pumpVelocity = 0;
-				} catch (Exception ex) {
-					return;
-				}
 				break;
 			case 1:
-				threading = false;
-				//task stop 
-				try {
-					serialOutput.write('s');
-					pumpVelocity = 0;
-				} catch (Exception ex) {
-					return;
-				}
 				break;
-			case 2:  //valve 1 to close
-				thread("valve1Close");
+			case 2:  //both pump stop
+				thread("pumpOff");
 				break;
-				
+			
 			case 3:  //valve 1 to close
-				thread("valve2Close");
+				thread("valve1Close");
+				thread("valve2Open");
+				mouseTriggered[4] = 1;
 				break;
 				
-							
+			case 4:  //valve 2 to close
+				thread("valve2Close");
+				thread("valve1Open");
+				mouseTriggered[3] = 1;
+				break;
+				
+			case 5: //valve 3 to close
+				thread("valve3Close");
+				break;
+
 			}
 
 		}else  //turn on tasks
 		{
 			switch (task) {
-			case 0:  //left vibrating
-				try {
-					serialOutput.write('l');
-					pumpVelocity = 255;
-					
-				} catch (Exception ex) {
-					return;
-				}
+//			case 0:  //left vibrating
+//				try {
+//					serialOutput_One.write('l');
+//					pumpVelocity = 255;
+//					
+//				} catch (Exception ex) {
+//					return;
+//				}
+//				break;
+//			case 1:  // right vibrating, will not be used for now
+//				try {
+//					serialOutput_One.write('r');
+//					pumpVelocity = 255;
+//				} catch (Exception ex) {
+//					return;
+//				}
+//				break;
+			case 0:  //cold
+				thread("moreCold");
 				break;
-			case 1:  // right vibrating, will not be used for now
-				try {
-					serialOutput.write('r');
-					pumpVelocity = 255;
-				} catch (Exception ex) {
-					return;
-				}
+			case 1:  //hot
+				thread("moreHot");
 				break;
-			case 2:  //valve 1 to open
-				thread("valve1Open");				
-				break;
-			case 3: //valve down
-				thread("valve2Open");	
-				break;
-			case 4:  //zero
-				thread("valveZero");
+			case 2:
+				thread("pumpOn");
 				break;
 				
-			case 5:  //max
-				thread("valveMax");
+			case 3:  //valve 1 to open
+				thread("valve1Open");
+				thread("valve2Close");
+				mouseTriggered[4] = 0;
 				break;
+			case 4: //valve 2 open
+				thread("valve2Open");
+				thread("valve1Close");
+				mouseTriggered[3] = 0;
+				break;
+				
+			case 5:  //valve 3 to open
+				thread("valve3Open");
+				break;
+					
 				
 			
 			}
@@ -310,37 +385,76 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		
 	}
 	
-	void configurePort(String _portName) {
-		portName = _portName;
+	void configurePort_One(String _portName) {
+		portName_One = _portName;
 	}
 	
-	void connectPort() {
+	void configurePort_Two(String _portName)
+	{
+		portName_Two = _portName;
+	}
+	
+	void connectPort_One() {
 		try {
-			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
+			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName_One);
 			if (portIdentifier.isCurrentlyOwned()) {
 				System.out.println("Error: Port is currently in use");
 			} else {
 				CommPort commPort = portIdentifier.open(this.getClass().getName(), 2000);
 				
 				if (commPort instanceof SerialPort) {
-					serialPort = (SerialPort) commPort;
+					serialPort_One = (SerialPort) commPort;
 
 					// Set appropriate properties (do not change these)
-					serialPort.setSerialPortParams(
+					serialPort_One.setSerialPortParams(
 							9600, 
 							SerialPort.DATABITS_8,
 							SerialPort.STOPBITS_1, 
 							SerialPort.PARITY_NONE);
 
-					serialInput = serialPort.getInputStream();
-					input = new BufferedReader(new InputStreamReader(serialInput));				
-					serialOutput = serialPort.getOutputStream();
+					serialInput_One = serialPort_One.getInputStream();
+					//input = new BufferedReader(new InputStreamReader(serialInput));				
+					serialOutput_One = serialPort_One.getOutputStream();
 					
-					serialPort.addEventListener(this);
-			        serialPort.notifyOnDataAvailable(true);
-			        
-			        
-					System.out.println("Connected to port: " + portName);
+					//serialPort.addEventListener(this);
+			        //serialPort.notifyOnDataAvailable(true);
+			      
+					System.out.println("Connected to port: " + portName_One);
+				} else {
+					System.out.println("Error: Only serial ports are handled by this example.");
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}		
+	}
+	
+	void connectPort_Two() {
+		try {
+			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName_Two);
+			if (portIdentifier.isCurrentlyOwned()) {
+				System.out.println("Error: Port is currently in use");
+			} else {
+				CommPort commPort = portIdentifier.open(this.getClass().getName(), 2000);
+				
+				if (commPort instanceof SerialPort) {
+					serialPort_Two = (SerialPort) commPort;
+
+					// Set appropriate properties (do not change these)
+					serialPort_Two.setSerialPortParams(
+							9600, 
+							SerialPort.DATABITS_8,
+							SerialPort.STOPBITS_1, 
+							SerialPort.PARITY_NONE);
+
+					serialInput_Two = serialPort_Two.getInputStream();
+					input_Two = new BufferedReader(new InputStreamReader(serialInput_Two));				
+					serialOutput_Two = serialPort_Two.getOutputStream();
+					
+					serialPort_Two.addEventListener(this);
+			        serialPort_Two.notifyOnDataAvailable(true);
+			      
+					System.out.println("Connected to port: " + portName_Two);
 				} else {
 					System.out.println("Error: Only serial ports are handled by this example.");
 				}
@@ -352,10 +466,22 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	
 	void disconnectPort() {
 		try {
-			System.out.println("Disconnecting from port: " + portName);
-			serialInput.close();
-			serialOutput.close();
-			serialPort.close();
+			System.out.println("Disconnecting from port: " + portName_One);
+			serialInput_One.close();
+			serialOutput_One.close();
+			serialPort_One.close();
+			
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+		
+		delay(100);
+		
+		try {
+			System.out.println("Disconnecting from port: " + portName_Two);
+			serialInput_Two.close();
+			serialOutput_Two.close();
+			serialPort_Two.close();
 			
 		} catch (Exception ex){
 			ex.printStackTrace();
@@ -366,11 +492,19 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		 if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
 		    try {
 		        String inputLine=null;
-		        if (input.ready()) {
-		            inputLine = input.readLine();
+		        if (input_Two.ready()) {
+		            inputLine = input_Two.readLine();
 		            //System.out.println(inputLine);
 		            try {
-		            	timeSeriesPlot.addValue(Float.parseFloat(inputLine));
+		            	float readValue = Float.parseFloat(inputLine);
+		            	if(readValue > 100) {
+		            		timeSeriesPlot.addValue(readValue);
+		            	}
+		            	else
+		            	{
+		            		//System.out.println("temperature: " + readValue);
+		            		temperatureValue = readValue;
+		            	}
 		            }catch(Exception ex)
 		            {
 		            	return;
@@ -389,46 +523,51 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	public void keyPressed() {
 		if (key == 'q') {
 			
-			valveZero();
+			//valveZero();
 			
-			//stop pop and reset valve
-			try {
-				serialOutput.write('s');
-				pumpVelocity = 0;
-			} catch (Exception ex) {
-				return;
-			}
+//			//stop pop and reset valve
+//			try {
+//				serialOutput_One.write('s');
+//				pumpVelocity = 0;
+//			} catch (Exception ex) {
+//				return;
+//			}
+			
+			thread("pumpOff");
 		
+			delay(1000);
 			
 			disconnectPort();
 			leap.end();
 			exit();
+			
+			
 		}else if(key == CODED)
 		{
 			//try not using these
 			if(keyCode == LEFT)
 			{
-				thread("leftPump");
+				//thread("leftPump");
 			}else if(keyCode == RIGHT)
 			{
-				thread("rightPump");
+				//thread("rightPump");
 			}else if(keyCode == UP)
 			{
-				if(pumpVelocity + velocityStep <= 255)
-				{
-					pumpVelocity += velocityStep;
-					
-					thread("fasterVelocity");
-					
-				}
+//				if(pumpVelocity + velocityStep <= 255)
+//				{
+//					pumpVelocity += velocityStep;
+//					
+//					thread("fasterVelocity");
+//					
+//				}
 			}else if(keyCode == DOWN)
 			{
-				if(pumpVelocity - velocityStep >= 0)
-				{
-					pumpVelocity -= velocityStep;
-					
-					thread("slowerVelocity");
-				}
+//				if(pumpVelocity - velocityStep >= 0)
+//				{
+//					pumpVelocity -= velocityStep;
+//					
+//					thread("slowerVelocity");
+//				}
 			}
 		}
 		
@@ -436,116 +575,176 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	}
 	
 	
-	public void leftPump()
+//	public void leftPump()
+//	{
+//		threading = true;
+//		
+//		try {
+//			serialOutput_One.write('l');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//		
+//		delay(1000);
+//		
+//		try {
+//			serialOutput_One.write('s');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//		
+//		threading = false;
+//		
+//	}
+//	
+//	
+//	public void rightPump()
+//	{
+//		threading = true;
+//		
+//		try {
+//			serialOutput_One.write('r');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//		
+//		delay(1000);
+//		
+//		try {
+//			serialOutput_One.write('s');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//		
+//		threading = false;
+//		
+//	}
+//	
+//	public void fasterVelocity()
+//	{
+//		threading = true;
+//		
+//		try {
+//			serialOutput_One.write('i');
+//		}catch(Exception ex){
+//			return;
+//		}
+//		
+//		threading = false;
+//	}
+//	
+//	public void slowerVelocity()
+//	{
+//		threading = true;
+//		
+//		try {
+//			serialOutput_One.write('d');
+//		}catch(Exception ex){
+//			return;
+//		}
+//		
+//		threading = false;
+//	}
+//	
+//	
+//	public void valveUp()
+//	{
+//		threading = true;
+//		//give some delay
+//		delay(100);
+//		
+//		try {
+//			serialOutput_One.write('p');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//
+//		mouseTriggered[2] = 0; 
+//		threading = false;
+//	}
+//	
+//	public void valveDown()
+//	{
+//		threading = true;
+//		//give some delay
+//		delay(100);
+//		
+//		try {
+//			serialOutput_One.write('o');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//		
+//		mouseTriggered[3] = 0; 
+//		threading = false;
+//	}
+	
+	
+	public void pumpOn()
 	{
 		threading = true;
 		
 		try {
-			serialOutput.write('l');
-		} catch (Exception ex) {
-			return;
-		}
-		
-		delay(1000);
-		
-		try {
-			serialOutput.write('s');
+			serialOutput_One.write('r');
 		} catch (Exception ex) {
 			return;
 		}
 		
 		threading = false;
-		
 	}
 	
-	
-	public void rightPump()
+	public void pumpOff()
 	{
 		threading = true;
 		
 		try {
-			serialOutput.write('r');
-		} catch (Exception ex) {
-			return;
-		}
-		
-		delay(1000);
-		
-		try {
-			serialOutput.write('s');
+			serialOutput_One.write('t');
 		} catch (Exception ex) {
 			return;
 		}
 		
 		threading = false;
-		
 	}
 	
-	public void fasterVelocity()
-	{
-		threading = true;
-		
-		try {
-			serialOutput.write('i');
-		}catch(Exception ex){
-			return;
-		}
-		
-		threading = false;
-	}
-	
-	public void slowerVelocity()
-	{
-		threading = true;
-		
-		try {
-			serialOutput.write('d');
-		}catch(Exception ex){
-			return;
-		}
-		
-		threading = false;
-	}
-	
-	
-	public void valveUp()
+	public void moreCold()
 	{
 		threading = true;
 		//give some delay
 		delay(100);
 		
 		try {
-			serialOutput.write('p');
+			serialOutput_One.write('w');
 		} catch (Exception ex) {
 			return;
 		}
-
-		mouseTriggered[2] = 0; 
+		
+		mouseTriggered[0] = 0; 
 		threading = false;
 	}
 	
-	public void valveDown()
+	public void moreHot()
 	{
 		threading = true;
 		//give some delay
 		delay(100);
 		
 		try {
-			serialOutput.write('o');
+			serialOutput_One.write('e');
 		} catch (Exception ex) {
 			return;
 		}
 		
-		mouseTriggered[3] = 0; 
+		mouseTriggered[1] = 0; 
 		threading = false;
 	}
+	
 	
 	public void valve1Open()
 	{
 		threading = true;
 		
 		try {
-			serialOutput.write('v');
+			serialOutput_One.write('v');
 		} catch (Exception ex) {
 			return;
 		}
@@ -558,7 +757,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		threading = true;
 		
 		try {
-			serialOutput.write('b');
+			serialOutput_One.write('b');
 		} catch (Exception ex) {
 			return;
 		}
@@ -571,7 +770,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		threading = true;
 		
 		try {
-			serialOutput.write('f');
+			serialOutput_One.write('f');
 		} catch (Exception ex) {
 			return;
 		}
@@ -584,7 +783,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		threading = true;
 		
 		try {
-			serialOutput.write('g');
+			serialOutput_One.write('g');
 		} catch (Exception ex) {
 			return;
 		}
@@ -592,37 +791,89 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		threading = false;
 	}
 	
-	public void valveZero()
+	public void valve3Open()
 	{
 		threading = true;
-		//give some delay
-		delay(100);
 		
 		try {
-			serialOutput.write('z');
+			serialOutput_One.write('h');
 		} catch (Exception ex) {
 			return;
 		}
-		
-		mouseTriggered[4] = 0; 
+
 		threading = false;
 	}
 	
-	public void valveMax()
+	public void valve3Close()
 	{
 		threading = true;
-		//give some delay
-		delay(100);
-				
+		
 		try {
-			serialOutput.write('m');
+			serialOutput_One.write('j');
 		} catch (Exception ex) {
 			return;
 		}
 		
-		mouseTriggered[5] = 0; 
 		threading = false;
 	}
+	
+//	public void valveZero()
+//	{
+//		threading = true;
+//		//give some delay
+//		delay(100);
+//		
+//		try {
+//			serialOutput_One.write('z');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//		
+//		mouseTriggered[4] = 0; 
+//		threading = false;
+//	}
+//	
+//	public void valveMax()
+//	{
+//		threading = true;
+//		//give some delay
+//		delay(100);
+//				
+//		try {
+//			serialOutput_One.write('m');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//		
+//		mouseTriggered[5] = 0; 
+//		threading = false;
+//	}
+//	
+//	public void heatOff()
+//	{
+//		threading = true;
+//		
+//		try {
+//			serialOutput_One.write('u');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//		
+//		threading = false;
+//	}
+//	
+//	public void heatOn()
+//	{
+//		threading = true;
+//		
+//		try {
+//			serialOutput_One.write('y');
+//		} catch (Exception ex) {
+//			return;
+//		}
+//		
+//		threading = false;
+//	}
 	
 	
 	public void initializeButton()
