@@ -39,12 +39,12 @@ int solenoid1Pin = 4;
 int solenoid2Pin = 5;
 int solenoid3Pin = 6;
 
-int pumpTwo = 3;
-int pumpOne = 2;
+int pumpTwo = 9;
+int pumpOne = 3;
 
 int pumpOneSpeed = 0;  //0 - 255 , cold
 int pumpTwoSpeed = 0;  //hot
-int MaxSpeed = 255;
+int maxSpeed = 255;
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
@@ -60,9 +60,9 @@ void setup() {
 //  // turn on motor
 //  myMotor->run(RELEASE);
 
-
-  pinMode(pumpTwo, OUTPUT);
   pinMode(pumpOne, OUTPUT);
+  pinMode(pumpTwo, OUTPUT);
+  
   
   //servo
 //  myservo.attach(9);
@@ -80,8 +80,8 @@ void setup() {
 
 void loop() {
 
-   analogWrite(pumpOne, pumpOneSpeed);
-   analogWrite(pumpTwo, pumpTwoSpeed);
+  analogWrite(pumpOne, pumpOneSpeed);
+  analogWrite(pumpTwo, pumpTwoSpeed);
 
   //wait for input
   if(Serial.available()>0){
@@ -169,7 +169,6 @@ void loop() {
       case 't':
       pumpOff();
       break;
-      
 
 //      case 'y':
 //      increaseTemperature();
@@ -194,9 +193,9 @@ void loop() {
 void coldWater()
 {
   pumpOneSpeed += 5;
-  if(pumpOneSpeed > MaxSpeed)
+  if(pumpOneSpeed > maxSpeed)
   {
-    pumpOneSpeed = MaxSpeed;
+    pumpOneSpeed = maxSpeed;
   }
   pumpTwoSpeed = maxSpeed - pumpOneSpeed;
 }
@@ -214,7 +213,7 @@ void hotWater()
 void pumpOn()
 {
   pumpOneSpeed = 127;
-  pumpTwoSpeed = maxSpeed - pumpOneSpeed;
+  pumpTwoSpeed = 127;
 }
 
 void pumpOff()

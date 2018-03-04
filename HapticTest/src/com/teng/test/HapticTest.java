@@ -142,24 +142,24 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		
 		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 900, windowWidth, 200, 500);
 		
-//		//open at least one valve
-//		mouseTriggered[2] = 1;
-//		println("action: " + buttonTexts[2]);
-//		//valve 1 open
-//		switchTask(2, 1);
-//		
-//		delay(200);
-//		mouseTriggered[3] = 0;
-//		println("action: " + buttonTextsBackup[3]);
-//		//valve 2 close
-//		switchTask(3, 0);
-//		
-//				
-//		delay(200);
-//		//valve 3 open
-//		mouseTriggered[4] = 1;
-//		println("action: " + buttonTexts[4]);
-//		switchTask(4, 1);
+		//open at least one valve
+		mouseTriggered[3] = 1;
+		println("action: " + buttonTexts[3]);
+		//valve 1 open
+		switchTask(3, 1);
+		
+		delay(200);
+		mouseTriggered[4] = 0;
+		println("action: " + buttonTextsBackup[4]);
+		//valve 2 close
+		switchTask(4, 0);
+		
+				
+		delay(200);
+		//valve 3 open
+		mouseTriggered[5] = 1;
+		println("action: " + buttonTexts[5]);
+		switchTask(5, 1);
 		
 	}
 	
@@ -749,8 +749,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			return;
 		}
 
-		threading = false;
-	}
+		threading = false;	}
 	
 	public void valve1Close()
 	{
@@ -878,7 +877,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	
 	public void initializeButton()
 	{
-		valveMax();
+		//valveMax();
 		
 		//switch on the flow
 		switchTask(0, 1);
