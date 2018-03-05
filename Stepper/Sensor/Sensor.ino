@@ -11,7 +11,6 @@ int temperature = 1;
 double pressure_abs, pressure_relative, altitude_delta, pressure_baseline;
 double base_altitude = 1655.0; 
 
-int pumpTwo = 3;
 
 void setup() {
   Serial.begin(9600);
@@ -20,14 +19,10 @@ void setup() {
   pressureSensor.begin();  
   pressure_baseline = pressureSensor.getPressure(ADC_4096);
 
-  pinMode(pumpTwo, OUTPUT);
 
 }
 
 void loop() {
-
-
-  analogWrite(pumpTwo, pumpTwoSpeed);
   
   //read pressure
    pressure_abs = pressureSensor.getPressure(ADC_4096);

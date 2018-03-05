@@ -558,7 +558,8 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 //					pumpVelocity += velocityStep;
 //					
 //					thread("fasterVelocity");
-//					
+				
+//					 
 //				}
 			}else if(keyCode == DOWN)
 			{
