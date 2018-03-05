@@ -162,6 +162,14 @@ void loop() {
       hotWater();
       break;
 
+      case 'y':
+      coldWaterSlow();
+      break;
+
+      case 'u':
+      hotWaterSlow();
+      break;
+
       case 'r':
       pumpOn();
       break;
@@ -192,22 +200,39 @@ void loop() {
 //set speed
 void coldWater()
 {
-  pumpOneSpeed += 5;
-  if(pumpOneSpeed > maxSpeed)
-  {
-    pumpOneSpeed = maxSpeed;
-  }
-  pumpTwoSpeed = maxSpeed - pumpOneSpeed;
+//  pumpOneSpeed += 5;
+//  if(pumpOneSpeed > maxSpeed)
+//  {
+//    pumpOneSpeed = maxSpeed;
+//  }
+//  pumpTwoSpeed = maxSpeed - pumpOneSpeed;
+
+  pumpOneSpeed = 255;
+  pumpTwoSpeed = 0;
 }
 
 void hotWater()
 {
-  pumpOneSpeed -= 5;
-  if(pumpOneSpeed < 0)
-  {
-    pumpOneSpeed = 0;
-  }
-  pumpTwoSpeed = maxSpeed - pumpOneSpeed;
+//  pumpOneSpeed -= 5;
+//  if(pumpOneSpeed < 0)
+//  {
+//    pumpOneSpeed = 0;
+//  }
+//  pumpTwoSpeed = maxSpeed - pumpOneSpeed;
+  pumpOneSpeed = 0;
+  pumpTwoSpeed = 255;
+}
+
+void coldWaterSlow()
+{
+  pumpOneSpeed = 130;
+  pumpTwoSpeed = 0;
+}
+
+void hotWaterSlow()
+{
+  pumpOneSpeed = 0;
+  pumpTwoSpeed = 130;
 }
 
 void pumpOn()
