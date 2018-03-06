@@ -302,8 +302,8 @@ void hotWaterSlow()
 
 void pumpOn()
 {
-  pumpOneSpeed = 127;
-  pumpTwoSpeed = 127;
+  //pumpOneSpeed = 127;
+  //pumpTwoSpeed = 127;
 }
 
 void pumpOff()

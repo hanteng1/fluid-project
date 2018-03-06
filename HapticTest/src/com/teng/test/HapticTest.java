@@ -280,8 +280,11 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		String targetTemperatureText = "" + targetTemperature + " C";
 		text(targetTemperatureText, 700, 230);
 		
+		if(mouseTriggered[2] == 1)
+		{
+			AdjustTemperature(targetTemperature);
+		}
 		
-		AdjustTemperature(targetTemperature);
 	}
 
 	
@@ -438,9 +441,11 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 					
 			case 6:
 				thread("increaseTen");
+				mouseTriggered[2] = 1;
 				break;
 			case 7:
 				thread("decreaseTen");
+				mouseTriggered[2] = 1;
 				break;
 			}
 		}
@@ -763,6 +768,8 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	public void pumpOff()
 	{
 		threading = true;
+		
+		delay(1000);
 		
 		try {
 			serialOutput_One.write('t');
