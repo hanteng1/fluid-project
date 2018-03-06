@@ -79,11 +79,22 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	//pid controller for temperature
 	MiniPID miniPID; 
 	double pidOutput  = 0;
+	double prevPidOutput = 0;
 	
 	// 0 - stop, 1 - fast hot, 2 - slow hot, 3 - fast cold, 4 - slow cold
 	int pumpState = 0;
-	float pumpOneSpeed = 0;
-	float pumpTwoSpeed = 0;
+	int pumpOneSpeed = 0;
+	int pumpTwoSpeed = 0;
+	
+	//for testing with text input
+	String inputText = "";
+	int maxSpeed = 255;
+	
+	
+	
+	
+	
+	
 	
 	public static HapticTest instance;
 	public static HapticTest getInstance()
@@ -284,6 +295,11 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		{
 			AdjustTemperature(targetTemperature);
 		}
+		
+		
+		//draw teting text
+		textSize(24);
+		text("input text: " + inputText, 700, 300);
 		
 	}
 
@@ -641,6 +657,53 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 //					thread("slowerVelocity");
 //				}
 			}
+		}else if(key == ENTER || key == RETURN)
+		{
+			
+			if(inputText != null && inputText.length() > 0)
+			{
+				
+				float inputValue = Float.parseFloat(inputText);
+				calculateWater(inputValue);
+				
+				if(inputValue > 0)
+				{
+					inputText = Float.toString(Math.abs(inputValue)) + 'z';
+				}else
+				{
+					inputText = Float.toString(Math.abs(inputValue)) + 'x';
+				}
+				
+				
+//				///to test////
+//				float inputValue = Float.parseFloat(inputText);
+//				if(inputValue >= 0 && inputValue <= 1)
+//				{
+//					testWater(inputValue);
+//					inputText = Float.toString(Math.abs(inputValue)) + 'c';
+//					try {
+//						serialOutput_One.write(inputText.getBytes());  //full speed hot
+//					} catch (Exception ex) {
+//						return;
+//					}
+//					mouseTriggered[2] = 1;
+//				}
+//				
+//				////////////
+				
+			}
+			
+			
+			inputText = "";
+		}else if(key == BACKSPACE)
+		{
+			 if (inputText != null && inputText.length() > 0) {
+				 inputText = inputText.substring(0, inputText.length() - 1);
+			  }
+		}
+		else
+		{
+			inputText = inputText + key;
 		}
 		
 
@@ -846,46 +909,55 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	{
 		float change = target - temperatureValue;
 		
-		if(Math.abs(change) >= 1)
+		if(Math.abs(change) != 0)
 		{
 			//the output is desired change in the next step
 			pidOutput = miniPID.getOutput(temperatureValue, target);
 			
-			if(pidOutput >= 0)
+			if(pidOutput == prevPidOutput)
 			{
-				if(pidOutput >= 10.0f)
-				{
-					pidOutput = 9.99f;
-				}
-				String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
-				String valuetosend = valueTwoDecial + "z";
-				float temp = Float.parseFloat(valueTwoDecial);
-				calculateWater(temp);
-				
-				println("ratio " + temp);
-				try {
-					serialOutput_One.write(valuetosend.getBytes());  //full speed hot
-				} catch (Exception ex) {
-					return;
-				}
+				//do nothing
 			}else
 			{
-				if(pidOutput <= -10.0f)
+				if(pidOutput >= 0)
 				{
-					pidOutput = -9.99f;
-				}
-				String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
-				String valuetosend = valueTwoDecial + "x";
-				float temp = Float.parseFloat(valueTwoDecial) * (-1);
-				calculateWater(temp);
-				
-				println("ratio " + temp);
-				try {
-					serialOutput_One.write(valuetosend.getBytes());  //full speed hot
-				} catch (Exception ex) {
-					return;
+					if(pidOutput >= 10.0f)
+					{
+						pidOutput = 9.99f;
+					}
+					String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+					String valuetosend = valueTwoDecial + "z";
+					float temp = Float.parseFloat(valueTwoDecial);
+					calculateWater(temp);
+					
+					println("ratio " + temp);
+					try {
+						serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+					} catch (Exception ex) {
+						return;
+					}
+				}else
+				{
+					if(pidOutput <= -10.0f)
+					{
+						pidOutput = -9.99f;
+					}
+					String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+					String valuetosend = valueTwoDecial + "x";
+					float temp = Float.parseFloat(valueTwoDecial) * (-1);
+					calculateWater(temp);
+					
+					println("ratio " + temp);
+					try {
+						serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+					} catch (Exception ex) {
+						return;
+					}
 				}
 			}
+			
+			prevPidOutput = pidOutput;
+			
 		}
 		
 		//only do something when the change is >1
@@ -971,21 +1043,40 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	{
 		if(ratio > 1)
 		  {
+		    //full speed
 		    pumpTwoSpeed = 250;
-		    pumpOneSpeed = 130;
+		    pumpOneSpeed = 0;
 		  }else if(ratio <= 1 && ratio >= 0)
 		  {
-		    pumpTwoSpeed = 140 + 110 * ratio;
-		    pumpOneSpeed = 140 - 10 * ratio;
+		    //90 - 250 reduce speed and balance the cold and hot
+		    int totalSpeed = (int)(250 - (1.25 - ratio) * (250- 180));  // 230 - 180
+
+		    // 0 - 90/90
+		    float pTwo = (float) ((1.0 + ratio) / 2.0);
+		    float pOne = (float) ((1.0 - ratio) / 2.0);
+		    pumpTwoSpeed = (int)(pTwo * totalSpeed);
+		    pumpOneSpeed = (int)(pOne * totalSpeed);
 		  }else if(ratio < 0 && ratio >= -1)
 		  {
-		    pumpTwoSpeed = 140 + 10 * ratio;
-		    pumpOneSpeed = 140 - 110 * ratio;
+		    //90 - 250 reduce speed and balance the cold and hot
+		    int totalSpeed = (int)(250 - (1.25 + ratio) * (250- 180));  // 230 - 180
+
+		    // 0 - 90/90
+		    float pTwo = (float) ((1.0 + ratio) / 2.0);
+		    float pOne = (float) ((1.0 - ratio) / 2.0);
+		    pumpTwoSpeed = (int)(pTwo * totalSpeed);
+		    pumpOneSpeed = (int)(pOne * totalSpeed);
 		  }else if(ratio < -1)
 		  {
-		    pumpTwoSpeed = 130;
+		    pumpTwoSpeed = 0;
 		    pumpOneSpeed = 250;
 		  }
+	}
+	
+	void testWater(float ratio)
+	{
+		pumpTwoSpeed = (int)(ratio * maxSpeed);
+		pumpOneSpeed = (int)((1 - ratio) * maxSpeed);
 	}
 	
 	

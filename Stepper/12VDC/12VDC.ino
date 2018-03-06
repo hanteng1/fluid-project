@@ -44,7 +44,7 @@ int pumpOne = 3;
 
 int pumpOneSpeed = 0;  //0 - 255 , cold
 int pumpTwoSpeed = 0;  //hot
-int maxSpeed = 255;
+int maxSpeed = 250;
 
 float ratioValue;
 String inString = ""; 
@@ -158,7 +158,7 @@ void loop() {
           shrink *= 10.0;
         }
         ratioValue = inString.toFloat() / shrink;
-        Serial.println(ratioValue);
+        //Serial.println(ratioValue);
         //Serial.println(digitalCount);
         inString = "";
         digitalCount = 0;
@@ -176,7 +176,7 @@ void loop() {
           shrink *= 10.0;
         }
         ratioValue = inString.toFloat() / shrink;
-        Serial.println(ratioValue);
+        //Serial.println(ratioValue);
         //Serial.println(digitalCount);
         inString = "";
         digitalCount = 0;
@@ -186,7 +186,20 @@ void loop() {
         calculateWater(ratioValue * (-1));
         break;
 
+        case 'c':
+        shrink = 1.0f;
+        for(int itr = 0; itr < digitalCount - 1; itr++)
+        {
+          shrink *= 10.0;
+        }
+        ratioValue = inString.toFloat() / shrink;
+        inString = "";
+        digitalCount = 0;
+        analogWrite(led, 255);
 
+        testWater(ratioValue);
+        
+        break;
 
 /////////////////////////valves////////////////////
       case 'v':
@@ -316,21 +329,41 @@ void calculateWater(float ratio)
 {
   if(ratio > 1)
   {
+    //full speed
     pumpTwoSpeed = 250;
-    pumpOneSpeed = 130;
+    pumpOneSpeed = 0;
   }else if(ratio <= 1 && ratio >= 0)
   {
-    pumpTwoSpeed = 140 + 110 * ratio;
-    pumpOneSpeed = 140 - 10 * ratio;
+    //90 - 250 reduce speed and balance the cold and hot
+    int totalSpeed = (int)(250 - (1.25 - ratio) * (250- 180));  // 230 - 180
+
+    // 0 - 90/90
+    float pTwo = (float)((1.0 + ratio) / 2.0);
+    float pOne = (float)((1.0 - ratio) / 2.0);
+    pumpTwoSpeed = (int)(pTwo * totalSpeed);
+    pumpOneSpeed = (int)(pOne * totalSpeed);
   }else if(ratio < 0 && ratio >= -1)
   {
-    pumpTwoSpeed = 140 + 10 * ratio;
-    pumpOneSpeed = 140 - 110 * ratio;
+    //90 - 250 reduce speed and balance the cold and hot
+    int totalSpeed = (int)(250 - (1.25 + ratio) * (250- 180));  // 230 - 180
+
+    // 0 - 90/90
+    float pTwo = (float)((1.0 + ratio) / 2.0);
+    float pOne = (float)((1.0 - ratio) / 2.0);
+    pumpTwoSpeed = (int)(pTwo * totalSpeed);
+    pumpOneSpeed = (int)(pOne * totalSpeed);
   }else if(ratio < -1)
   {
-    pumpTwoSpeed = 130;
+    pumpTwoSpeed = 0;
     pumpOneSpeed = 250;
   }
+}
+
+void testWater(float ratio)
+{
+  //ratio is hot / max
+  pumpTwoSpeed = (int)(ratio * maxSpeed);
+  pumpOneSpeed = (int)((1 - ratio) * maxSpeed);
 }
 
 
