@@ -4,7 +4,7 @@
 //pressure
 MS5803 pressureSensor(ADDRESS_HIGH);
 int temperature = 1;
-#define aref_voltage 5.0;
+#define aref_voltage 3.3;
 
 
 //Create variables to store results
@@ -19,6 +19,8 @@ void setup() {
   pressureSensor.begin();  
   pressure_baseline = pressureSensor.getPressure(ADC_4096);
 
+
+  analogReference(EXTERNAL);
 
 }
 

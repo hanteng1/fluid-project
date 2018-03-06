@@ -335,7 +335,7 @@ void calculateWater(float ratio)
   }else if(ratio <= 1 && ratio >= 0)
   {
     //90 - 250 reduce speed and balance the cold and hot
-    int totalSpeed = (int)(250 - (1.25 - ratio) * (250- 180));  // 230 - 180
+    int totalSpeed = (int)(200 + (ratio - 0.25) * (50 / 0.75));  // 250 - 200
 
     // 0 - 90/90
     float pTwo = (float)((1.0 + ratio) / 2.0);
@@ -345,7 +345,7 @@ void calculateWater(float ratio)
   }else if(ratio < 0 && ratio >= -1)
   {
     //90 - 250 reduce speed and balance the cold and hot
-    int totalSpeed = (int)(250 - (1.25 + ratio) * (250- 180));  // 230 - 180
+    int totalSpeed = (int)(200 + (ratio * (-1) - 0.25) * (50 / 0.75));  // 250 - 200
 
     // 0 - 90/90
     float pTwo = (float)((1.0 + ratio) / 2.0);

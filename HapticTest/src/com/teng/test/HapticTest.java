@@ -72,10 +72,13 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	TimeSeriesPlot timeSeriesPlot;
 	
 	//temperature value
-	int temperatureValue;
-	int targetTemperature;
+	float temperatureValue;
+	float targetTemperature;
 	boolean targetSet = false;
-
+	TimeSeriesPlot temperateSeriesPlot;
+	
+	
+	
 	//pid controller for temperature
 	MiniPID miniPID; 
 	double pidOutput  = 0;
@@ -161,6 +164,10 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		slider = new Slider(this, 600, 700);
 		
 		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 900, windowWidth, 200, 500);
+		timeSeriesPlot.setShampen(10);
+		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500);
+		temperateSeriesPlot.setMinMax(20, 25);
+		temperateSeriesPlot.setShampen(2);
 		
 		//open at least one valve
 		mouseTriggered[3] = 1;
@@ -285,15 +292,17 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 
 		if(targetSet == false)
 		{
-			targetTemperature = (int) temperatureValue;
+			targetTemperature = Float.parseFloat(String.format("%.1f", Math.abs( temperateSeriesPlot.getLastValue())));  //(int) temperatureValue;
 		}
 		
 		String targetTemperatureText = "" + targetTemperature + " C";
 		text(targetTemperatureText, 700, 230);
 		
+		temperateSeriesPlot.draw();
+		
 		if(mouseTriggered[2] == 1)
 		{
-			AdjustTemperature(targetTemperature);
+			//AdjustTemperature(targetTemperature);
 		}
 		
 		
@@ -585,10 +594,9 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		            	}
 		            	else
 		            	{
-		            		//System.out.println("temperature: " + readValue);
-		            		
-		            		
-		            			temperatureValue = (int)readValue;
+		            		//System.out.println("temperature: " + readValue)
+		            		temperatureValue = readValue;
+		            		temperateSeriesPlot.addValue(temperatureValue);
 		            		
 		            		
 		            	}
@@ -1049,7 +1057,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		  }else if(ratio <= 1 && ratio >= 0)
 		  {
 		    //90 - 250 reduce speed and balance the cold and hot
-		    int totalSpeed = (int)(250 - (1.25 - ratio) * (250- 180));  // 230 - 180
+		    int totalSpeed = (int)(200 + (ratio - 0.25) * (50 / 0.75));  // 250 - 200 : 1 - 0.25
 
 		    // 0 - 90/90
 		    float pTwo = (float) ((1.0 + ratio) / 2.0);
@@ -1059,7 +1067,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		  }else if(ratio < 0 && ratio >= -1)
 		  {
 		    //90 - 250 reduce speed and balance the cold and hot
-		    int totalSpeed = (int)(250 - (1.25 + ratio) * (250- 180));  // 230 - 180
+		    int totalSpeed = (int)(200 + (ratio * (-1) - 0.25) * (50 / 0.75));  // 230 - 180
 
 		    // 0 - 90/90
 		    float pTwo = (float) ((1.0 + ratio) / 2.0);
