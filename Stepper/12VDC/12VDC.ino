@@ -46,6 +46,12 @@ int pumpOneSpeed = 0;  //0 - 255 , cold
 int pumpTwoSpeed = 0;  //hot
 int maxSpeed = 255;
 
+float ratioValue;
+String inString = ""; 
+int digitalCount = 0;
+float shrink = 1.0f;
+int led = 10;
+
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
   //Serial.println("Adafruit Motorshield v2 - DC Motor test!");
@@ -75,6 +81,7 @@ void setup() {
   pinMode(solenoid2Pin, OUTPUT);
   pinMode(solenoid3Pin, OUTPUT);
 
+  pinMode(led, OUTPUT);
   
 }
 
@@ -83,10 +90,22 @@ void loop() {
   analogWrite(pumpOne, pumpOneSpeed);
   analogWrite(pumpTwo, pumpTwoSpeed);
 
+  analogWrite(led, 0);
   //wait for input
   if(Serial.available()>0){
-    state = Serial.read();          
-    switch(state){                   // different state to switch  
+    
+    state = Serial.read(); 
+
+    if(isDigit(state)){
+      //Serial.println("it's a digit");
+      inString += (char)state;
+      digitalCount++;
+    }
+
+    if(isAlpha(state))
+    {
+      //Serial.println("it's a letter");
+      switch(state){                   // different state to switch  
       
       //////////////pump////////////
 //      case 's':  //stop   
@@ -127,6 +146,47 @@ void loop() {
 //      case 'm':  //pos = 180
 //      moveMax();
 //      break;
+
+
+
+///////////////////float///////////////////
+        case 'z':
+
+        shrink = 1.0f;
+        for(int itr = 0; itr < digitalCount - 1; itr++)
+        {
+          shrink *= 10.0;
+        }
+        ratioValue = inString.toFloat() / shrink;
+        Serial.println(ratioValue);
+        //Serial.println(digitalCount);
+        inString = "";
+        digitalCount = 0;
+        analogWrite(led, 255);
+
+        //to control the pump
+        calculateWater(ratioValue);
+        break;
+
+
+        case 'x':
+        shrink = 1.0f;
+        for(int itr = 0; itr < digitalCount - 1; itr++)
+        {
+          shrink *= 10.0;
+        }
+        ratioValue = inString.toFloat() / shrink;
+        Serial.println(ratioValue);
+        //Serial.println(digitalCount);
+        inString = "";
+        digitalCount = 0;
+        analogWrite(led, 255);
+
+        //to control the pump
+        calculateWater(ratioValue * (-1));
+        break;
+
+
 
 /////////////////////////valves////////////////////
       case 'v':
@@ -189,8 +249,13 @@ void loop() {
 //      case 't':
 //      noTemperature();
 //      break;
+
       
+      
+      }
     }
+    
+    
   }
 
   delay(10); 
@@ -247,6 +312,26 @@ void pumpOff()
   pumpTwoSpeed = 0;
 }
 
+void calculateWater(float ratio)
+{
+  if(ratio > 1)
+  {
+    pumpTwoSpeed = 250;
+    pumpOneSpeed = 130;
+  }else if(ratio <= 1 && ratio >= 0)
+  {
+    pumpTwoSpeed = 140 + 110 * ratio;
+    pumpOneSpeed = 140 - 10 * ratio;
+  }else if(ratio < 0 && ratio >= -1)
+  {
+    pumpTwoSpeed = 140 + 10 * ratio;
+    pumpOneSpeed = 140 - 110 * ratio;
+  }else if(ratio < -1)
+  {
+    pumpTwoSpeed = 130;
+    pumpOneSpeed = 250;
+  }
+}
 
 
 //void stopPumping()

@@ -72,16 +72,18 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	TimeSeriesPlot timeSeriesPlot;
 	
 	//temperature value
-	float temperatureValue;
+	int temperatureValue;
 	int targetTemperature;
 	boolean targetSet = false;
 
 	//pid controller for temperature
 	MiniPID miniPID; 
-	
+	double pidOutput  = 0;
 	
 	// 0 - stop, 1 - fast hot, 2 - slow hot, 3 - fast cold, 4 - slow cold
 	int pumpState = 0;
+	float pumpOneSpeed = 0;
+	float pumpTwoSpeed = 0;
 	
 	public static HapticTest instance;
 	public static HapticTest getInstance()
@@ -109,8 +111,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		fill(120, 50, 240);
 		rectColor = color(211, 211, 211);
 		rectHighlight = color(105, 105, 105);
-		
-		
+			
 		//5 buttons
 		numButtons = 8;
 		rectXs = new int[] {100, 100, 100, 100, 100, 100,  900, 900};
@@ -169,6 +170,18 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		println("action: " + buttonTexts[5]);
 		switchTask(5, 1);
 		
+		
+		//initialize pid controller
+		//output should be a ratio: portion of hot water flow speed in the total speed
+		//if total speed is 255
+		//output: 1 - hot 255, cold 0 ; 0.5 - hot 127 cold 127; 0 - hot 0 cold 255
+		miniPID = new MiniPID(0.25, 0, 0.3);  // no integral part
+		miniPID.setOutputLimits(10);
+		//miniPID.setMaxIOutput(2);
+		//miniPID.setOutputRampRate(3);
+		//miniPID.setOutputFilter(.3);
+		miniPID.setSetpointRange(40);
+		
 	}
 	
 	public void draw()
@@ -193,13 +206,35 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			textSize(32);
 			fill(0, 102, 153);
 			
-			if(mouseTriggered[itrr] == 1)
+			if(itrr == 0)
 			{
-				text(buttonTexts[itrr], rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
-			}else
+				if(mouseTriggered[itrr] == 1)
+				{
+					text(buttonTexts[itrr] + " " + pumpOneSpeed, rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+				}else
+				{
+					text(buttonTextsBackup[itrr] + " " + pumpOneSpeed, rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+				}
+			}else if(itrr == 1)
 			{
-				text(buttonTextsBackup[itrr], rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+				if(mouseTriggered[itrr] == 1)
+				{
+					text(buttonTexts[itrr] + " " + pumpTwoSpeed, rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+				}else
+				{
+					text(buttonTextsBackup[itrr] + " " + pumpTwoSpeed, rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+				}
+			}else{
+				if(mouseTriggered[itrr] == 1)
+				{
+					text(buttonTexts[itrr], rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+				}else
+				{
+					text(buttonTextsBackup[itrr], rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
+				}
 			}
+			
+			
 			
 		}
 		
@@ -530,7 +565,11 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		            	else
 		            	{
 		            		//System.out.println("temperature: " + readValue);
-		            		temperatureValue = readValue;
+		            		
+		            		
+		            			temperatureValue = (int)readValue;
+		            		
+		            		
 		            	}
 		            }catch(Exception ex)
 		            {
@@ -800,84 +839,147 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	{
 		float change = target - temperatureValue;
 		
-		//only do something when the change is >1
-		
-		if(change >= 0.5)
+		if(Math.abs(change) >= 1)
 		{
-			if(change > 1)
-			{
-				if(pumpState != 1)
-				{
-					try {
-						serialOutput_One.write('e');  //full speed hot
-					} catch (Exception ex) {
-						return;
-					}
-					
-					pumpState = 1; //fast hot
-					mouseTriggered[2] = 1;
-				}
-			}else
-			{
-				if(pumpState != 2)
-				{
-					try {
-						serialOutput_One.write('u');  //full speed hot
-					} catch (Exception ex) {
-						return;
-					}
-					
-					pumpState = 2; //slow hot
-					mouseTriggered[2] = 1;
-				}
-			}
+			//the output is desired change in the next step
+			pidOutput = miniPID.getOutput(temperatureValue, target);
 			
-		}else if(change <= -0.5)
-		{
-			if(change < -1)
+			if(pidOutput >= 0)
 			{
-				if(pumpState != 3)
+				if(pidOutput >= 10.0f)
 				{
-					try {
-						serialOutput_One.write('w');  //full speed hot
-					} catch (Exception ex) {
-						return;
-					}
-					
-					pumpState = 3; //fast hot
-					mouseTriggered[2] = 1;
+					pidOutput = 9.99f;
 				}
-			}else
-			{
-				if(pumpState != 4)
-				{
-					try {
-						serialOutput_One.write('y');  //full speed hot
-					} catch (Exception ex) {
-						return;
-					}
-					
-					pumpState = 4; //slow hot
-					mouseTriggered[2] = 1;
-				}
-			}
-		}else  //-0.5 - 0.5
-		{
-			//stop pump
-			if(pumpState != 0)
-			{
+				String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+				String valuetosend = valueTwoDecial + "z";
+				float temp = Float.parseFloat(valueTwoDecial);
+				calculateWater(temp);
+				
+				println("ratio " + temp);
 				try {
-					serialOutput_One.write('t');  //full speed hot
+					serialOutput_One.write(valuetosend.getBytes());  //full speed hot
 				} catch (Exception ex) {
 					return;
 				}
+			}else
+			{
+				if(pidOutput <= -10.0f)
+				{
+					pidOutput = -9.99f;
+				}
+				String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+				String valuetosend = valueTwoDecial + "x";
+				float temp = Float.parseFloat(valueTwoDecial) * (-1);
+				calculateWater(temp);
 				
-				pumpState = 0; //slow hot
-				mouseTriggered[2] = 0;
+				println("ratio " + temp);
+				try {
+					serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+				} catch (Exception ex) {
+					return;
+				}
 			}
 		}
+		
+		//only do something when the change is >1
+		
+//		if(change >= 0.5)
+//		{
+//			if(change > 1)
+//			{
+//				if(pumpState != 1)
+//				{
+//					try {
+//						serialOutput_One.write('e');  //full speed hot
+//					} catch (Exception ex) {
+//						return;
+//					}
+//					
+//					pumpState = 1; //fast hot
+//					mouseTriggered[2] = 1;
+//				}
+//			}else
+//			{
+//				if(pumpState != 2)
+//				{
+//					try {
+//						serialOutput_One.write('u');  //full speed hot
+//					} catch (Exception ex) {
+//						return;
+//					}
+//					
+//					pumpState = 2; //slow hot
+//					mouseTriggered[2] = 1;
+//				}
+//			}
+//			
+//		}else if(change <= -0.5)
+//		{
+//			if(change < -1)
+//			{
+//				if(pumpState != 3)
+//				{
+//					try {
+//						serialOutput_One.write('w');  //full speed hot
+//					} catch (Exception ex) {
+//						return;
+//					}
+//					
+//					pumpState = 3; //fast hot
+//					mouseTriggered[2] = 1;
+//				}
+//			}else
+//			{
+//				if(pumpState != 4)
+//				{
+//					try {
+//						serialOutput_One.write('y');  //full speed hot
+//					} catch (Exception ex) {
+//						return;
+//					}
+//					
+//					pumpState = 4; //slow hot
+//					mouseTriggered[2] = 1;
+//				}
+//			}
+//		}else  //-0.5 - 0.5
+//		{
+//			//stop pump
+//			if(pumpState != 0)
+//			{
+//				try {
+//					serialOutput_One.write('t');  //full speed hot
+//				} catch (Exception ex) {
+//					return;
+//				}
+//				
+//				pumpState = 0; //slow hot
+//				mouseTriggered[2] = 0;
+//			}
+//		}
 	}
 	
+	
+	void calculateWater(float ratio)
+	{
+		if(ratio > 1)
+		  {
+		    pumpTwoSpeed = 250;
+		    pumpOneSpeed = 130;
+		  }else if(ratio <= 1 && ratio >= 0)
+		  {
+		    pumpTwoSpeed = 140 + 110 * ratio;
+		    pumpOneSpeed = 140 - 10 * ratio;
+		  }else if(ratio < 0 && ratio >= -1)
+		  {
+		    pumpTwoSpeed = 140 + 10 * ratio;
+		    pumpOneSpeed = 140 - 110 * ratio;
+		  }else if(ratio < -1)
+		  {
+		    pumpTwoSpeed = 130;
+		    pumpOneSpeed = 250;
+		  }
+	}
 	
 	
 	public void valve1Open()
