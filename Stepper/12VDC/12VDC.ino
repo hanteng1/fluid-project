@@ -45,6 +45,10 @@ int pumpOne = 3;
 int pumpOneSpeed = 0;  //0 - 255 , cold
 int pumpTwoSpeed = 0;  //hot
 int maxSpeed = 250;
+float changePoint = 0.7;
+
+int relayPinOne = 12;
+int relayPinTwo = 13;
 
 float ratioValue;
 String inString = ""; 
@@ -81,6 +85,9 @@ void setup() {
   pinMode(solenoid2Pin, OUTPUT);
   pinMode(solenoid3Pin, OUTPUT);
 
+  pinMode(relayPinOne, OUTPUT);
+  pinMode(relayPinTwo, OUTPUT);
+  
   pinMode(led, OUTPUT);
   
 }
@@ -251,6 +258,14 @@ void loop() {
       pumpOff();
       break;
 
+      case 'i':
+      clockWise();
+      break;
+
+      case 'o':
+      antiClockWise();
+      break;
+
 //      case 'y':
 //      increaseTemperature();
 //      break;
@@ -327,32 +342,32 @@ void pumpOff()
 
 void calculateWater(float ratio)
 {
-  if(ratio > 1)
+  if(ratio > changePoint)
   {
     //full speed
     pumpTwoSpeed = 250;
     pumpOneSpeed = 0;
-  }else if(ratio <= 1 && ratio >= 0)
+  }else if(ratio <= changePoint && ratio >= 0)
   {
     //90 - 250 reduce speed and balance the cold and hot
-    int totalSpeed = (int)(200 + (ratio - 0.25) * (50 / 0.75));  // 250 - 200
+    int totalSpeed = 100;// (int)(250 - (1.5 - ratio) * 50);  // 250 - 200
 
     // 0 - 90/90
-    float pTwo = (float)((1.0 + ratio) / 2.0);
-    float pOne = (float)((1.0 - ratio) / 2.0);
-    pumpTwoSpeed = (int)(pTwo * totalSpeed);
-    pumpOneSpeed = (int)(pOne * totalSpeed);
-  }else if(ratio < 0 && ratio >= -1)
+    float pTwo = (float)((changePoint + ratio) / (2 * changePoint));  // 100 - 50
+    float pOne = (float)((changePoint - ratio) / (2 * changePoint));  //0 - 50
+    pumpTwoSpeed = (int)(90 + pTwo * totalSpeed);
+    pumpOneSpeed = (int)(90 + pOne * totalSpeed);
+  }else if(ratio < 0 && ratio >= (changePoint * (-1)))
   {
     //90 - 250 reduce speed and balance the cold and hot
-    int totalSpeed = (int)(200 + (ratio * (-1) - 0.25) * (50 / 0.75));  // 250 - 200
+    int totalSpeed = 100; // (int)(250 - (1.5 + ratio) * 50);  // 250 - 200
 
     // 0 - 90/90
-    float pTwo = (float)((1.0 + ratio) / 2.0);
-    float pOne = (float)((1.0 - ratio) / 2.0);
-    pumpTwoSpeed = (int)(pTwo * totalSpeed);
-    pumpOneSpeed = (int)(pOne * totalSpeed);
-  }else if(ratio < -1)
+    float pTwo = (float)((changePoint + ratio) / (2 * changePoint));
+    float pOne = (float)((changePoint - ratio) / (2 * changePoint));
+    pumpTwoSpeed = (int)(90 + pTwo * totalSpeed);
+    pumpOneSpeed = (int)(90 + pOne * totalSpeed);
+  }else if(ratio < (changePoint * (-1)))
   {
     pumpTwoSpeed = 0;
     pumpOneSpeed = 250;
@@ -366,6 +381,17 @@ void testWater(float ratio)
   pumpOneSpeed = (int)((1 - ratio) * maxSpeed);
 }
 
+void clockWise()
+{
+  digitalWrite(relayPinTwo, LOW);  
+  digitalWrite(relayPinOne, HIGH);
+}
+
+void antiClockWise()
+{
+  digitalWrite(relayPinOne, LOW);  
+  digitalWrite(relayPinTwo, HIGH);
+}
 
 //void stopPumping()
 //{

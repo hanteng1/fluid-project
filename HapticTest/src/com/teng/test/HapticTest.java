@@ -73,6 +73,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	
 	//temperature value
 	float temperatureValue;
+	float filteredTemperatureValue;
 	float targetTemperature;
 	boolean targetSet = false;
 	TimeSeriesPlot temperateSeriesPlot;
@@ -91,11 +92,8 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	
 	//for testing with text input
 	String inputText = "";
-	int maxSpeed = 255;
-	
-	
-	
-	
+	int maxSpeed = 250;
+	float changePoint = 0.7f;
 	
 	
 	
@@ -127,19 +125,20 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		rectHighlight = color(105, 105, 105);
 			
 		//5 buttons
-		numButtons = 8;
-		rectXs = new int[] {100, 100, 100, 100, 100, 100,  900, 900};
-		rectWidth = new int[] {200, 200, 500, 500, 500, 500, 100, 100};
+		numButtons = 9;
+		rectXs = new int[] {100, 100, 100, 100, 100, 100,  900, 900, 350};
+		rectWidth = new int[] {200, 200, 500, 500, 500, 500, 100, 100, 100};
 		rectHeight = 50;
 		rectYs = new int[] {(int)(rectHeight * 3.0), (int)(rectHeight * 4.5), (int)(rectHeight * 1.5), 
 				(int)(rectHeight * 6.0), (int)(rectHeight * 7.5), (int)(rectHeight * 9.0),
-				(int)(rectHeight * 3.0), (int)(rectHeight * 4.5)};
+				(int)(rectHeight * 3.0), (int)(rectHeight * 4.5),
+				(int)(rectHeight * 3.0)};
 	
 		
-		buttonTexts = new String[] {"Cold", "Hot", "On", "Valve 1 : Open", "Valve 2 : Open", "Valve 3: Open", "+10", "-10"};
-		buttonTextsBackup = new String[] {"Cold", "Hot", "Off", "Valve 1 : Close", "Valve 2 : Close", "Valve 3: Close", "+10", "-10"};
+		buttonTexts = new String[] {"Cold", "Hot", "On", "Valve 1 : Open", "Valve 2 : Open", "Valve 3: Open", "+10", "-10", ">>>"};
+		buttonTextsBackup = new String[] {"Cold", "Hot", "Off", "Valve 1 : Close", "Valve 2 : Close", "Valve 3: Close", "+10", "-10", "<<<"};
 		
-		mouseTriggered = new int[] {0, 0, 0, 0, 0, 0, 0, 0};  //0 - not active, 1 - active
+		mouseTriggered = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0};  //0 - not active, 1 - active
 		
 		//control
 		configurePort_One("COM10");
@@ -164,7 +163,9 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		slider = new Slider(this, 600, 700);
 		
 		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 900, windowWidth, 200, 500);
-		timeSeriesPlot.setShampen(10);
+		timeSeriesPlot.setShampen(200);
+		
+		
 		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500);
 		temperateSeriesPlot.setMinMax(20, 25);
 		temperateSeriesPlot.setShampen(2);
@@ -199,6 +200,11 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		//miniPID.setOutputRampRate(3);
 		//miniPID.setOutputFilter(.3);
 		miniPID.setSetpointRange(40);
+		
+		
+		delay(200);
+		//set to clockwise by default
+		thread("setClockWise");
 		
 	}
 	
@@ -287,18 +293,18 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		//draw temperature
 		//show the velocity
 		textSize(64);
-		String temperatureText = "" + temperatureValue + " C";
-		text(temperatureText, 350, 230);
+		String temperatureText = "" + filteredTemperatureValue + " C";  //now the resolution is 0.2
+		text(temperatureText, 350, 260);
 
 		if(targetSet == false)
 		{
-			targetTemperature = Float.parseFloat(String.format("%.1f", Math.abs( temperateSeriesPlot.getLastValue())));  //(int) temperatureValue;
+			targetTemperature =  (int) filteredTemperatureValue;
 		}
 		
 		String targetTemperatureText = "" + targetTemperature + " C";
-		text(targetTemperatureText, 700, 230);
+		text(targetTemperatureText, 700, 260);
 		
-		temperateSeriesPlot.draw();
+		//temperateSeriesPlot.draw();
 		
 		if(mouseTriggered[2] == 1)
 		{
@@ -416,6 +422,9 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 				break;
 			case 7:
 				break;
+			case 8:
+				thread("setAntiClockWise");
+				break;
 
 			}
 
@@ -471,6 +480,10 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			case 7:
 				thread("decreaseTen");
 				mouseTriggered[2] = 1;
+				break;
+				
+			case 8:
+				thread("setClockWise");
 				break;
 			}
 		}
@@ -597,7 +610,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		            		//System.out.println("temperature: " + readValue)
 		            		temperatureValue = readValue;
 		            		temperateSeriesPlot.addValue(temperatureValue);
-		            		
+		            		filteredTemperatureValue = Float.parseFloat(String.format("%.1f", Math.abs( temperateSeriesPlot.getLastFilteredValue())));
 		            		
 		            	}
 		            }catch(Exception ex)
@@ -672,15 +685,24 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			{
 				
 				float inputValue = Float.parseFloat(inputText);
-				calculateWater(inputValue);
 				
-				if(inputValue > 0)
+				if(inputValue > 0 && inputValue < 60)
 				{
-					inputText = Float.toString(Math.abs(inputValue)) + 'z';
-				}else
-				{
-					inputText = Float.toString(Math.abs(inputValue)) + 'x';
+					targetSet = true;
+					targetTemperature = inputValue;
+					mouseTriggered[2] = 1;
 				}
+				
+				
+				//calculateWater(inputValue);
+				
+//				if(inputValue > 0)
+//				{
+//					inputText = Float.toString(Math.abs(inputValue)) + 'z';
+//				}else
+//				{
+//					inputText = Float.toString(Math.abs(inputValue)) + 'x';
+//				}
 				
 				
 //				///to test////
@@ -841,6 +863,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		threading = true;
 		
 		delay(1000);
+		targetSet = false;
 		
 		try {
 			serialOutput_One.write('t');
@@ -911,16 +934,45 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	}
 	
 	
+	public void setClockWise()
+	{
+		threading = true;
+		
+		//some delay to protect?
+		
+		try {
+			serialOutput_One.write('i');
+		} catch (Exception ex) {
+			return;
+		}
+		
+		mouseTriggered[8] = 1; 
+		threading = false;
+	}
+	
+	public void setAntiClockWise()
+	{
+		threading = true;
+		try {
+			serialOutput_One.write('o');
+		} catch (Exception ex) {
+			return;
+		}
+		
+		mouseTriggered[8] = 0; 
+		threading = false;
+	}
+	
 	//for pump to work
 	//run every frame
-	public void AdjustTemperature(int target)
+	public void AdjustTemperature(float target)
 	{
-		float change = target - temperatureValue;
+		float change = target - filteredTemperatureValue;
 		
-		if(Math.abs(change) != 0)
+		if(Math.abs(change) > 0.2)
 		{
 			//the output is desired change in the next step
-			pidOutput = miniPID.getOutput(temperatureValue, target);
+			pidOutput = miniPID.getOutput(filteredTemperatureValue, target);
 			
 			if(pidOutput == prevPidOutput)
 			{
@@ -1049,36 +1101,36 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	
 	void calculateWater(float ratio)
 	{
-		if(ratio > 1)
-		  {
-		    //full speed
-		    pumpTwoSpeed = 250;
-		    pumpOneSpeed = 0;
-		  }else if(ratio <= 1 && ratio >= 0)
-		  {
-		    //90 - 250 reduce speed and balance the cold and hot
-		    int totalSpeed = (int)(200 + (ratio - 0.25) * (50 / 0.75));  // 250 - 200 : 1 - 0.25
+	  if(ratio > changePoint)
+	  {
+	    //full speed
+	    pumpTwoSpeed = 250;
+	    pumpOneSpeed = 0;
+	  }else if(ratio <= changePoint && ratio >= 0)
+	  {
+	    //90 - 250 reduce speed and balance the cold and hot
+	    int totalSpeed = 100;// (int)(250 - (1.5 - ratio) * 50);  // 250 - 200
 
-		    // 0 - 90/90
-		    float pTwo = (float) ((1.0 + ratio) / 2.0);
-		    float pOne = (float) ((1.0 - ratio) / 2.0);
-		    pumpTwoSpeed = (int)(pTwo * totalSpeed);
-		    pumpOneSpeed = (int)(pOne * totalSpeed);
-		  }else if(ratio < 0 && ratio >= -1)
-		  {
-		    //90 - 250 reduce speed and balance the cold and hot
-		    int totalSpeed = (int)(200 + (ratio * (-1) - 0.25) * (50 / 0.75));  // 230 - 180
+	    // 0 - 90/90
+	    float pTwo = (float)((changePoint + ratio) / (2 * changePoint));  // 100 - 50
+	    float pOne = (float)((changePoint - ratio) / (2 * changePoint));  //0 - 50
+	    pumpTwoSpeed = (int)(90 + pTwo * totalSpeed);
+	    pumpOneSpeed = (int)(90 + pOne * totalSpeed);
+	  }else if(ratio < 0 && ratio >= (changePoint * (-1)))
+	  {
+	    //90 - 250 reduce speed and balance the cold and hot
+	    int totalSpeed = 100; // (int)(250 - (1.5 + ratio) * 50);  // 250 - 200
 
-		    // 0 - 90/90
-		    float pTwo = (float) ((1.0 + ratio) / 2.0);
-		    float pOne = (float) ((1.0 - ratio) / 2.0);
-		    pumpTwoSpeed = (int)(pTwo * totalSpeed);
-		    pumpOneSpeed = (int)(pOne * totalSpeed);
-		  }else if(ratio < -1)
-		  {
-		    pumpTwoSpeed = 0;
-		    pumpOneSpeed = 250;
-		  }
+	    // 0 - 90/90
+	    float pTwo = (float)((changePoint + ratio) / (2 * changePoint));
+	    float pOne = (float)((changePoint - ratio) / (2 * changePoint));
+	    pumpTwoSpeed = (int)(90 + pTwo * totalSpeed);
+	    pumpOneSpeed = (int)(90 + pOne * totalSpeed);
+	  }else if(ratio < (changePoint * (-1)))
+	  {
+	    pumpTwoSpeed = 0;
+	    pumpOneSpeed = 250;
+	  }
 	}
 	
 	void testWater(float ratio)
