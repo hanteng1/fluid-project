@@ -1,4 +1,4 @@
-int solenoidPin = 4;   
+int solenoidPin = 10;   
 
 
 void setup() {
@@ -8,8 +8,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
- // digitalWrite(solenoidPin, HIGH);    //Switch Solenoid ON
-  //delay(1000);                      //Wait 1 Second
-  //digitalWrite(solenoidPin, LOW);     //Switch Solenoid OFF
-  //delay(1000);                      //Wait 1 Second
+  digitalWrite(solenoidPin, HIGH);    //Switch Solenoid ON
+  delay(100);                      //Wait 1 Second
+ digitalWrite(solenoidPin, LOW);     //Switch Solenoid OFF
+  delay(100);                      //Wait 1 Second
 }

@@ -96,6 +96,9 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	float changePoint = 0.7f;
 	
 	
+	//demo squeeze
+	Squeeze squeeze;
+	
 	
 	public static HapticTest instance;
 	public static HapticTest getInstance()
@@ -205,6 +208,11 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		delay(200);
 		//set to clockwise by default
 		thread("setClockWise");
+		
+		
+		
+		//demo squeeze
+		squeeze = new Squeeze(this);
 		
 	}
 	
@@ -650,7 +658,19 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			exit();
 			
 			
-		}else if(key == CODED)
+		}else if(key == 's')
+		{
+			squeeze.sendNotification();
+			
+		}else if(key =='d')
+		{
+			squeeze.startVibration();
+		}else if(key == 'f')
+		{
+			squeeze.stopVirbation();
+		}
+		
+		else if(key == CODED)
 		{
 			//try not using these
 			if(keyCode == LEFT)
@@ -854,7 +874,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		} catch (Exception ex) {
 			return;
 		}
-		
+						
 		threading = false;
 	}
 	
@@ -864,12 +884,15 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		
 		delay(1000);
 		targetSet = false;
-		
+				
 		try {
 			serialOutput_One.write('t');
 		} catch (Exception ex) {
 			return;
 		}
+		
+		pumpOneSpeed = 0;
+		pumpTwoSpeed = 0;
 		
 		threading = false;
 	}
@@ -885,6 +908,8 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		} catch (Exception ex) {
 			return;
 		}
+		
+		pumpOneSpeed = 255;
 		
 		mouseTriggered[0] = 0; 
 		mouseTriggered[2] = 1;
@@ -902,6 +927,8 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		} catch (Exception ex) {
 			return;
 		}
+		
+		pumpTwoSpeed = 255;
 		
 		mouseTriggered[1] = 0; 
 		mouseTriggered[2] = 1;
