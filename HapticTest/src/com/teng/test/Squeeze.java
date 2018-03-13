@@ -31,6 +31,17 @@ public class Squeeze {
 	
 	public void startVibration()
 	{
+		vibration = new Vibration(50);
+		vibration.start();
+		
+	}
+	
+	
+	public void startVibration(float frequency)
+	{
+		int freq = (int)frequency;
+		int duration = (int)(500 / freq);
+		vibration = new Vibration(duration);
 		vibration.start();
 		
 	}

@@ -78,6 +78,8 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	boolean targetSet = false;
 	TimeSeriesPlot temperateSeriesPlot;
 	
+	//vibration
+	float vibFrequency = 0;
 	
 	
 	//pid controller for temperature
@@ -128,20 +130,38 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		rectHighlight = color(105, 105, 105);
 			
 		//5 buttons
-		numButtons = 9;
-		rectXs = new int[] {100, 100, 100, 100, 100, 100,  900, 900, 350};
-		rectWidth = new int[] {200, 200, 500, 500, 500, 500, 100, 100, 100};
+		numButtons = 16;
+		rectXs = new int[] {100, 100, 100, 600, 600, 600, 900, 900, 350,
+			100, 400, 100, 400, 100, 400, 800	
+		};
+		rectWidth = new int[] {200, 200, 300, 300, 300, 300, 100, 100, 100,
+			200, 200, 200, 200, 200, 200, 200	
+		};
 		rectHeight = 50;
-		rectYs = new int[] {(int)(rectHeight * 3.0), (int)(rectHeight * 4.5), (int)(rectHeight * 1.5), 
-				(int)(rectHeight * 6.0), (int)(rectHeight * 7.5), (int)(rectHeight * 9.0),
-				(int)(rectHeight * 3.0), (int)(rectHeight * 4.5),
-				(int)(rectHeight * 3.0)};
+		rectYs = new int[] {(int)(rectHeight * 3.8), (int)(rectHeight * 5.2), (int)(rectHeight * 1.0), //cold hot on
+				(int)(rectHeight * 0.2), (int)(rectHeight * 1.3), (int)(rectHeight * 2.4), //valves
+				(int)(rectHeight * 3.8), (int)(rectHeight * 5.2),  // + 10 -10
+				(int)(rectHeight * 3.8),  /// <<< >>>
+				(int)(rectHeight * 8.8), (int)(rectHeight * 8.8), 
+				(int)(rectHeight * 10.3), (int)(rectHeight * 10.3),
+				(int)(rectHeight * 13.8), (int)(rectHeight * 13.8),
+				(int)(rectHeight * 8.8)
+		};
 	
 		
-		buttonTexts = new String[] {"Cold", "Hot", "On", "Valve 1 : Open", "Valve 2 : Open", "Valve 3: Open", "+10", "-10", ">>>"};
-		buttonTextsBackup = new String[] {"Cold", "Hot", "Off", "Valve 1 : Close", "Valve 2 : Close", "Valve 3: Close", "+10", "-10", "<<<"};
+		//render when 1
+		buttonTexts = new String[] {"Cold", "Hot", "On", "Valve 1 : Open", "Valve 2 : Open", "Valve 3: Open", "+10", "-10", ">>>", 
+				"Amplitude up", "Amplitude down", "Frequency up", "Frequency down", "Pressure up", "Pressure down", "Vib On"
 		
-		mouseTriggered = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0};  //0 - not active, 1 - active
+		};
+		
+		//render when 0
+		buttonTextsBackup = new String[] {"Cold", "Hot", "Off", "Valve 1 : Close", "Valve 2 : Close", "Valve 3: Close", "+10", "-10", "<<<",
+				"Amplitude up", "Amplitude down", "Frequency up", "Frequency down", "Pressure up", "Pressure down", "Vib Off"
+				
+		};
+		
+		mouseTriggered = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  //0 - not active, 1 - active
 		
 		//control
 		configurePort_One("COM10");
@@ -154,19 +174,19 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		connectPort_Two();
 		
 		delay(1000);
-		
-		
+//		
+//		
 		leap = new Leap();
-		
-		
-		delay(1000);
-		button = new Button(this, 400, 700);
-		//thread("initializeButton");
-		
-		slider = new Slider(this, 600, 700);
-		
-		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 900, windowWidth, 200, 500);
-		timeSeriesPlot.setShampen(200);
+//		
+//		
+//		delay(1000);
+//		button = new Button(this, 400, 700);
+//		//thread("initializeButton");
+//		
+//		slider = new Slider(this, 600, 700);
+//		
+		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500);
+		timeSeriesPlot.setShampen(1000);
 		
 		
 		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500);
@@ -209,8 +229,6 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		//set to clockwise by default
 		thread("setClockWise");
 		
-		
-		
 		//demo squeeze
 		squeeze = new Squeeze(this);
 		
@@ -222,6 +240,39 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		background(225, 225, 225);
 		
 		update(mouseX, mouseY);
+		
+		
+		//temperature zone
+		noStroke();
+		fill(200);
+		rect(0, (int)(rectHeight * 3.5),  windowWidth, 150);
+		
+		textSize(36);
+		fill(120);
+		text("Temperature", 20, (int)(rectHeight * 3.0));
+		
+		//vibration zone 
+		noStroke();
+		fill(200);
+		rect(0, (int)(rectHeight * 8.5),  windowWidth, 150);
+		
+		textSize(36);
+		fill(120);
+		text("Vibration", 20, (int)(rectHeight * 8.0));
+		
+		
+		
+		//pressure zone
+		noStroke();
+		fill(200);
+		rect(0, (int)(rectHeight * 13.5),  windowWidth, 320);
+		
+		textSize(36);
+		fill(120);
+		text("Pressure", 20, (int)(rectHeight * 13.0));
+		
+		
+		
 		
 		for(int itrr = 0; itrr < numButtons; itrr++)
 		{
@@ -277,24 +328,24 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		text(showText, windowWidth / 2 - textWidth(showText) / 2, windowHeight * 9 / 10);
 		
 						
-		//finger
-		leapX = leap.indexTipX * 2 + windowWidth / 2;
-		leapY = windowHeight - leap.indexTipY * 2;
-		
-		stroke(153);
-		noFill();
-		arc(leapX, leapY - 25, 100, 50, 0, PI);
-		
-		//new button position
-		button.detectTouch(leapX, leapY, prev_leapX, prev_leapY);
-
-		prev_leapX = leapX;
-		prev_leapY = leapY;
-		
-		
-		button.draw();
-		
-		slider.draw();
+//		//finger
+//		leapX = leap.indexTipX * 2 + windowWidth / 2;
+//		leapY = windowHeight - leap.indexTipY * 2;
+//		
+//		stroke(153);
+//		noFill();
+//		arc(leapX, leapY - 25, 100, 50, 0, PI);
+//		
+//		//new button position
+//		button.detectTouch(leapX, leapY, prev_leapX, prev_leapY);
+//
+//		prev_leapX = leapX;
+//		prev_leapY = leapY;
+//		
+//		
+//		button.draw();
+//		
+//		slider.draw();
 		
 		timeSeriesPlot.draw();
 		
@@ -302,7 +353,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		//show the velocity
 		textSize(64);
 		String temperatureText = "" + filteredTemperatureValue + " C";  //now the resolution is 0.2
-		text(temperatureText, 350, 260);
+		text(temperatureText, 350, 300);
 
 		if(targetSet == false)
 		{
@@ -313,6 +364,12 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		text(targetTemperatureText, 700, 260);
 		
 		//temperateSeriesPlot.draw();
+		
+		//show the virbation frequency
+		textSize(48);
+		String frequencyText = "" + vibFrequency + " Hz"; 
+		text(frequencyText, 800, 550);
+		
 		
 		if(mouseTriggered[2] == 1)
 		{
@@ -433,7 +490,24 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			case 8:
 				thread("setAntiClockWise");
 				break;
-
+			
+			case 9:
+				break;
+			case 10:
+				break;
+			case 11:
+				break;
+			case 12:
+				break;
+			case 13:
+				break;
+			case 14:
+				break;
+			case 15:  //vibration off
+				thread("stopVibration");
+				break;
+				
+				
 			}
 
 		}else  //turn on tasks
@@ -493,6 +567,25 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			case 8:
 				thread("setClockWise");
 				break;
+				
+				
+			case 9:
+				break;
+			case 10:
+				break;
+			case 11:
+				break;
+			case 12:
+				break;
+			case 13:
+				break;
+			case 14:
+				break;
+			case 15:  //vibration on
+				thread("startVibration");
+				break;
+				
+				
 			}
 		}
 		
@@ -1177,7 +1270,8 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			return;
 		}
 
-		threading = false;	}
+		threading = false;	
+	}
 	
 	public void valve1Close()
 	{
@@ -1243,6 +1337,92 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		
 		threading = false;
 	}
+	
+	
+	//vibration start
+	public void startVibration()
+	{
+		threading = true;
+		
+		//valve 1 open
+		if(mouseTriggered[3] == 0)
+		{
+			 valve1Open();
+			 mouseTriggered[3] = 1;
+			 delay(200);
+		}
+		
+		//valve 3 open
+		if(mouseTriggered[5] == 0)
+		{
+			 valve3Open();
+			 mouseTriggered[5] = 1;
+			 delay(200);
+		}
+		
+		//cold flow at initial speed
+		try {
+			serialOutput_One.write('y');
+		} catch (Exception ex) {
+			return;
+		}
+		
+		pumpOneSpeed = 130;
+		mouseTriggered[2] = 1;
+		
+		delay(1000);
+		//set initial vibration frequency
+		vibFrequency = 5;
+		squeeze.startVibration(vibFrequency);
+		
+		threading = false;
+		
+		
+	}
+	
+	
+	public void stopVibration()
+	{
+		threading = true;
+		
+		//valve 1 open
+		if(mouseTriggered[3] == 0)
+		{
+			 valve1Open();
+			 mouseTriggered[3] = 1;
+			 delay(200);
+		}
+		
+		//valve 3 open
+		if(mouseTriggered[5] == 0)
+		{
+			 valve3Open();
+			 mouseTriggered[5] = 1;
+			 delay(200);
+		}
+		
+		//flow stop
+		try {
+			serialOutput_One.write('t');
+		} catch (Exception ex) {
+			return;
+		}
+		
+		pumpOneSpeed = 0;
+		mouseTriggered[2] = 0;
+		
+		
+		delay(200);
+		//set initial vibration frequency
+		squeeze.stopVirbation();
+		vibFrequency = 0;
+		
+		threading = false;
+		
+		
+	}
+	
+	
 	
 //	public void valveZero()
 //	{
