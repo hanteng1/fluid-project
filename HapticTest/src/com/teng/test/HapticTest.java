@@ -79,7 +79,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	TimeSeriesPlot temperateSeriesPlot;
 	
 	//vibration
-	float vibFrequency = 0;
+	int vibFrequency = 0;
 	
 	
 	//pid controller for temperature
@@ -570,12 +570,16 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 				
 				
 			case 9:
+				thread("increaseVibAmplitude");
 				break;
 			case 10:
+				thread("decreaseVibAmplitude");
 				break;
 			case 11:
+				thread("increaseVibFrequency");
 				break;
 			case 12:
+				thread("decreaseVibFrequency");
 				break;
 			case 13:
 				break;
@@ -1380,7 +1384,6 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		
 	}
 	
-	
 	public void stopVibration()
 	{
 		threading = true;
@@ -1417,11 +1420,75 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		squeeze.stopVirbation();
 		vibFrequency = 0;
 		
-		threading = false;
-		
-		
+		threading = false;	
 	}
 	
+	public void increaseVibFrequency()
+	{
+		threading = true;
+		delay(100);
+		vibFrequency += 2;
+		squeeze.setVibration(vibFrequency);
+		mouseTriggered[11] = 0;
+		threading = false;
+	}
+	
+	public void decreaseVibFrequency()
+	{
+		threading = true;
+		delay(100);
+		vibFrequency -= 2;
+		squeeze.setVibration(vibFrequency);
+		mouseTriggered[12] = 0;
+		threading = false;
+	}
+	
+	public void increaseVibAmplitude()
+	{
+		threading = true;
+		delay(100);
+		
+		pumpOneSpeed += 5;
+		
+		if(pumpOneSpeed > 250)
+		{
+			pumpOneSpeed = 250;
+		}else
+		{
+			try {
+				serialOutput_One.write('l');
+			} catch (Exception ex) {
+				return;
+			}
+		}
+		
+		
+		mouseTriggered[9] = 0;
+		threading = false;
+	}
+	
+	public void decreaseVibAmplitude()
+	{
+		threading = true;
+		delay(100);
+		
+		pumpOneSpeed -= 5;
+		
+		if(pumpOneSpeed < 0)
+		{
+			pumpOneSpeed = 0;
+		}else
+		{
+			try {
+				serialOutput_One.write('k');
+			} catch (Exception ex) {
+				return;
+			}
+		}
+		
+		mouseTriggered[10] = 0;
+		threading = false;
+	}
 	
 	
 //	public void valveZero()

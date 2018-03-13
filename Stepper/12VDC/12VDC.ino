@@ -250,6 +250,13 @@ void loop() {
       hotWaterSlow();
       break;
 
+      case 'k':
+      coldWaterSlower();
+      break;
+
+      case 'l':
+      coldWaterFaster();
+
       case 'r':
       pumpOn();
       break;
@@ -289,7 +296,7 @@ void loop() {
     
   }
 
-  delay(10); 
+  delay(1); 
 }
 
 
@@ -330,6 +337,25 @@ void hotWaterSlow()
   pumpOneSpeed = 0;
   pumpTwoSpeed = 130;
 }
+
+void coldWaterSlower()
+{
+  pumpOneSpeed -= 5;
+  if(pumpOneSpeed < 0)
+  {
+    pumpOneSpeed = 0;
+  }
+}
+
+void coldWaterFaster()
+{
+  pumpOneSpeed += 5;
+  if(pumpOneSpeed > 250)
+  {
+    pumpOneSpeed = 250;
+  }
+}
+
 
 void pumpOn()
 {
@@ -395,6 +421,8 @@ void antiClockWise()
   digitalWrite(relayPinOne, LOW);  
   digitalWrite(relayPinTwo, HIGH);
 }
+
+
 
 //void stopPumping()
 //{

@@ -37,10 +37,9 @@ public class Squeeze {
 	}
 	
 	
-	public void startVibration(float frequency)
+	public void startVibration(int frequency)
 	{
-		int freq = (int)frequency;
-		int duration = (int)(500 / freq);
+		int duration = (int)(500 / frequency);
 		vibration = new Vibration(duration);
 		vibration.start();
 		
@@ -49,6 +48,15 @@ public class Squeeze {
 	public void stopVirbation()
 	{
 		vibration.stopWorking();
+	}
+	
+	public void setVibration(float frequency)
+	{
+		if(vibration != null)
+		{
+			int duration = (int)(500 / frequency);
+			vibration.setDuration(duration); 
+		}
 	}
 	
 	class AddWater extends Thread{
@@ -109,6 +117,11 @@ public class Squeeze {
 		public void stopWorking()
 		{
 			working = false;
+		}
+		
+		public void setDuration(int _duration)
+		{
+			duration = _duration;
 		}
 		
 		public void run()
