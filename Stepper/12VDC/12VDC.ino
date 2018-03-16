@@ -272,8 +272,6 @@ void loop() {
       case 'o':
       antiClockWise();
       break;
-
-      
       
 
 //      case 'y':

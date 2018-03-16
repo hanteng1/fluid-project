@@ -30,6 +30,23 @@ public class TimeSeriesPlot {
 	float lastFilteredValue = 0;
 	boolean  firstFrame = true;
 	
+	boolean getReady = false;
+	int readyValue = 0;
+	int releaseValue = 0;
+	
+	int  colorValue = 150;
+	
+	//fft to test the frequency
+	public RealDoubleFFT mRealFFT;
+	int fftBins;
+	double scale;
+	private final static float MEAN_MAX = 16384f;   // Maximum signal value
+	
+	
+	//testing
+	boolean isTesting = false;
+	int logCount = 0;
+	
 	public TimeSeriesPlot(PApplet ap, float cx, float cy, float cw, float ch, int sz)
 	{
 		app = ap;
@@ -56,6 +73,10 @@ public class TimeSeriesPlot {
 		{
 			plotDataFiltered.add(plotHeight / 2 + centerY );
 		}
+		
+		fftBins = 64;
+		mRealFFT = new RealDoubleFFT(fftBins);
+		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
 	}
 	
 	public void addValue(float value)
@@ -80,6 +101,17 @@ public class TimeSeriesPlot {
 		
 		plotData.remove(0);
 		plotData.add(value);
+		
+		if(isTesting)
+		{
+			logCount++;
+			if(logCount == 100)
+			{
+				
+				app.println("" + System.currentTimeMillis());
+				logCount = 0;
+			}
+		}
 			
 		average = average + 0.05f*(value-average);
 		plotDataFiltered.remove(0);
@@ -119,12 +151,120 @@ public class TimeSeriesPlot {
 		shampen = _shampen;
 	}
 	
+	
+	public boolean mouseEffect(int mousex, int mousey)
+	{
+		//centerX - plotWidth / 2, centerY, plotWidth, plotHeight);
+		
+		if((mousex >= (centerX - plotWidth / 2)) && (mousex < (centerX + plotWidth / 2)) &&
+				(mousey >= centerY) && (mousey <= (centerY + plotHeight)) )
+		{
+			return true;
+		}
+			
+		return false;
+	}
+	
+	public void mousePress(int mousex, int mousey)
+	{
+		if(mouseEffect(mousex, mousey))
+		{
+			getReady = true;
+			//yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight
+			readyValue = (int) ((centerY + plotHeight - mousey) / (plotHeight / yHeight) + yMin);
+			
+			colorValue = 120;
+			
+			app.println("readyValue " + readyValue);
+		}
+	}
+	
+	public void mouseRelease(int mousex, int mousey)
+	{
+		if(getReady == true)
+		{
+			releaseValue = (int) ((centerY + plotHeight - mousey) / (plotHeight / yHeight) + yMin);
+			app.println("releaseValue " + releaseValue);
+			if(Math.abs(releaseValue - readyValue) > 2)
+			{
+				//made an effective selection 
+				if(releaseValue > readyValue)
+				{
+					setMinMax(readyValue, releaseValue);
+				}else
+				{
+					setMinMax(releaseValue, readyValue);
+				}
+			}else
+			{
+				//set to default
+				setMinMax(900, 1200);
+			}
+			
+			readyValue = 0;
+			releaseValue = 0;
+			getReady = false;
+			colorValue = 150;
+			
+			
+		}
+	}
+	
+	public double[] freq(ArrayList<Float> data)  //size of ac should equal to fftBins
+	{
+		double[] result = new double[fftBins/2];
+		if(data.size() != fftBins)
+		{
+			return result;
+		}
+		
+		double[] fftData = new double[fftBins];
+
+		for(int itra = 0; itra < fftBins; itra++)
+		{
+			fftData[itra] = data.get(itra);
+		}
+		
+		mRealFFT.ft(fftData);
+		
+		//convert to db
+		convertToDb(fftData, scale);
+		
+		for(int itr = 0; itr < fftBins/2; itr++)
+		{
+			result[itr] = fftData[itr];
+		}
+
+		return result;
+	}
+	
+	public double[] convertToDb(double[] data, double maxSquared) {
+	    data[0] = db2(data[0], 0.0, maxSquared);
+	    int j = 1;
+	    for (int i=1; i < data.length - 1; i+=2, j++) {
+	      data[j] = db2(data[i], data[i+1], maxSquared);
+	    }
+	    data[j] = data[0];
+	    return data;
+	}
+	
+	private double db2(double r, double i, double maxSquared) {
+	    return 5.0 * Math.log10((r * r + i * i) / maxSquared);
+	}
+	
+	
 	public void draw()
 	{
 		
-		app.fill(150, 150, 150);
+		app.fill(colorValue);
 		app.noStroke();
 		app.rect(centerX - plotWidth / 2, centerY, plotWidth, plotHeight);
+		
+		//min and max values
+		app.textSize(32);
+		app.fill(200, 100, 100);
+		app.text("" + yMin, 100, centerY + plotHeight );
+		app.text("" + yMax, 100, centerY );
 		
 		app.stroke(200, 100, 100);
 		app.noFill();

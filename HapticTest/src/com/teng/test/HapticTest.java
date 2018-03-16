@@ -187,7 +187,9 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 //		
 		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500);
 		timeSeriesPlot.setShampen(1000);
+		timeSeriesPlot.setMinMax(900, 1200);
 		
+		timeSeriesPlot.isTesting = true;
 		
 		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500);
 		temperateSeriesPlot.setMinMax(20, 25);
@@ -429,6 +431,13 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 				switchTask(rectOverIndex, 1);
 			}
 		}
+		
+		timeSeriesPlot.mousePress(mouseX, mouseY);
+	}
+	
+	public void mouseReleased()
+	{
+		timeSeriesPlot.mouseRelease(mouseX, mouseY);
 	}
 	
 	
@@ -652,7 +661,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 
 					// Set appropriate properties (do not change these)
 					serialPort_Two.setSerialPortParams(
-							9600, 
+							115200, 
 							SerialPort.DATABITS_8,
 							SerialPort.STOPBITS_1, 
 							SerialPort.PARITY_NONE);
