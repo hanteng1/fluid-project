@@ -24,12 +24,18 @@ public class PressureTest extends PApplet{
 	int totalTrials = 0;
 	int repetition = 5;
 	ArrayList<Integer> trialSequence;
+	int target = 0;
+	int answer = 0;
+	boolean waitingForAnswer = false;
 	
 	boolean isTrainingMode = true;
 	
 	//always play a reference first
 	boolean isReferencing = true;
 	boolean blockDone = false;
+	
+	String promp = "";
+	
 	
 	public void settings()
 	{
@@ -80,6 +86,13 @@ public class PressureTest extends PApplet{
 		{
 			mouseTriggered.add(0);
 		}
+		
+		if(isTrainingMode)
+		{
+			promp = "Train mode, press SPACE to start";
+		}
+		
+		
 	}
 	
 	public void draw()
@@ -106,7 +119,7 @@ public class PressureTest extends PApplet{
 		noStroke();
 		ellipse(800, 85, 100, 100);
 		
-		update(mouseX, mouseY);
+		//update(mouseX, mouseY);  //disable mouse select
 		
 		//choices
 		for(int itr = 0; itr < levels; itr++)
@@ -128,20 +141,10 @@ public class PressureTest extends PApplet{
 			
 		}
 		
-		
-		//is training
-		if(isTrainingMode)
-		{
-			textSize(24);
-			fill(120);
-			text("Train mode, press SPACE to start", 300, 200);
-		}else
-		{
-			textSize(24);
-			fill(120);
-			text("Study mode, press SPACE to next", 300, 200);
-		}
-		
+	
+		textSize(24);
+		fill(120);
+		text(promp, windowWidth/2 - textWidth(promp)/2, 200);
 		
 		
 		//pressure signal
@@ -222,8 +225,13 @@ public class PressureTest extends PApplet{
 	public void makeChoice()
 	{
 		mouseTriggered.set(rectOverIndex, 1);
-		delay(100);
-		mouseTriggered.set(rectOverIndex, 0);
+		
+		//record
+		
+		
+		promp = "Press SPACE to next";
+		
+		waitingForAnswer = false;
 	}
 	
 	
@@ -237,16 +245,39 @@ public class PressureTest extends PApplet{
 				if(isTrainingMode)
 				{
 					isTrainingMode = false;
-					
 					nextTrial();
 					
 				}else
 				{
-					//go to next
-					nextTrial();
+					if(waitingForAnswer == false)
+					{
+						//go to next
+						nextTrial();
+					}
+					
 				}
 			}
 			
+		}else
+		{
+			String inpuText = "" + key;
+			
+			if(waitingForAnswer)
+			{
+				int inputValue = -1;
+				try {
+					inputValue = Integer.parseInt(inpuText);
+				}catch(Exception ex)
+				{
+					return;
+				}
+				
+				if(inputValue > 0 && inputValue < (levels + 1))
+				{
+					rectOverIndex = inputValue - 1 ;
+					makeChoice();
+				}
+			}
 		}
 	}
 	
@@ -255,7 +286,23 @@ public class PressureTest extends PApplet{
 		
 		if(trial <= (totalTrials - 1))
 		{
+			target = trialSequence.get(trial);
+			println("target: " + target);
 			trial++;
+			
+			waitingForAnswer = true;
+			if(rectOverIndex > -1)
+			{
+				mouseTriggered.set(rectOverIndex, 0);
+				rectOverIndex = -1;
+			}
+			
+			//render the target
+			
+			
+			//
+			promp = "waiting for your answer ...";
+			
 		}else
 		{
 			//block finish
