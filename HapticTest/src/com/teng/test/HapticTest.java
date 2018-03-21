@@ -189,7 +189,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		timeSeriesPlot.setShampen(1000);
 		timeSeriesPlot.setMinMax(900, 1200);
 		
-		timeSeriesPlot.isTesting = true;
+		//timeSeriesPlot.isTesting = true;
 		
 		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500);
 		temperateSeriesPlot.setMinMax(20, 25);
@@ -274,8 +274,6 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		text("Pressure", 20, (int)(rectHeight * 13.0));
 		
 		
-		
-		
 		for(int itrr = 0; itrr < numButtons; itrr++)
 		{
 			if(mouseTriggered[itrr] == 1)
@@ -318,8 +316,6 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 					text(buttonTextsBackup[itrr], rectXs[itrr] + rectWidth[itrr] / 2 - textWidth(buttonTexts[itrr]) / 2, rectYs[itrr] + 2 * rectHeight / 3); 
 				}
 			}
-			
-			
 			
 		}
 		
@@ -425,7 +421,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			}else
 			{
 				mouseTriggered[rectOverIndex] = 1;
-				println("action: " + buttonTexts[rectOverIndex]);
+				//println("action: " + buttonTexts[rectOverIndex]);
 				
 				//switch on
 				switchTask(rectOverIndex, 1);

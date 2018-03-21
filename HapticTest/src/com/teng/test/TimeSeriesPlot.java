@@ -40,12 +40,15 @@ public class TimeSeriesPlot {
 	public RealDoubleFFT mRealFFT;
 	int fftBins;
 	double scale;
-	private final static float MEAN_MAX = 16384f;   // Maximum signal value
-	
+	private final static float MEAN_MAX = 2000;   // Maximum signal value
+	ArrayList<Float> fftData;
+	int mainFrequncy = 0;
 	
 	//testing
 	boolean isTesting = false;
 	int logCount = 0;
+	long timeStamp = 0;
+	
 	
 	public TimeSeriesPlot(PApplet ap, float cx, float cy, float cw, float ch, int sz)
 	{
@@ -77,6 +80,8 @@ public class TimeSeriesPlot {
 		fftBins = 64;
 		mRealFFT = new RealDoubleFFT(fftBins);
 		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
+		
+		fftData = new ArrayList<Float>();
 	}
 	
 	public void addValue(float value)
@@ -104,14 +109,39 @@ public class TimeSeriesPlot {
 		
 		if(isTesting)
 		{
-			logCount++;
-			if(logCount == 100)
+//			logCount++;
+//			
+//			if(timeStamp == 0)
+//			{
+//				timeStamp = System.currentTimeMillis();
+//			}else
+//			{
+//				long curTime = System.currentTimeMillis();
+//				if( curTime - timeStamp >= 1000)
+//				{
+//					app.println("" + logCount);
+//					logCount = 0;
+//					timeStamp = curTime;
+//				}
+//			}
+			
+			
+			fftData.add(value);
+			if(fftData.size() == fftBins)
 			{
+				//perform a fft
+				double[] fftResults = freq(fftData);
 				
-				app.println("" + System.currentTimeMillis());
-				logCount = 0;
+				//return a main frequency, 64hz sampling rate, 1hz / bin
+				mainFrequncy = getFrequency(fftResults);
+			
+				fftData.clear();
 			}
+			
 		}
+		
+		
+		
 			
 		average = average + 0.05f*(value-average);
 		plotDataFiltered.remove(0);
@@ -238,6 +268,27 @@ public class TimeSeriesPlot {
 		return result;
 	}
 	
+	public int getFrequency(double[] data)
+	{
+		if(data.length != fftBins/2)
+		{
+			return -2;
+		}
+		
+		int result = -1;
+		double maxValue = 0;
+		for(int itr = 1; itr < fftBins/2; itr++)
+		{
+			if(Math.abs(data[itr]) > maxValue)
+			{
+				result = itr;
+				maxValue = Math.abs(data[itr]);
+			}
+		}
+		
+		return result;
+	}
+	
 	public double[] convertToDb(double[] data, double maxSquared) {
 	    data[0] = db2(data[0], 0.0, maxSquared);
 	    int j = 1;
@@ -264,7 +315,14 @@ public class TimeSeriesPlot {
 		app.textSize(32);
 		app.fill(200, 100, 100);
 		app.text("" + yMin, 100, centerY + plotHeight );
-		app.text("" + yMax, 100, centerY );
+		app.text("" + yMax, 100, centerY + 30);
+		
+		
+		//show frequency
+		if(isTesting)
+		{
+			app.text("" + mainFrequncy + " Hz", 900, centerY + 30);
+		}
 		
 		app.stroke(200, 100, 100);
 		app.noFill();
