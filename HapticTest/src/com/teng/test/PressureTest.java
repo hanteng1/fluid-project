@@ -18,7 +18,14 @@ public class PressureTest extends PApplet{
 	
 	boolean isReady = false;
 	
+	//****************************//
+	int sensation = 1;   
+	//****************************//
+	int userId = 1;
+	//****************************//
 	int block = 3;    // 1, 2, 3
+	
+	
 	int levels = 0;   //3, 5, 7 (or 9)
 	int trial = 0;
 	int totalTrials = 0;
@@ -35,6 +42,10 @@ public class PressureTest extends PApplet{
 	boolean blockDone = false;
 	
 	String promp = "";
+	long responseTime = 0;
+	long startTime = 0;
+	
+	public static DataStorage dataStorage;
 	
 	
 	public void settings()
@@ -92,7 +103,10 @@ public class PressureTest extends PApplet{
 			promp = "Train mode, press SPACE to start";
 		}
 		
-		
+		dataStorage = DataStorage.getInstance();
+		dataStorage.userId = userId;
+		dataStorage.sensation = "pressure";
+		dataStorage.levels = levels;
 	}
 	
 	public void draw()
@@ -225,18 +239,19 @@ public class PressureTest extends PApplet{
 	public void makeChoice()
 	{
 		mouseTriggered.set(rectOverIndex, 1);
+		answer = rectOverIndex + 1;
 		
-		//record
-		
+		//record/update the duration
+		//responseTime = System.currentTimeMillis() - startTime;
 		
 		promp = "Press SPACE to next";
-		
 		waitingForAnswer = false;
 	}
 	
 	
 	public void keyPressed() {
 		if (key == 'q') {
+			dataStorage.save();
 			exit();
 		}else if(key == ' ')
 		{
@@ -245,16 +260,18 @@ public class PressureTest extends PApplet{
 				if(isTrainingMode)
 				{
 					isTrainingMode = false;
+					//start
 					nextTrial();
-					
 				}else
 				{
 					if(waitingForAnswer == false)
 					{
+						//record the data
+						DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
+						
 						//go to next
 						nextTrial();
-					}
-					
+					}	
 				}
 			}
 			
@@ -262,7 +279,7 @@ public class PressureTest extends PApplet{
 		{
 			String inpuText = "" + key;
 			
-			if(waitingForAnswer)
+			if(waitingForAnswer || rectOverIndex >= 0)
 			{
 				int inputValue = -1;
 				try {
@@ -274,6 +291,10 @@ public class PressureTest extends PApplet{
 				
 				if(inputValue > 0 && inputValue < (levels + 1))
 				{
+					if(rectOverIndex >= 0)
+					{
+						mouseTriggered.set(rectOverIndex, 0);
+					}
 					rectOverIndex = inputValue - 1 ;
 					makeChoice();
 				}
@@ -300,7 +321,7 @@ public class PressureTest extends PApplet{
 			//render the target
 			
 			
-			//
+			
 			promp = "waiting for your answer ...";
 			
 		}else
