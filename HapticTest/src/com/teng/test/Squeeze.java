@@ -20,7 +20,16 @@ public class Squeeze {
 	{
 
 		//add water 2 seconds
-		new AddWater(1000).start();
+		instance.setClockWise();
+		new AddWater(100).start();
+	}
+	
+	public void releaseNotification()
+	{
+
+		//add water 2 seconds
+		instance.setAntiClockWise();
+		new AddWater(100).start();
 	}
 	
 	public void detectSqueeze()

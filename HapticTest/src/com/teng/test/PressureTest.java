@@ -23,7 +23,7 @@ public class PressureTest extends PApplet{
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 3;    // 1, 2, 3
+	int block = 2;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
@@ -165,9 +165,6 @@ public class PressureTest extends PApplet{
 		
 		
 		
-		
-		
-		
 		//complete
 		if(blockDone)
 		{
@@ -229,10 +226,10 @@ public class PressureTest extends PApplet{
 	
 	public void mousePressed()
 	{
-		if(rectOverIndex >= 0)
-		{
-			thread("makeChoice");
-		}
+//		if(rectOverIndex >= 0)
+//		{
+//			thread("makeChoice");
+//		}
 		
 	}
 	
@@ -246,6 +243,14 @@ public class PressureTest extends PApplet{
 		
 		promp = "Press SPACE to next";
 		waitingForAnswer = false;
+	}
+	
+	public void makePractice()
+	{
+		//render a target
+		
+		
+		//release
 	}
 	
 	
@@ -279,7 +284,7 @@ public class PressureTest extends PApplet{
 		{
 			String inpuText = "" + key;
 			
-			if(waitingForAnswer || rectOverIndex >= 0)
+			if(isTrainingMode)
 			{
 				int inputValue = -1;
 				try {
@@ -291,14 +296,34 @@ public class PressureTest extends PApplet{
 				
 				if(inputValue > 0 && inputValue < (levels + 1))
 				{
-					if(rectOverIndex >= 0)
-					{
-						mouseTriggered.set(rectOverIndex, 0);
-					}
 					rectOverIndex = inputValue - 1 ;
-					makeChoice();
+					target = inputValue;
+					makePractice();
+				}
+			}else
+			{
+				if(waitingForAnswer || rectOverIndex >= 0)
+				{
+					int inputValue = -1;
+					try {
+						inputValue = Integer.parseInt(inpuText);
+					}catch(Exception ex)
+					{
+						return;
+					}
+					
+					if(inputValue > 0 && inputValue < (levels + 1))
+					{
+						if(rectOverIndex >= 0)
+						{
+							mouseTriggered.set(rectOverIndex, 0);
+						}
+						rectOverIndex = inputValue - 1 ;
+						makeChoice();
+					}
 				}
 			}
+			
 		}
 	}
 	
@@ -319,8 +344,7 @@ public class PressureTest extends PApplet{
 			}
 			
 			//render the target
-			
-			
+			thread("renderNext");
 			
 			promp = "waiting for your answer ...";
 			
@@ -330,6 +354,18 @@ public class PressureTest extends PApplet{
 			blockDone = true;
 		}
 	}
+	
+	
+	public void renderNext()
+	{
+		
+	}
+	
+	public void leaseRender()
+	{
+		
+	}
+	
 	
 	
 	public static void main(String[] args){

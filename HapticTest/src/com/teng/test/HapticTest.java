@@ -13,7 +13,7 @@ import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
 import processing.core.PApplet;
 
-public class HapticTest extends PApplet implements SerialPortEventListener{
+public class HapticTest extends PApplet{
 
 	int windowWidth, windowHeight;
 	
@@ -45,7 +45,24 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	static OutputStream serialOutput_Two;
 	static String portName_Two;
 	
+	
+	//serial - for finger pressure
+	static SerialPort serialPort_Three;
+	static InputStream serialInput_Three;
+	static BufferedReader input_Three;
+	static OutputStream serialOutput_Three;
+	static String portName_Three;
 
+	
+	//serial - for finger pressure
+	static SerialPort serialPort_Four;
+	static InputStream serialInput_Four;
+	static BufferedReader input_Four;
+	static OutputStream serialOutput_Four;
+	static String portName_Four;
+	
+	
+	
 	boolean threading = false;
 	
 	int pumpVelocity = 0;  // 0 - 255
@@ -77,6 +94,10 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	float targetTemperature;
 	boolean targetSet = false;
 	TimeSeriesPlot temperateSeriesPlot;
+	
+	
+	//finger pressure
+	TimeSeriesPlot fingerPressurePlot;
 	
 	//vibration
 	int vibFrequency = 0;
@@ -174,6 +195,19 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		connectPort_Two();
 		
 		delay(1000);
+		
+		
+		//finger pressure
+		configurePort_Three("COM13");
+		connectPort_Three();
+		delay(1000);
+		
+		
+		//sensor for evaluation
+		configurePort_Four("COM4");
+		connectPort_Four();
+		delay(1000);
+		
 //		
 //		
 		leap = new Leap();
@@ -185,27 +219,34 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 //		
 //		slider = new Slider(this, 600, 700);
 //		
-		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500);
+		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500, false, false, true);
 		timeSeriesPlot.setShampen(1000);
 		timeSeriesPlot.setMinMax(900, 1200);
 		
 		//timeSeriesPlot.isTesting = true;
 		
-		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500);
+		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500, true, false, false);
 		temperateSeriesPlot.setMinMax(20, 25);
 		temperateSeriesPlot.setShampen(2);
 		
-		//open at least one valve
-		mouseTriggered[3] = 1;
-		println("action: " + buttonTexts[3]);
-		//valve 1 open
-		switchTask(3, 1);
 		
-		delay(200);
-		mouseTriggered[4] = 0;
-		println("action: " + buttonTextsBackup[4]);
-		//valve 2 close
-		switchTask(4, 0);
+		fingerPressurePlot = new TimeSeriesPlot(this, windowWidth / 2, 1000, windowWidth, 200, 500, false, false, false);
+		fingerPressurePlot.setShampen(200);
+		fingerPressurePlot.setMinMax(0, 1000);
+		//fingerPressurePlot.isTesting = true;
+		
+//		
+//		//open at least one valve
+//		mouseTriggered[3] = 1;
+//		println("action: " + buttonTexts[3]);
+//		//valve 1 open
+//		switchTask(3, 1);
+//		
+//		delay(200);
+//		mouseTriggered[4] = 0;
+//		println("action: " + buttonTextsBackup[4]);
+//		//valve 2 close
+//		switchTask(4, 0);
 		
 				
 		delay(200);
@@ -234,6 +275,16 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		//demo squeeze
 		squeeze = new Squeeze(this);
 		
+		
+		thread("setValueTwoOffset");
+		
+	}
+	
+	
+	public void setValueTwoOffset()
+	{
+		delay(7000);
+		timeSeriesPlot.setValueTwo();
 	}
 	
 	public void draw()
@@ -347,6 +398,8 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		
 		timeSeriesPlot.draw();
 		
+		//fingerPressurePlot.draw();
+		
 		//draw temperature
 		//show the velocity
 		textSize(64);
@@ -429,11 +482,13 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		}
 		
 		timeSeriesPlot.mousePress(mouseX, mouseY);
+		fingerPressurePlot.mousePress(mouseX, mouseY);
 	}
 	
 	public void mouseReleased()
 	{
 		timeSeriesPlot.mouseRelease(mouseX, mouseY);
+		fingerPressurePlot.mouseRelease(mouseX, mouseY);
 	}
 	
 	
@@ -587,8 +642,10 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 				thread("decreaseVibFrequency");
 				break;
 			case 13:
+				thread("increasePressure");
 				break;
 			case 14:
+				thread("decreasePressure");
 				break;
 			case 15:  //vibration on
 				thread("startVibration");
@@ -607,6 +664,16 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	void configurePort_Two(String _portName)
 	{
 		portName_Two = _portName;
+	}
+	
+	void configurePort_Three(String _portName)
+	{
+		portName_Three = _portName;
+	}
+	
+	void configurePort_Four(String _portName)
+	{
+		portName_Four = _portName;
 	}
 	
 	void connectPort_One() {
@@ -666,7 +733,7 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 					input_Two = new BufferedReader(new InputStreamReader(serialInput_Two));				
 					serialOutput_Two = serialPort_Two.getOutputStream();
 					
-					serialPort_Two.addEventListener(this);
+					serialPort_Two.addEventListener(new SerialListener(2, this));
 			        serialPort_Two.notifyOnDataAvailable(true);
 			      
 					System.out.println("Connected to port: " + portName_Two);
@@ -678,6 +745,79 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 			ex.printStackTrace();
 		}		
 	}
+	
+	
+	void connectPort_Three() {
+		try {
+			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName_Three);
+			if (portIdentifier.isCurrentlyOwned()) {
+				System.out.println("Error: Port is currently in use");
+			} else {
+				CommPort commPort = portIdentifier.open(this.getClass().getName(), 2000);
+				
+				if (commPort instanceof SerialPort) {
+					serialPort_Three = (SerialPort) commPort;
+
+					// Set appropriate properties (do not change these)
+					serialPort_Three.setSerialPortParams(
+							115200, 
+							SerialPort.DATABITS_8,
+							SerialPort.STOPBITS_1, 
+							SerialPort.PARITY_NONE);
+
+					serialInput_Three = serialPort_Three.getInputStream();
+					input_Three = new BufferedReader(new InputStreamReader(serialInput_Three));				
+					serialOutput_Three = serialPort_Three.getOutputStream();
+					
+					serialPort_Three.addEventListener(new SerialListener(3,this));
+			        serialPort_Three.notifyOnDataAvailable(true);
+			      
+					System.out.println("Connected to port: " + portName_Three);
+				} else {
+					System.out.println("Error: Only serial ports are handled by this example.");
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}		
+	}
+	
+	
+	void connectPort_Four() {
+		try {
+			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName_Four);
+			if (portIdentifier.isCurrentlyOwned()) {
+				System.out.println("Error: Port is currently in use");
+			} else {
+				CommPort commPort = portIdentifier.open(this.getClass().getName(), 2000);
+				
+				if (commPort instanceof SerialPort) {
+					serialPort_Four = (SerialPort) commPort;
+
+					// Set appropriate properties (do not change these)
+					serialPort_Four.setSerialPortParams(
+							115200, 
+							SerialPort.DATABITS_8,
+							SerialPort.STOPBITS_1, 
+							SerialPort.PARITY_NONE);
+
+					serialInput_Four = serialPort_Four.getInputStream();
+					input_Four = new BufferedReader(new InputStreamReader(serialInput_Four));				
+					serialOutput_Four = serialPort_Four.getOutputStream();
+					
+					serialPort_Four.addEventListener(new SerialListener(4, this));
+			        serialPort_Four.notifyOnDataAvailable(true);
+			      
+					System.out.println("Connected to port: " + portName_Four);
+				} else {
+					System.out.println("Error: Only serial ports are handled by this example.");
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}		
+	}
+	
 	
 	void disconnectPort() {
 		try {
@@ -701,42 +841,30 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		} catch (Exception ex){
 			ex.printStackTrace();
 		}
-	}
-	
-	public synchronized void serialEvent(SerialPortEvent oEvent) {
-		 if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
-		    try {
-		        String inputLine=null;
-		        if (input_Two.ready()) {
-		            inputLine = input_Two.readLine();
-		            //System.out.println(inputLine);
-		            try {
-		            	float readValue = Float.parseFloat(inputLine);
-		            	if(readValue > 100) {
-		            		timeSeriesPlot.addValue(readValue);
-		            	}
-		            	else
-		            	{
-		            		//System.out.println("temperature: " + readValue)
-		            		temperatureValue = readValue;
-		            		temperateSeriesPlot.addValue(temperatureValue);
-		            		filteredTemperatureValue = Float.parseFloat(String.format("%.1f", Math.abs( temperateSeriesPlot.getLastFilteredValue())));
-		            		
-		            	}
-		            }catch(Exception ex)
-		            {
-		            	return;
-		            }
-		            
-		        }
-
-		    } catch (Exception e) {
-		        System.err.println(e.toString());
-		    }
-		 }
-		// Ignore all the other eventTypes, but you should consider the other ones.
+		
+		delay(100);
+		
+		try {
+			System.out.println("Disconnecting from port: " + portName_Three);
+			serialInput_Three.close();
+			serialOutput_Three.close();
+			serialPort_Three.close();
+			
+		} catch (Exception ex){
+			ex.printStackTrace();
 		}
-	
+		
+		delay(100);
+		try {
+			System.out.println("Disconnecting from port: " + portName_Four);
+			serialInput_Four.close();
+			serialOutput_Four.close();
+			serialPort_Four.close();
+			
+		} catch (Exception ex){
+			ex.printStackTrace();
+		}
+	}
 	
 	public void keyPressed() {
 		if (key == 'q') {
@@ -1496,6 +1624,30 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 	}
 	
 	
+	public void increasePressure()
+	{
+		threading = true;
+		delay(100);
+		
+		squeeze.sendNotification();
+		
+		mouseTriggered[13] = 0;
+		threading = false;
+	}
+	
+	public void decreasePressure()
+	{
+		threading = true;
+		delay(100);
+		
+		squeeze.releaseNotification();
+		
+		mouseTriggered[14] = 0;
+		threading = false;
+	}
+	
+	
+	
 //	public void valveZero()
 //	{
 //		threading = true;
@@ -1584,4 +1736,91 @@ public class HapticTest extends PApplet implements SerialPortEventListener{
 		PApplet.main("com.teng.test.HapticTest");
 		
 	}
+}
+
+class SerialListener implements SerialPortEventListener
+{
+
+	public int index;
+	//public BufferedReader input;
+	//public TimeSeriesPlot plot;
+	
+	HapticTest instance;
+	
+	
+	public SerialListener(int _index, HapticTest _instance)
+	{
+		index = _index;
+		instance = _instance;
+	}
+	
+	@Override
+	public synchronized void serialEvent(SerialPortEvent oEvent) {
+		// TODO Auto-generated method stub
+		if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
+		    try {
+		        String inputLine=null;
+		        
+		        if(index == 2)
+		        {
+		        	 if(instance.input_Two.ready()) {
+				        	inputLine = instance.input_Two.readLine();
+				        	try {
+				            	float readValue = Float.parseFloat(inputLine);         	
+	
+				            	
+				            	instance.timeSeriesPlot.addValue(readValue);
+//				            	
+//			            		if(readValue > 100) {
+//				            		instance.timeSeriesPlot.addValue(readValue);
+//				            	}
+//				            	else
+//				            	{
+//				            		//System.out.println("temperature: " + readValue)
+//				            		instance.temperatureValue = readValue;
+//				            		instance.temperateSeriesPlot.addValue(instance.temperatureValue);
+//				            		instance.filteredTemperatureValue = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastFilteredValue())));
+//				            		
+//				            	}
+				            	
+				            }catch(Exception ex)
+				            {
+				            	return;
+				            }
+				     }
+		        }else if(index == 3)
+		        {
+		        	 if(instance.input_Three.ready()) {
+				        	inputLine = instance.input_Three.readLine();
+				        	try {
+				            	float readValue = Float.parseFloat(inputLine);         	
+				            	instance.fingerPressurePlot.addValue(readValue);
+				            
+				            }catch(Exception ex)
+				            {
+				            	return;
+				            }
+				     }
+		        }else if(index == 4)
+		        {
+		        	 if(instance.input_Four.ready()) {
+		        		 inputLine = instance.input_Four.readLine();
+				        	try {
+				            	float readValue = Float.parseFloat(inputLine);         	
+				            	instance.timeSeriesPlot.addValueTwo(readValue);
+				            
+				            }catch(Exception ex)
+				            {
+				            	return;
+				            }
+		        	 }
+		        }
+
+		    } catch (Exception e) {
+		        System.err.println(e.toString());
+		    }
+		 }
+		// Ignore all the other eventTypes, but you should consider the other ones.
+	}
+	
 }

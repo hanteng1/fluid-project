@@ -17,8 +17,9 @@ public class TimeSeriesPlot {
 	float plotSegWidth =0;
 	ArrayList<Float> plotData;
 	ArrayList<Float> plotDataFiltered;
-	boolean drawFilter = false;
+	ArrayList<Float> plotDataTwo;
 	
+	boolean drawFilter = false;
 	
 	float yMax = 0;
 	float yMin = 0;
@@ -27,8 +28,11 @@ public class TimeSeriesPlot {
 	float average = 0;
 	float shampen = 2;
 	float lastValue = 0;
+	float lastValueTwo = 0;
+	float valueTwoOffset = 0;
 	float lastFilteredValue = 0;
 	boolean  firstFrame = true;
+	boolean firstFrameTwo = true;
 	
 	boolean getReady = false;
 	int readyValue = 0;
@@ -50,7 +54,12 @@ public class TimeSeriesPlot {
 	long timeStamp = 0;
 	
 	
-	public TimeSeriesPlot(PApplet ap, float cx, float cy, float cw, float ch, int sz)
+	boolean isFilter;
+	boolean isFFT;
+	boolean isDataTwo;
+	
+	public TimeSeriesPlot(PApplet ap, float cx, float cy, float cw, float ch, int sz,
+			boolean applyFilter, boolean applyFFT, boolean applyDataTwo)
 	{
 		app = ap;
 		centerX = cx;
@@ -58,6 +67,9 @@ public class TimeSeriesPlot {
 		plotWidth = cw;
 		plotHeight = ch;
 		plotPointSize = sz;
+		isFilter = applyFilter;
+		isFFT = applyFFT;
+		isDataTwo = applyDataTwo;
 		plotSegWidth = plotWidth / plotPointSize;
 		
 			
@@ -71,28 +83,38 @@ public class TimeSeriesPlot {
 			plotData.add(plotHeight / 2 + centerY );
 		}
 		
-		plotDataFiltered = new ArrayList<Float>();
-		for(int itrd = 0; itrd < plotPointSize; itrd++)
+		
+		if(isFilter)
 		{
-			plotDataFiltered.add(plotHeight / 2 + centerY );
+			plotDataFiltered = new ArrayList<Float>();
+			for(int itrd = 0; itrd < plotPointSize; itrd++)
+			{
+				plotDataFiltered.add(plotHeight / 2 + centerY );
+			}
 		}
 		
-		fftBins = 64;
-		mRealFFT = new RealDoubleFFT(fftBins);
-		scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
+		if(isFFT)
+		{
+			fftBins = 64;
+			mRealFFT = new RealDoubleFFT(fftBins);
+			scale =  MEAN_MAX * MEAN_MAX * fftBins * fftBins / 2d;
+			
+			fftData = new ArrayList<Float>();
+		}
 		
-		fftData = new ArrayList<Float>();
+		if(isDataTwo)
+		{
+			plotDataTwo = new ArrayList<Float>();
+			for(int itrd = 0; itrd < plotPointSize; itrd++)
+			{
+				plotDataTwo.add(plotHeight / 2 + centerY );
+			}
+		}
+		
 	}
 	
 	public void addValue(float value)
 	{
-		
-		//if(value < 700 || value > 1500)
-		//{
-		//	return;
-		//}
-		
-		
 		if(firstFrame)
 		{
 			firstFrame = false;
@@ -109,48 +131,90 @@ public class TimeSeriesPlot {
 		
 		if(isTesting)
 		{
-//			logCount++;
-//			
-//			if(timeStamp == 0)
-//			{
-//				timeStamp = System.currentTimeMillis();
-//			}else
-//			{
-//				long curTime = System.currentTimeMillis();
-//				if( curTime - timeStamp >= 1000)
-//				{
-//					app.println("" + logCount);
-//					logCount = 0;
-//					timeStamp = curTime;
-//				}
-//			}
+			logCount++;
 			
-			
-			fftData.add(value);
-			if(fftData.size() == fftBins)
+			if(timeStamp == 0)
 			{
-				//perform a fft
-				double[] fftResults = freq(fftData);
-				
-				//return a main frequency, 64hz sampling rate, 1hz / bin
-				mainFrequncy = getFrequency(fftResults);
-			
-				fftData.clear();
+				timeStamp = System.currentTimeMillis();
+			}else
+			{
+				long curTime = System.currentTimeMillis();
+				if( curTime - timeStamp >= 1000)
+				{
+					app.println("" + logCount);
+					logCount = 0;
+					timeStamp = curTime;
+				}
 			}
+			
+			
+//			fftData.add(value);
+//			if(fftData.size() == fftBins)
+//			{
+//				//perform a fft
+//				double[] fftResults = freq(fftData);
+//				
+//				//return a main frequency, 64hz sampling rate, 1hz / bin
+//				mainFrequncy = getFrequency(fftResults);
+//			
+//				fftData.clear();
+//			}
 			
 		}
 		
 		
 		
-			
-		average = average + 0.05f*(value-average);
-		plotDataFiltered.remove(0);
-		plotDataFiltered.add(average);
+		if(isFilter)
+		{
+			average = average + 0.05f*(value-average);
+			plotDataFiltered.remove(0);
+			plotDataFiltered.add(average);
+			lastFilteredValue = average;
+		}
 		
 		lastValue = value;
-		lastFilteredValue = average;
 		
 	}
+	
+	
+	public void addValueTwo(float value)
+	{
+		
+		float offettedValue = value + valueTwoOffset;
+		if(firstFrameTwo)
+		{
+			firstFrameTwo = false;
+		}else
+		{
+			if(Math.abs(offettedValue - lastValueTwo) > shampen)
+			{
+				offettedValue = lastValueTwo;
+			}
+		}
+		
+		plotDataTwo.remove(0);
+		plotDataTwo.add(offettedValue);
+		
+		lastValueTwo = offettedValue;
+	}
+	
+	public void setValueTwo()
+	{
+		//average over the last 100
+		float avgOne = 0;
+		float avgTwo = 0;
+		for(int itr = 0; itr < 100; itr++)
+		{
+			avgOne += plotData.get(plotPointSize - 1 - itr);
+			avgTwo += plotDataTwo.get(plotPointSize - 1 - itr);
+		}
+		
+		avgOne = avgOne / 100;
+		avgTwo = avgTwo / 100;
+		
+		valueTwoOffset = avgOne - avgTwo;
+	}
+	
 	
 	public float getLastValue()
 	{
@@ -205,7 +269,7 @@ public class TimeSeriesPlot {
 			
 			colorValue = 120;
 			
-			app.println("readyValue " + readyValue);
+			//app.println("readyValue " + readyValue);
 		}
 	}
 	
@@ -214,7 +278,7 @@ public class TimeSeriesPlot {
 		if(getReady == true)
 		{
 			releaseValue = (int) ((centerY + plotHeight - mousey) / (plotHeight / yHeight) + yMin);
-			app.println("releaseValue " + releaseValue);
+			//app.println("releaseValue " + releaseValue);
 			if(Math.abs(releaseValue - readyValue) > 2)
 			{
 				//made an effective selection 
@@ -228,7 +292,7 @@ public class TimeSeriesPlot {
 			}else
 			{
 				//set to default
-				setMinMax(900, 1200);
+				setMinMax(0, 1000);
 			}
 			
 			readyValue = 0;
@@ -321,8 +385,12 @@ public class TimeSeriesPlot {
 		//show frequency
 		if(isTesting)
 		{
-			app.text("" + mainFrequncy + " Hz", 900, centerY + 30);
+			//app.text("" + mainFrequncy + " Hz", 900, centerY + 30);
+			
+			
 		}
+		
+		app.text("" + lastValue + "", 800, centerY + 30);
 		
 		app.stroke(200, 100, 100);
 		app.noFill();
@@ -339,6 +407,28 @@ public class TimeSeriesPlot {
 			float xOnAxisTwo = plotSegWidth * (itrd + 1);
 			
 			app.line(xOnAxisOne, yOnAxisOne, xOnAxisTwo, yOnAxisTwo);
+		}
+		
+		
+		if(isDataTwo)
+		{
+			app.stroke(100, 100, 200);
+			app.fill(100, 100, 200);
+			app.text("" + lastValueTwo + "", 800, centerY + 80);
+			
+			for(int itrd = 0; itrd < plotDataTwo.size() - 1 ; itrd++)
+			{
+				float valueOne = plotDataTwo.get(itrd);
+				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
+				float xOnAxisOne = plotSegWidth * itrd;
+				
+				float valueTwo = plotDataTwo.get(itrd + 1);
+				float yOnAxisTwo = centerY + plotHeight - (valueTwo - yMin) * plotHeight / yHeight;
+				float xOnAxisTwo = plotSegWidth * (itrd + 1);
+				
+				app.line(xOnAxisOne, yOnAxisOne, xOnAxisTwo, yOnAxisTwo);
+			}
+			
 		}
 		
 		

@@ -225,11 +225,11 @@ void loop() {
       open2Valve();
       break;
 
-      case 'h':
+      case 'j':
       close3Valve();
       break;
 
-      case 'j':
+      case 'h':
       open3Valve();
       break;
 
