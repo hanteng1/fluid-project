@@ -1,8 +1,14 @@
 package com.teng.test;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Random;
 
+import gnu.io.CommPort;
+import gnu.io.CommPortIdentifier;
+import gnu.io.SerialPort;
 import gnu.io.SerialPortEventListener;
 import processing.core.PApplet;
 
@@ -15,8 +21,6 @@ public class PressureTest extends PApplet{
 	ArrayList<Integer> mouseTriggered;
 	int  rectWidth, rectHeight;
 	int rectOverIndex = -1;
-	
-	boolean isReady = false;
 	
 	//****************************//
 	int sensation = 1;   
@@ -46,6 +50,23 @@ public class PressureTest extends PApplet{
 	long startTime = 0;
 	
 	public static DataStorage dataStorage;
+	
+	
+	//ring
+	//serial - for pump and valves
+	static SerialPort serialPort_One;
+	static InputStream serialInput_One;
+	static BufferedReader input_One;
+	static OutputStream serialOutput_One;
+	static String portName_One;
+	
+	//to control pressure
+	HapticController controller;
+	
+	
+	
+	boolean workingInProgress = false;
+	public int rendering = 0;  //0 - nothing, 1 - render, 2 - ready
 	
 	
 	public void settings()
@@ -107,8 +128,117 @@ public class PressureTest extends PApplet{
 		dataStorage.userId = userId;
 		dataStorage.sensation = "pressure";
 		dataStorage.levels = levels;
+		
+
+		//ring
+		configurePort_One("COM8");
+		connectPort_One();
+		delay(2000);
+		//set to clockwise by default
+		
+		controller = new HapticController(this);
+		
+		//get ready
+		thread("getWaterReady");
+		
 	}
 	
+	void configurePort_One(String _portName) {
+		portName_One = _portName;
+	}
+	
+	void connectPort_One() {
+		try {
+			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName_One);
+			if (portIdentifier.isCurrentlyOwned()) {
+				System.out.println("Error: Port is currently in use");
+			} else {
+				CommPort commPort = portIdentifier.open(this.getClass().getName(), 2000);
+				
+				if (commPort instanceof SerialPort) {
+					serialPort_One = (SerialPort) commPort;
+
+					// Set appropriate properties (do not change these)
+					serialPort_One.setSerialPortParams(
+							9600, 
+							SerialPort.DATABITS_8,
+							SerialPort.STOPBITS_1, 
+							SerialPort.PARITY_NONE);
+
+					serialInput_One = serialPort_One.getInputStream();			
+					serialOutput_One = serialPort_One.getOutputStream();
+			      
+					System.out.println("Connected to port: " + portName_One);
+				} else {
+					System.out.println("Error: Only serial ports are handled by this example.");
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}		
+	}
+	
+	
+	public void setClockWise()
+	{
+		try {
+			serialOutput_One.write('i');
+		} catch (Exception ex) {
+			return;
+		}
+	}
+	
+	public void valveOpen()
+	{
+		try {
+			serialOutput_One.write('h');
+		} catch (Exception ex) {
+			return;
+		}
+	}
+	
+	public void valveClose()
+	{
+		try {
+			serialOutput_One.write('j');
+		} catch (Exception ex) {
+			return;
+		}
+	
+	}
+	
+	public void runWater()
+	{
+		try {
+			serialOutput_One.write('w');
+		} catch (Exception ex) {
+			return;
+		}
+	}
+	
+	public void stopWater()
+	{
+		try {
+			serialOutput_One.write('t');
+		} catch (Exception ex) {
+			return;
+		}
+	}
+	
+	public void getWaterReady()
+	{
+		workingInProgress = true;
+		setClockWise();
+		delay(200);
+		valveOpen();
+		delay(200);
+		
+		runWater();
+		delay(5000);
+		stopWater();
+		workingInProgress = false;
+	}
+
 	public void draw()
 	{
 		background(225, 225, 225);
@@ -123,12 +253,15 @@ public class PressureTest extends PApplet{
 		text("Trial " + trial + " / " + totalTrials , 400, 100);
 		
 		//ready?
-		if(isReady)
-		{
-			fill(0, 200, 0);
-		}else
+		if(rendering == 0)
 		{
 			fill(200, 0, 0);
+		}else if(rendering == 1)
+		{
+			fill(200, 200, 0);
+		}else if(rendering == 2)
+		{
+			fill(0, 200, 0);
 		}
 		noStroke();
 		ellipse(800, 85, 100, 100);
@@ -171,6 +304,16 @@ public class PressureTest extends PApplet{
 			fill(200, 200, 200, 200);
 			rect(0, 0, windowWidth, windowHeight);
 			String textShown = "Block done, press Q to quit";
+			fill(120);
+			textSize(48);
+			text(textShown, windowWidth/ 2 - textWidth(textShown) / 2, windowHeight / 2); 
+		}
+		
+		if(workingInProgress)
+		{
+			fill(200, 200, 200, 200);
+			rect(0, 0, windowWidth, windowHeight);
+			String textShown = "working...";
 			fill(120);
 			textSize(48);
 			text(textShown, windowWidth/ 2 - textWidth(textShown) / 2, windowHeight / 2); 
@@ -248,82 +391,116 @@ public class PressureTest extends PApplet{
 	public void makePractice()
 	{
 		//render a target
+		mouseTriggered.set(rectOverIndex, 1);
 		
-		
-		//release
+		renderNext(target, isTrainingMode);  //render with releasing		
 	}
 	
 	
 	public void keyPressed() {
 		if (key == 'q') {
 			dataStorage.save();
+			
+			try {
+				System.out.println("Disconnecting from port: " + portName_One);
+				serialInput_One.close();
+				serialOutput_One.close();
+				serialPort_One.close();
+				
+			} catch (Exception ex){
+				ex.printStackTrace();
+			}
+			
+			delay(100);
+			
 			exit();
 		}else if(key == ' ')
 		{
-			if(blockDone == false)
+			if(workingInProgress || rendering == 1)
 			{
-				if(isTrainingMode)
+				return;
+			}else
+			{
+				if(blockDone == false)
 				{
-					isTrainingMode = false;
-					//start
-					nextTrial();
-				}else
-				{
-					if(waitingForAnswer == false)
+					if(isTrainingMode)
 					{
-						//record the data
-						DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
-						
-						//go to next
+						isTrainingMode = false;
+						//start
 						nextTrial();
-					}	
+					}else
+					{
+						if(waitingForAnswer == false)
+						{
+							//record the data
+							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
+							
+							//go to next
+							nextTrial();
+						}	
+					}
 				}
 			}
+			
 			
 		}else
 		{
-			String inpuText = "" + key;
 			
-			if(isTrainingMode)
+			if(workingInProgress)
 			{
-				int inputValue = -1;
-				try {
-					inputValue = Integer.parseInt(inpuText);
-				}catch(Exception ex)
-				{
-					return;
-				}
-				
-				if(inputValue > 0 && inputValue < (levels + 1))
-				{
-					rectOverIndex = inputValue - 1 ;
-					target = inputValue;
-					makePractice();
-				}
+				return;
 			}else
 			{
-				if(waitingForAnswer || rectOverIndex >= 0)
+				String inpuText = "" + key;
+				
+				if(isTrainingMode)
 				{
-					int inputValue = -1;
-					try {
-						inputValue = Integer.parseInt(inpuText);
-					}catch(Exception ex)
+					if(rendering > 0)
 					{
 						return;
+					}else
+					{
+						int inputValue = -1;
+						try {
+							inputValue = Integer.parseInt(inpuText);
+						}catch(Exception ex)
+						{
+							return;
+						}
+						
+						if(inputValue > 0 && inputValue < (levels + 1))
+						{			
+							rectOverIndex = inputValue - 1 ;
+							target = inputValue;
+							makePractice();
+						}
 					}
 					
-					if(inputValue > 0 && inputValue < (levels + 1))
+					
+				}else
+				{
+					if(waitingForAnswer || rectOverIndex >= 0)
 					{
-						if(rectOverIndex >= 0)
+						int inputValue = -1;
+						try {
+							inputValue = Integer.parseInt(inpuText);
+						}catch(Exception ex)
 						{
-							mouseTriggered.set(rectOverIndex, 0);
+							return;
 						}
-						rectOverIndex = inputValue - 1 ;
-						makeChoice();
+						
+						if(inputValue > 0 && inputValue < (levels + 1))
+						{
+							if(rectOverIndex >= 0)
+							{
+								mouseTriggered.set(rectOverIndex, 0);
+							}
+							rectOverIndex = inputValue - 1 ;
+							makeChoice();
+						}
 					}
 				}
 			}
-			
 		}
 	}
 	
@@ -356,16 +533,33 @@ public class PressureTest extends PApplet{
 	}
 	
 	
-	public void renderNext()
+	public void renderNext(int targetIndex, boolean isTraining)
 	{
+		controller.addPressure(targetIndex);
 		
+		if(isTraining)
+		{
+			thread("scheduleRelease");
+		}
 	}
 	
-	public void leaseRender()
+	public void releaseRender()
 	{
-		
+		controller.releasePressure();
 	}
 	
+	
+	public void scheduleRelease()
+	{
+		delay(3000);  //how long it lasts before releasing
+		releaseRender();
+		rendering = 1;
+		delay(2000);
+		rendering = 0;
+		mouseTriggered.set(rectOverIndex, 0);
+		rectOverIndex = -1;
+		
+	}
 	
 	
 	public static void main(String[] args){

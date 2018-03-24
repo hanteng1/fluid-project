@@ -47,20 +47,20 @@ public class Leap {
 
 
 class LeapListener extends Listener {
-    public void onInit(Controller controller) {
+    public void onInit(HapticController controller) {
         System.out.println("Initialized");
     }
 
-    public void onConnect(Controller controller) {
+    public void onConnect(HapticController controller) {
         System.out.println("Connected");
     }
 
-    public void onDisconnect(Controller controller) {
+    public void onDisconnect(HapticController controller) {
         //Note: not dispatched when running in a debugger.
         System.out.println("Disconnected");
     }
 
-    public void onExit(Controller controller) {
+    public void onExit(HapticController controller) {
         System.out.println("Exited");
     }
 

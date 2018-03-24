@@ -29,7 +29,7 @@ public class TimeSeriesPlot {
 	float shampen = 2;
 	float lastValue = 0;
 	float lastValueTwo = 0;
-	float valueTwoOffset = 0;
+	float valueTwoOffset = 62.9f;
 	float lastFilteredValue = 0;
 	boolean  firstFrame = true;
 	boolean firstFrameTwo = true;
@@ -179,7 +179,6 @@ public class TimeSeriesPlot {
 	
 	public void addValueTwo(float value)
 	{
-		
 		float offettedValue = value + valueTwoOffset;
 		if(firstFrameTwo)
 		{
@@ -209,10 +208,13 @@ public class TimeSeriesPlot {
 			avgTwo += plotDataTwo.get(plotPointSize - 1 - itr);
 		}
 		
-		avgOne = avgOne / 100;
-		avgTwo = avgTwo / 100;
+		avgOne = avgOne / 100.0f;
+		avgTwo = avgTwo / 100.0f;
 		
 		valueTwoOffset = avgOne - avgTwo;
+		valueTwoOffset = Float.parseFloat(String.format("%.1f", valueTwoOffset));
+		
+		app.println("valueoffset " + valueTwoOffset);
 	}
 	
 	

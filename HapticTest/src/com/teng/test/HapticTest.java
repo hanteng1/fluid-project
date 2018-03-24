@@ -185,29 +185,29 @@ public class HapticTest extends PApplet{
 		mouseTriggered = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  //0 - not active, 1 - active
 		
 		//control
-		configurePort_One("COM10");
+		configurePort_One("COM8");
 		connectPort_One();
 			
 		delay(1000);
-		
-		//sensor
-		configurePort_Two("COM8");
-		connectPort_Two();
-		
-		delay(1000);
-		
-		
-		//finger pressure
-		configurePort_Three("COM13");
-		connectPort_Three();
-		delay(1000);
-		
-		
-		//sensor for evaluation
-		configurePort_Four("COM4");
-		connectPort_Four();
-		delay(1000);
-		
+//		
+//		//sensor
+//		configurePort_Two("COM8");
+//		connectPort_Two();
+//		
+//		delay(1000);
+//		
+//		
+//		//finger pressure
+//		configurePort_Three("COM13");
+//		connectPort_Three();
+//		delay(1000);
+//		
+//		
+//		//sensor for evaluation
+//		configurePort_Four("COM4");
+//		connectPort_Four();
+//		delay(1000);
+//		
 //		
 //		
 		leap = new Leap();
@@ -276,7 +276,7 @@ public class HapticTest extends PApplet{
 		squeeze = new Squeeze(this);
 		
 		
-		thread("setValueTwoOffset");
+		//thread("setValueTwoOffset");
 		
 	}
 	
@@ -398,7 +398,7 @@ public class HapticTest extends PApplet{
 		
 		timeSeriesPlot.draw();
 		
-		//fingerPressurePlot.draw();
+		fingerPressurePlot.draw();
 		
 		//draw temperature
 		//show the velocity
@@ -890,7 +890,7 @@ public class HapticTest extends PApplet{
 			
 		}else if(key == 's')
 		{
-			squeeze.sendNotification();
+			thread("setValueTwoOffset");
 			
 		}else if(key =='d')
 		{
@@ -907,6 +907,7 @@ public class HapticTest extends PApplet{
 			{
 				//thread("leftPump");
 			}else if(keyCode == RIGHT)
+				
 			{
 				//thread("rightPump");
 			}else if(keyCode == UP)
