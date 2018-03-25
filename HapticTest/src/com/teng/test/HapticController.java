@@ -27,12 +27,11 @@ public class HapticController {
 		
 		int levels = pressureTest.levels;
 		levelFactor = (float) Math.pow(pressureHigh / pressureLow, 1.0/ (levels - 1));
-		 
-		pressureTest.println(levelFactor);
+		//pressureTest.println(levelFactor);
 		for(int itr = 0; itr < levels; itr++)
 		{
 			pressureLevels.add((int) (pressureLow * Math.pow(levelFactor, itr)));
-			pressureTest.println("" + itr + " : " + pressureLevels.get(itr));
+			//pressureTest.println("" + itr + " : " + pressureLevels.get(itr));
 		}
 	}
 	
@@ -52,7 +51,7 @@ public class HapticController {
 		{
 			new AddWater(pressureLevels.get(level - 1)).start();
 			
-			pressureTest.println("render " + level + " : " +  pressureLevels.get(level - 1));
+			//pressureTest.println("render " + level + " : " +  pressureLevels.get(level - 1));
 		}
 		
 	}

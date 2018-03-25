@@ -62,8 +62,7 @@ public class PressureTest extends PApplet{
 	
 	//to control pressure
 	HapticController controller;
-	
-	
+
 	
 	boolean workingInProgress = false;
 	public int rendering = 0;  //0 - nothing, 1 - render, 2 - ready
@@ -313,7 +312,15 @@ public class PressureTest extends PApplet{
 		{
 			fill(200, 200, 200, 200);
 			rect(0, 0, windowWidth, windowHeight);
-			String textShown = "working...";
+			String textShown;
+			if(trial > 0)
+			{
+				textShown = "press SPACE to refamiliar... ";
+			}else
+			{
+				textShown = "working...";
+			}
+			
 			fill(120);
 			textSize(48);
 			text(textShown, windowWidth/ 2 - textWidth(textShown) / 2, windowHeight / 2); 
@@ -421,6 +428,14 @@ public class PressureTest extends PApplet{
 			exit();
 		}else if(key == ' ')
 		{
+			if(workingInProgress && trial > 0)
+			{
+				isTrainingMode = true;
+				workingInProgress = false;
+				promp = "Train mode, press 123... to try, or SPACE to start";
+				return;
+			}
+			
 			if(workingInProgress || rendering == 1)
 			{
 				return;
@@ -447,7 +462,15 @@ public class PressureTest extends PApplet{
 							responseTime = 0;
 							
 							//go to next
-							nextTrial();
+							if(trial % 2 == 0)
+							{
+								workingInProgress = true;
+							}else
+							{
+								nextTrial();
+							}
+							
+							
 						}	
 					}
 				}
@@ -517,11 +540,10 @@ public class PressureTest extends PApplet{
 	
 	public void nextTrial()
 	{
-		
 		if(trial <= (totalTrials - 1))
 		{
 			target = trialSequence.get(trial);
-			println("target: " + target);
+			//println("target: " + target);
 			trial++;
 			
 			if(rectOverIndex > -1)
