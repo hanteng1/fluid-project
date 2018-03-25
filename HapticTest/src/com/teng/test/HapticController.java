@@ -8,8 +8,8 @@ public class HapticController {
 	
 	PressureTest pressureTest;
 	public int pressureLevel = 0;
-	public int pressureLow = 300;
-	public int pressureHigh = 1000;
+	public float pressureLow = 200.0f;
+	public float pressureHigh = 1000.0f;
 	public int pressureRange;
 	public ArrayList<Integer> pressureLevels;
 	
@@ -17,19 +17,22 @@ public class HapticController {
 	TemperatureTest temperatureTest;
 	
 	
+	public float levelFactor = 0;
+	
+	
 	public HapticController(PressureTest test)
 	{
 		pressureTest = test;
-		pressureRange = pressureHigh - pressureLow;
 		pressureLevels = new ArrayList<Integer>();
 		
 		int levels = pressureTest.levels;
-		int unitPressure = (int)(pressureRange / (levels - 1));
-		
+		levelFactor = (float) Math.pow(pressureHigh / pressureLow, 1.0/ (levels - 1));
+		 
+		pressureTest.println(levelFactor);
 		for(int itr = 0; itr < levels; itr++)
 		{
-			pressureLevels.add(pressureLow + itr * unitPressure);
-			
+			pressureLevels.add((int) (pressureLow * Math.pow(levelFactor, itr)));
+			pressureTest.println("" + itr + " : " + pressureLevels.get(itr));
 		}
 	}
 	
@@ -47,10 +50,9 @@ public class HapticController {
 	{
 		if(level > 0 && level < 10)
 		{
-			new AddWater(level * 100).start();
-			pressureLevel = level;
+			new AddWater(pressureLevels.get(level - 1)).start();
 			
-			//pressureTest.println("level: " + pressureLevel);
+			pressureTest.println("render " + level + " : " +  pressureLevels.get(level - 1));
 		}
 		
 	}
@@ -58,7 +60,6 @@ public class HapticController {
 	public void releasePressure()
 	{
 		pressureTest.valveOpen();
-		pressureLevel = 0;
 		//pressureTest.println("level: " + pressureLevel);
 	}
 	
@@ -74,9 +75,7 @@ public class HapticController {
 		}
 		
 		public void run()
-		{
-			pressureTest.rendering = 1;
-			
+		{	
 			//close the value
 			try {
 				pressureTest.serialOutput_One.write('j');
@@ -98,8 +97,6 @@ public class HapticController {
 			} catch (Exception ex) {
 				return;
 			}
-			
-			pressureTest.rendering = 2;
 			
 		}
 	}

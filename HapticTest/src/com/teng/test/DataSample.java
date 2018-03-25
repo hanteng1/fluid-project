@@ -22,7 +22,7 @@ public class DataSample {
         levels = _levels;
         target = _target;
         answer = _answer;
-        responseTime = -responseTime;
+        responseTime = _responseTime;
         iscorrect = _iscorrect;
     }
 

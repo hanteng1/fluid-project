@@ -27,7 +27,7 @@ public class PressureTest extends PApplet{
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 2;    // 1, 2, 3
+	int block = 1;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
@@ -47,7 +47,7 @@ public class PressureTest extends PApplet{
 	
 	String promp = "";
 	long responseTime = 0;
-	long startTime = 0;
+	long trialStartTime = 0;
 	
 	public static DataStorage dataStorage;
 	
@@ -121,7 +121,7 @@ public class PressureTest extends PApplet{
 		
 		if(isTrainingMode)
 		{
-			promp = "Train mode, press SPACE to start";
+			promp = "Train mode, press 123.. to try, or SPACE to start";
 		}
 		
 		dataStorage = DataStorage.getInstance();
@@ -382,9 +382,8 @@ public class PressureTest extends PApplet{
 		answer = rectOverIndex + 1;
 		
 		//record/update the duration
-		//responseTime = System.currentTimeMillis() - startTime;
-		
-		promp = "Press SPACE to next";
+		responseTime = System.currentTimeMillis() - trialStartTime;
+		promp = "Press SPACE to release";
 		waitingForAnswer = false;
 	}
 	
@@ -400,6 +399,12 @@ public class PressureTest extends PApplet{
 	public void keyPressed() {
 		if (key == 'q') {
 			dataStorage.save();
+			
+			stopWater();
+			delay(200);
+			
+			valveOpen();
+			delay(200);
 			
 			try {
 				System.out.println("Disconnecting from port: " + portName_One);
@@ -419,7 +424,10 @@ public class PressureTest extends PApplet{
 			if(workingInProgress || rendering == 1)
 			{
 				return;
-			}else
+			}else if(rendering == 2 && waitingForAnswer == false)
+			{
+				thread("releaseWithSpace");
+			}else if(rendering == 0)
 			{
 				if(blockDone == false)
 				{
@@ -434,6 +442,9 @@ public class PressureTest extends PApplet{
 						{
 							//record the data
 							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
+							
+							answer = 0;
+							responseTime = 0;
 							
 							//go to next
 							nextTrial();
@@ -479,7 +490,7 @@ public class PressureTest extends PApplet{
 					
 				}else
 				{
-					if(waitingForAnswer || rectOverIndex >= 0)
+					if((waitingForAnswer || rectOverIndex >= 0) && rendering == 2)
 					{
 						int inputValue = -1;
 						try {
@@ -513,7 +524,6 @@ public class PressureTest extends PApplet{
 			println("target: " + target);
 			trial++;
 			
-			waitingForAnswer = true;
 			if(rectOverIndex > -1)
 			{
 				mouseTriggered.set(rectOverIndex, 0);
@@ -521,9 +531,7 @@ public class PressureTest extends PApplet{
 			}
 			
 			//render the target
-			thread("renderNext");
-			
-			promp = "waiting for your answer ...";
+			renderNext(target, isTrainingMode);
 			
 		}else
 		{
@@ -535,12 +543,12 @@ public class PressureTest extends PApplet{
 	
 	public void renderNext(int targetIndex, boolean isTraining)
 	{
+		rendering = 1;
 		controller.addPressure(targetIndex);
 		
-		if(isTraining)
-		{
-			thread("scheduleRelease");
-		}
+		promp = "rendering...";
+		
+		thread("scheduleTaskReady");
 	}
 	
 	public void releaseRender()
@@ -548,16 +556,53 @@ public class PressureTest extends PApplet{
 		controller.releasePressure();
 	}
 	
-	
-	public void scheduleRelease()
+	public void scheduleTaskReady()
 	{
-		delay(3000);  //how long it lasts before releasing
+		delay(2000);
+		rendering = 2;
+		
+		if(isTrainingMode)
+		{
+			promp = "press SPACE to release ...";
+		}else
+		{
+			waitingForAnswer = true;
+			trialStartTime = System.currentTimeMillis();
+			promp = "waiting for your answer ...";
+		}
+		
+	}
+	
+//	public void scheduleRelease()
+//	{
+//		delay(5000);  //how long it lasts before releasing
+//		releaseRender();
+//		rendering = 1;
+//		delay(2000);
+//		rendering = 0;
+//		mouseTriggered.set(rectOverIndex, 0);
+//		rectOverIndex = -1;
+//		
+//	}
+	
+	public void releaseWithSpace()
+	{
+		promp = "releasing...";
 		releaseRender();
 		rendering = 1;
 		delay(2000);
 		rendering = 0;
 		mouseTriggered.set(rectOverIndex, 0);
 		rectOverIndex = -1;
+		
+		if(isTrainingMode)
+		{
+			promp = "Train mode, press 123... to try, or SPACE to start";
+		}else
+		{
+			promp = "Press SPACE to next";
+		}
+		
 		
 	}
 	
