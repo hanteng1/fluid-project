@@ -321,7 +321,7 @@ void hotWater()
 //  }
 //  pumpTwoSpeed = maxSpeed - pumpOneSpeed;
   pumpOneSpeed = 0;
-  pumpTwoSpeed = 255;
+  pumpTwoSpeed = 200;
 }
 
 void coldWaterSlow()

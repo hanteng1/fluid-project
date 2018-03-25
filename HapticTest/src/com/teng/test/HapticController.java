@@ -3,22 +3,27 @@ package com.teng.test;
 import java.util.ArrayList;
 
 import com.teng.test.Squeeze.AddWater;
+import com.teng.test.Squeeze.Vibration;
 
 public class HapticController {
 	
 	PressureTest pressureTest;
-	public int pressureLevel = 0;
-	public float pressureLow = 200.0f;
-	public float pressureHigh = 1000.0f;
-	public int pressureRange;
-	public ArrayList<Integer> pressureLevels;
+	float pressureLow = 200.0f;
+	float pressureHigh = 1000.0f;
+	ArrayList<Integer> pressureLevels;
 	
 	VibrationTest vibrationTest;
-	TemperatureTest temperatureTest;
+	float vibrationLow = 1.0f;
+	float vibrationHigh = 40.0f;
+	ArrayList<Integer> vibrationLevels;
+	Vibration vibration;
 	
+	TemperatureTest temperatureTest;
+	float temperatureLow = 15.0f;
+	float temperatureHigh = 35.0f;
+	ArrayList<Integer> temperatureLevels;
 	
 	public float levelFactor = 0;
-	
 	
 	public HapticController(PressureTest test)
 	{
@@ -38,6 +43,27 @@ public class HapticController {
 	public HapticController(VibrationTest test)
 	{
 		vibrationTest = test;
+		vibrationLevels = new ArrayList<Integer>();
+		
+		int levels = vibrationTest.levels;
+		levelFactor = (float) Math.pow(vibrationHigh / vibrationLow, 1.0/ (levels - 1));
+		vibrationTest.println(levelFactor);
+		for(int itr = 0; itr < levels; itr++)
+		{
+			vibrationLevels.add((int) (vibrationLow * Math.pow(levelFactor, itr)));
+			
+			if(itr > 0)
+			{
+				if(vibrationLevels.get(itr) == vibrationLevels.get(itr - 1))
+				{
+					vibrationLevels.set(itr, vibrationLevels.get(itr) + 1);
+				}
+			}
+			
+			//vibrationTest.println("" + itr + " : " + vibrationLevels.get(itr));
+		}
+		
+		
 	}
 	
 	public HapticController(TemperatureTest test)
@@ -62,6 +88,21 @@ public class HapticController {
 		//pressureTest.println("level: " + pressureLevel);
 	}
 	
+	
+	public void startVibration(int level)
+	{
+		if(level > 0 && level < 10)
+		{
+			int duration = (int)(500 / vibrationLevels.get(level - 1));
+			vibration = new Vibration(duration);
+			vibration.start();
+		}
+	}
+	
+	public void stopVibration()
+	{
+		vibration.stopWorking();
+	}
 	
 	//used only for pressureTest
 	class AddWater extends Thread{
@@ -124,22 +165,24 @@ public class HapticController {
 		
 		public void run()
 		{
+			
+			vibrationTest.valveOpen();
+			vibrationTest.delay(200);
+			vibrationTest.runWater();
+			vibrationTest.delay(2000);
+			
+			vibrationTest.scheduleTaskReady();
+			
 			while(working)
 			{
-//				try {
-//					vibrationTest.serialOutput_One.write('j');
-//				} catch (Exception ex) {
-//					return;
-//				}
-//				vibrationTest.delay(duration);
-//				
-//				try {
-//					vibrationTest.serialOutput_One.write('h');
-//				} catch (Exception ex) {
-//					return;
-//				}
-//				vibrationTest.delay(duration);
+				vibrationTest.valveClose();
+				vibrationTest.delay(duration);
+				
+				vibrationTest.valveOpen();
+				vibrationTest.delay(duration);
 			}
+			
+			vibrationTest.stopWater();
 		}
 		
 		

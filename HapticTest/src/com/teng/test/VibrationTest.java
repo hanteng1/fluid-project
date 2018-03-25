@@ -22,7 +22,7 @@ public class VibrationTest extends PApplet{
 	int rectOverIndex = -1;
 	
 	//****************************//
-	int sensation = 1;   
+	int sensation = 2;   
 	//****************************//
 	int userId = 1;
 	//****************************//
@@ -94,13 +94,6 @@ public class VibrationTest extends PApplet{
 		
 		trialSequence = randomize(oldSequence);
 		
-//		for(int itr = 0; itr < trialSequence.size(); itr++)
-//		{
-//			print(trialSequence.get(itr) + ",");
-//		}
-//		println();
-		
-		
 		rectWidth = windowWidth /( 2 * levels + 1);
 		rectHeight = 50;
 		rectXs = new ArrayList<Integer>();
@@ -123,7 +116,7 @@ public class VibrationTest extends PApplet{
 		
 		dataStorage = DataStorage.getInstance();
 		dataStorage.userId = userId;
-		dataStorage.sensation = "pressure";
+		dataStorage.sensation = "vibration";
 		dataStorage.levels = levels;
 		
 
@@ -207,7 +200,7 @@ public class VibrationTest extends PApplet{
 	public void runWater()
 	{
 		try {
-			serialOutput_One.write('w');
+			serialOutput_One.write('y');  //slow speed
 		} catch (Exception ex) {
 			return;
 		}
@@ -352,7 +345,7 @@ public class VibrationTest extends PApplet{
 	{
 		//render a target
 		mouseTriggered.set(rectOverIndex, 1);
-		renderNext(target, isTrainingMode);  //render with releasing		
+		renderNext(target);
 	}
 	
 	public void keyPressed() {
@@ -503,7 +496,7 @@ public class VibrationTest extends PApplet{
 			}
 			
 			//render the target
-			renderNext(target, isTrainingMode);
+			renderNext(target);
 			
 		}else
 		{
@@ -512,27 +505,22 @@ public class VibrationTest extends PApplet{
 		}
 	}
 	
-	public void renderNext(int targetIndex, boolean isTraining)
+	public void renderNext(int targetIndex)
 	{
 		
 		rendering = 1;
-		controller.addPressure(targetIndex);
-		
+		controller.startVibration(targetIndex);
 		promp = "rendering...";
-		
-		thread("scheduleTaskReady");
 	}
 	
 	public void releaseRender()
 	{
-		controller.releasePressure();
+		controller.stopVibration();
 	}
 	
 	public void scheduleTaskReady()
 	{
-		delay(2000);
 		rendering = 2;
-		
 		if(isTrainingMode)
 		{
 			promp = "press SPACE to release ...";
