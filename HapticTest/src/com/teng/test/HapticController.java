@@ -2,9 +2,6 @@ package com.teng.test;
 
 import java.util.ArrayList;
 
-import com.teng.test.Squeeze.AddWater;
-import com.teng.test.Squeeze.Vibration;
-
 public class HapticController {
 	
 	PressureTest pressureTest;
@@ -19,9 +16,13 @@ public class HapticController {
 	Vibration vibration;
 	
 	TemperatureTest temperatureTest;
-	float temperatureLow = 15.0f;
-	float temperatureHigh = 35.0f;
+	float temperatureLow = 18.0f;
+	float temperatureHigh = 40.0f;
 	ArrayList<Integer> temperatureLevels;
+	double pidOutput  = 0;
+	double prevPidOutput = 0;
+	MiniPID miniPID; 
+	AdjustTemperature adjustTemperature;
 	
 	public float levelFactor = 0;
 	
@@ -47,7 +48,7 @@ public class HapticController {
 		
 		int levels = vibrationTest.levels;
 		levelFactor = (float) Math.pow(vibrationHigh / vibrationLow, 1.0/ (levels - 1));
-		vibrationTest.println(levelFactor);
+		//vibrationTest.println(levelFactor);
 		for(int itr = 0; itr < levels; itr++)
 		{
 			vibrationLevels.add((int) (vibrationLow * Math.pow(levelFactor, itr)));
@@ -62,15 +63,50 @@ public class HapticController {
 			
 			//vibrationTest.println("" + itr + " : " + vibrationLevels.get(itr));
 		}
-		
-		
 	}
 	
 	public HapticController(TemperatureTest test)
 	{
 		temperatureTest = test;
+		temperatureLevels = new ArrayList<Integer>();
+		
+		int levels = temperatureTest.levels;
+//		levelFactor = (float) Math.pow(temperatureHigh / temperatureLow, 1.0/ (levels - 1));
+//		temperatureTest.println(levelFactor);
+//		for(int itr = 0; itr < levels; itr++)
+//		{
+//			temperatureLevels.add((int) (temperatureLow * Math.pow(levelFactor, itr)));
+//			
+//			if(itr > 0)
+//			{
+//				if(temperatureLevels.get(itr) == temperatureLevels.get(itr - 1))
+//				{
+//					temperatureLevels.set(itr, temperatureLevels.get(itr) + 1);
+//				}
+//			}
+//			
+//			temperatureTest.println("" + itr + " : " + temperatureLevels.get(itr));
+//		}
+		
+		float segment = (temperatureHigh - temperatureLow) / (levels - 1);
+		for(int itr = 0; itr < levels; itr++)
+		{
+			temperatureLevels.add((int)(temperatureLow + segment* itr));
+			temperatureTest.println("" + itr + " : " + temperatureLevels.get(itr));
+		}
+		
+		miniPID = new MiniPID(0.25, 0, 0.3);  // no integral part
+		miniPID.setOutputLimits(10);
+		//miniPID.setMaxIOutput(2);
+		//miniPID.setOutputRampRate(3);
+		//miniPID.setOutputFilter(.3);
+		miniPID.setSetpointRange(40);
+		
 	}
 	
+	
+	
+	//////////////////////////////////////////////////////////
 	public void addPressure(int level)
 	{
 		if(level > 0 && level < 10)
@@ -88,6 +124,7 @@ public class HapticController {
 		//pressureTest.println("level: " + pressureLevel);
 	}
 	
+	//////////////////////////////////////////////////////////////
 	
 	public void startVibration(int level)
 	{
@@ -103,6 +140,25 @@ public class HapticController {
 	{
 		vibration.stopWorking();
 	}
+	
+	///////////////////////////////////////////////////////////////
+	
+	public void setTemperature(int level)
+	{
+		if(level > 0 && level < 10)
+		{
+			adjustTemperature = new AdjustTemperature(temperatureLevels.get(level - 1));
+			adjustTemperature.start();
+		}
+	}
+	
+	public void stopTemperature()
+	{
+		adjustTemperature.stopWorking();
+	}
+	
+	//////////////////////////////////////////////////////////////////
+	
 	
 	//used only for pressureTest
 	class AddWater extends Thread{
@@ -186,5 +242,87 @@ public class HapticController {
 		}
 		
 		
+	}
+	
+	//used for running the temperature
+	class AdjustTemperature extends Thread
+	{
+		float target;
+		float actual;
+		boolean working = true;
+		
+		public AdjustTemperature(float _target)
+		{
+			target = _target;
+		}
+		
+		public void stopWorking()
+		{
+			working = false;
+		}
+		
+		public void run()
+		{
+			
+			while(working)
+			{
+				actual = temperatureTest.actualTemperature;
+				float change = target - actual;
+				
+				if(Math.abs(change) >= 0.1)
+				{
+					//the output is desired change in the next step
+					pidOutput = miniPID.getOutput(actual, target);
+					
+					if(pidOutput == prevPidOutput)
+					{
+						//do nothing
+					}else
+					{
+						if(pidOutput >= 0)
+						{
+							if(pidOutput >= 10.0f)
+							{
+								pidOutput = 9.99f;
+							}
+							String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+							String valuetosend = valueTwoDecial + "z";
+							float temp = Float.parseFloat(valueTwoDecial);
+							
+							try {
+								temperatureTest.serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+							} catch (Exception ex) {
+								return;
+							}
+						}else
+						{
+							if(pidOutput <= -10.0f)
+							{
+								pidOutput = -9.99f;
+							}
+							String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+							String valuetosend = valueTwoDecial + "x";
+							float temp = Float.parseFloat(valueTwoDecial) * (-1);
+
+							try {
+								temperatureTest.serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+							} catch (Exception ex) {
+								return;
+							}
+						}
+					}
+					
+					prevPidOutput = pidOutput;
+					
+				}
+				
+				temperatureTest.delay(100);
+			}
+			
+			//release
+			temperatureTest.stopWater();
+			
+			
+		}
 	}
 }

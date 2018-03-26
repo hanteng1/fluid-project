@@ -462,7 +462,7 @@ public class PressureTest extends PApplet{
 							responseTime = 0;
 							
 							//go to next
-							if(trial % 2 == 0)
+							if(trial % 10 == 0)
 							{
 								workingInProgress = true;
 							}else

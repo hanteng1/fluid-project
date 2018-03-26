@@ -92,6 +92,7 @@ public class HapticTest extends PApplet{
 	float temperatureValue;
 	float filteredTemperatureValue;
 	float targetTemperature;
+	float actualTarget;
 	boolean targetSet = false;
 	TimeSeriesPlot temperateSeriesPlot;
 	
@@ -108,6 +109,14 @@ public class HapticTest extends PApplet{
 	double pidOutput  = 0;
 	double prevPidOutput = 0;
 	
+	float hotTemp = 60;
+	float coldTemp = 25;
+	
+
+float alpha = 0.0f;
+float delta = 0.0f;
+	
+	
 	// 0 - stop, 1 - fast hot, 2 - slow hot, 3 - fast cold, 4 - slow cold
 	int pumpState = 0;
 	int pumpOneSpeed = 0;
@@ -116,7 +125,7 @@ public class HapticTest extends PApplet{
 	//for testing with text input
 	String inputText = "";
 	int maxSpeed = 250;
-	float changePoint = 0.7f;
+	float changePoint = 0.5f;
 	
 	
 	//demo squeeze
@@ -185,16 +194,16 @@ public class HapticTest extends PApplet{
 		mouseTriggered = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};  //0 - not active, 1 - active
 		
 		//control
-		configurePort_One("COM8");
+		configurePort_One("COM10");
 		connectPort_One();
 			
 		delay(1000);
-//		
-//		//sensor
-//		configurePort_Two("COM8");
-//		connectPort_Two();
-//		
-//		delay(1000);
+		
+		//sensor
+		configurePort_Two("COM8");
+		connectPort_Two();
+		
+		delay(1000);
 //		
 //		
 //		//finger pressure
@@ -260,7 +269,7 @@ public class HapticTest extends PApplet{
 		//output should be a ratio: portion of hot water flow speed in the total speed
 		//if total speed is 255
 		//output: 1 - hot 255, cold 0 ; 0.5 - hot 127 cold 127; 0 - hot 0 cold 255
-		miniPID = new MiniPID(0.25, 0, 0.3);  // no integral part
+		miniPID = new MiniPID(0.1, 0.0, 0.2);  // no integral part
 		miniPID.setOutputLimits(10);
 		//miniPID.setMaxIOutput(2);
 		//miniPID.setOutputRampRate(3);
@@ -405,6 +414,11 @@ public class HapticTest extends PApplet{
 		textSize(64);
 		String temperatureText = "" + filteredTemperatureValue + " C";  //now the resolution is 0.2
 		text(temperatureText, 350, 300);
+		
+		//show hot and cold 
+		textSize(32);
+		text(coldTemp, 20, 250);
+		text(hotTemp, 20, 300);
 
 		if(targetSet == false)
 		{
@@ -434,6 +448,10 @@ public class HapticTest extends PApplet{
 		
 	}
 
+	
+	
+	
+	
 	
 	private void update(int x, int y)
 	{
@@ -689,7 +707,7 @@ public class HapticTest extends PApplet{
 
 					// Set appropriate properties (do not change these)
 					serialPort_One.setSerialPortParams(
-							9600, 
+							115200, 
 							SerialPort.DATABITS_8,
 							SerialPort.STOPBITS_1, 
 							SerialPort.PARITY_NONE);
@@ -844,26 +862,26 @@ public class HapticTest extends PApplet{
 		
 		delay(100);
 		
-		try {
-			System.out.println("Disconnecting from port: " + portName_Three);
-			serialInput_Three.close();
-			serialOutput_Three.close();
-			serialPort_Three.close();
-			
-		} catch (Exception ex){
-			ex.printStackTrace();
-		}
-		
-		delay(100);
-		try {
-			System.out.println("Disconnecting from port: " + portName_Four);
-			serialInput_Four.close();
-			serialOutput_Four.close();
-			serialPort_Four.close();
-			
-		} catch (Exception ex){
-			ex.printStackTrace();
-		}
+//		try {
+//			System.out.println("Disconnecting from port: " + portName_Three);
+//			serialInput_Three.close();
+//			serialOutput_Three.close();
+//			serialPort_Three.close();
+//			
+//		} catch (Exception ex){
+//			ex.printStackTrace();
+//		}
+//		
+//		delay(100);
+//		try {
+//			System.out.println("Disconnecting from port: " + portName_Four);
+//			serialInput_Four.close();
+//			serialOutput_Four.close();
+//			serialPort_Four.close();
+//			
+//		} catch (Exception ex){
+//			ex.printStackTrace();
+//		}
 	}
 	
 	public void keyPressed() {
@@ -897,8 +915,23 @@ public class HapticTest extends PApplet{
 			squeeze.startVibration();
 		}else if(key == 'f')
 		{
-			squeeze.stopVirbation();
+			//squeeze.stopVirbation();
+			temperatureworking = false;
+		}else if(key == 'u')
+		{
+			coldTemp -= 1;
+		}else if(key == 'i')
+		{
+			coldTemp += 1;
+		}else if(key == 'j')
+		{
+			hotTemp -= 1;
+		}else if(key == 'k')
+		{
+			hotTemp += 1;
 		}
+		
+		
 		
 		else if(key == CODED)
 		{
@@ -941,6 +974,18 @@ public class HapticTest extends PApplet{
 				{
 					targetSet = true;
 					targetTemperature = inputValue;
+					
+					if(targetTemperature > filteredTemperatureValue)
+					{
+						actualTarget = targetTemperature + 0;
+					}else
+					{
+						actualTarget = targetTemperature - 0;
+					}
+					
+					temperatureworking = true;
+					thread("temperatureThread");
+					
 					mouseTriggered[2] = 1;
 				}
 				
@@ -1125,6 +1170,9 @@ public class HapticTest extends PApplet{
 		pumpOneSpeed = 0;
 		pumpTwoSpeed = 0;
 		
+		alpha = 0.0f;
+		delta = 0;
+		
 		threading = false;
 	}
 	
@@ -1140,7 +1188,7 @@ public class HapticTest extends PApplet{
 			return;
 		}
 		
-		pumpOneSpeed = 255;
+		pumpOneSpeed = 250;
 		
 		mouseTriggered[0] = 0; 
 		mouseTriggered[2] = 1;
@@ -1159,7 +1207,7 @@ public class HapticTest extends PApplet{
 			return;
 		}
 		
-		pumpTwoSpeed = 255;
+		pumpTwoSpeed = 250;
 		
 		mouseTriggered[1] = 0; 
 		mouseTriggered[2] = 1;
@@ -1221,34 +1269,53 @@ public class HapticTest extends PApplet{
 		threading = false;
 	}
 	
+	
+	
+	
+	boolean temperatureworking = false;
+	
+	public void temperatureThread()
+	{
+		while(temperatureworking)
+		{
+			AdjustTemperature(actualTarget);
+			delay(500);
+		}
+		
+		pumpOff();
+	}
+	
+	
 	//for pump to work
-	//run every frame
-	public void AdjustTemperature(float target)
+	//run every 0.5 seconds
+	public void AdjustTemperature(float target) 
 	{
 		float change = target - filteredTemperatureValue;
 		
-		if(Math.abs(change) > 0.2)
+		if(Math.abs(change) >= 0.1)
 		{
 			//the output is desired change in the next step
 			pidOutput = miniPID.getOutput(filteredTemperatureValue, target);
+		
 			
-			if(pidOutput == prevPidOutput)
-			{
-				//do nothing
-			}else
+//			if(pidOutput == prevPidOutput)
+//			{
+//				//do nothing
+//			}else
 			{
 				if(pidOutput >= 0)
 				{
-					if(pidOutput >= 10.0f)
-					{
-						pidOutput = 9.99f;
-					}
+//					if(pidOutput >= 10.0f)
+//					{
+//						pidOutput = 9.99f;
+//					}
+					
 					String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
 					String valuetosend = valueTwoDecial + "z";
 					float temp = Float.parseFloat(valueTwoDecial);
 					calculateWater(temp);
 					
-					println("ratio " + temp);
+					println("pid " + temp);
 					try {
 						serialOutput_One.write(valuetosend.getBytes());  //full speed hot
 					} catch (Exception ex) {
@@ -1256,16 +1323,17 @@ public class HapticTest extends PApplet{
 					}
 				}else
 				{
-					if(pidOutput <= -10.0f)
-					{
-						pidOutput = -9.99f;
-					}
+//					if(pidOutput <= -10.0f)
+//					{
+//						pidOutput = -9.99f;
+//					}
+					
 					String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
 					String valuetosend = valueTwoDecial + "x";
 					float temp = Float.parseFloat(valueTwoDecial) * (-1);
 					calculateWater(temp);
 					
-					println("ratio " + temp);
+					println("pid " + temp);
 					try {
 						serialOutput_One.write(valuetosend.getBytes());  //full speed hot
 					} catch (Exception ex) {
@@ -1277,119 +1345,94 @@ public class HapticTest extends PApplet{
 			prevPidOutput = pidOutput;
 			
 		}
-		
-		//only do something when the change is >1
-		
-//		if(change >= 0.5)
-//		{
-//			if(change > 1)
-//			{
-//				if(pumpState != 1)
-//				{
-//					try {
-//						serialOutput_One.write('e');  //full speed hot
-//					} catch (Exception ex) {
-//						return;
-//					}
-//					
-//					pumpState = 1; //fast hot
-//					mouseTriggered[2] = 1;
-//				}
-//			}else
-//			{
-//				if(pumpState != 2)
-//				{
-//					try {
-//						serialOutput_One.write('u');  //full speed hot
-//					} catch (Exception ex) {
-//						return;
-//					}
-//					
-//					pumpState = 2; //slow hot
-//					mouseTriggered[2] = 1;
-//				}
-//			}
-//			
-//		}else if(change <= -0.5)
-//		{
-//			if(change < -1)
-//			{
-//				if(pumpState != 3)
-//				{
-//					try {
-//						serialOutput_One.write('w');  //full speed hot
-//					} catch (Exception ex) {
-//						return;
-//					}
-//					
-//					pumpState = 3; //fast hot
-//					mouseTriggered[2] = 1;
-//				}
-//			}else
-//			{
-//				if(pumpState != 4)
-//				{
-//					try {
-//						serialOutput_One.write('y');  //full speed hot
-//					} catch (Exception ex) {
-//						return;
-//					}
-//					
-//					pumpState = 4; //slow hot
-//					mouseTriggered[2] = 1;
-//				}
-//			}
-//		}else  //-0.5 - 0.5
-//		{
-//			//stop pump
-//			if(pumpState != 0)
-//			{
-//				try {
-//					serialOutput_One.write('t');  //full speed hot
-//				} catch (Exception ex) {
-//					return;
-//				}
-//				
-//				pumpState = 0; //slow hot
-//				mouseTriggered[2] = 0;
-//			}
-//		}
+
 	}
 	
 	
-	void calculateWater(float ratio)
+	
+	
+//	void calculateWater(float ratio)
+//	{
+//	
+//	  changePoint = 0.7f;
+//		
+//	  if(ratio > changePoint)
+//	  {
+//	    //full speed
+//	    pumpTwoSpeed = 250;
+//	    pumpOneSpeed = 0;
+//	  }else if(ratio <= changePoint && ratio >= 0)
+//	  {
+//	    //90 - 250 reduce speed and balance the cold and hot
+//	    int totalSpeed = 100;// (int)(250 - (1.5 - ratio) * 50);  // 250 - 200
+//
+//	    // 0 - 90/90
+//	    float pTwo = (float)((changePoint + ratio) / (2 * changePoint));  // 100 - 50
+//	    float pOne = (float)((changePoint - ratio) / (2 * changePoint));  //0 - 50
+//	    pumpTwoSpeed = (int)(60 + pTwo * totalSpeed);
+//	    pumpOneSpeed = (int)(60 + pOne * totalSpeed);
+//	  }else if(ratio < 0 && ratio >= (changePoint * (-1)))
+//	  {
+//	    //90 - 250 reduce speed and balance the cold and hot
+//	    int totalSpeed = 100; // (int)(250 - (1.5 + ratio) * 50);  // 250 - 200
+//
+//	    // 0 - 90/90
+//	    float pTwo = (float)((changePoint + ratio) / (2 * changePoint));
+//	    float pOne = (float)((changePoint - ratio) / (2 * changePoint));
+//	    pumpTwoSpeed = (int)(60 + pTwo * totalSpeed);
+//	    pumpOneSpeed = (int)(60 + pOne * totalSpeed);
+//	  }else if(ratio < (changePoint * (-1)))
+//	  {
+//	    pumpTwoSpeed = 0;
+//	    pumpOneSpeed = 250;
+//	  }
+//	}
+	
+	
+
+	float lastpid = 0;
+	boolean ispiding = false;
+
+	void calculateWater(float pidvalue)
 	{
-	  if(ratio > changePoint)
-	  {
-	    //full speed
-	    pumpTwoSpeed = 250;
-	    pumpOneSpeed = 0;
-	  }else if(ratio <= changePoint && ratio >= 0)
-	  {
-	    //90 - 250 reduce speed and balance the cold and hot
-	    int totalSpeed = 100;// (int)(250 - (1.5 - ratio) * 50);  // 250 - 200
-
-	    // 0 - 90/90
-	    float pTwo = (float)((changePoint + ratio) / (2 * changePoint));  // 100 - 50
-	    float pOne = (float)((changePoint - ratio) / (2 * changePoint));  //0 - 50
-	    pumpTwoSpeed = (int)(90 + pTwo * totalSpeed);
-	    pumpOneSpeed = (int)(90 + pOne * totalSpeed);
-	  }else if(ratio < 0 && ratio >= (changePoint * (-1)))
-	  {
-	    //90 - 250 reduce speed and balance the cold and hot
-	    int totalSpeed = 100; // (int)(250 - (1.5 + ratio) * 50);  // 250 - 200
-
-	    // 0 - 90/90
-	    float pTwo = (float)((changePoint + ratio) / (2 * changePoint));
-	    float pOne = (float)((changePoint - ratio) / (2 * changePoint));
-	    pumpTwoSpeed = (int)(90 + pTwo * totalSpeed);
-	    pumpOneSpeed = (int)(90 + pOne * totalSpeed);
-	  }else if(ratio < (changePoint * (-1)))
-	  {
-	    pumpTwoSpeed = 0;
-	    pumpOneSpeed = 250;
-	  }
+		
+		if(pidvalue > 0)
+		{
+			alpha = 1.0f + pidvalue * 5.0f;
+			 
+			  if(alpha > 3.5f)
+			  {
+				  alpha = 3.5f;
+			  }
+			  
+			  println("alpha: " + alpha);
+			  
+			  //println("alpha: " + alpha);
+			  pumpOneSpeed = 70;
+			  pumpTwoSpeed = (int) ( alpha * pumpOneSpeed);
+		}else
+		{
+			alpha = 1.0f + pidvalue * (-5.0f);
+			 
+			  if(alpha > 3.5f)
+			  {
+				  alpha = 3.5f;
+			  }
+			  
+			  println("alpha: " + alpha);
+			  
+			  //println("alpha: " + alpha);
+			  pumpTwoSpeed = 70;
+			  pumpOneSpeed = (int) ( alpha * pumpTwoSpeed);
+		}
+	
+		
+	  
+	  
+	  
 	}
+		
+	
 	
 	void testWater(float ratio)
 	{
@@ -1770,19 +1813,19 @@ class SerialListener implements SerialPortEventListener
 				            	float readValue = Float.parseFloat(inputLine);         	
 	
 				            	
-				            	instance.timeSeriesPlot.addValue(readValue);
-//				            	
-//			            		if(readValue > 100) {
-//				            		instance.timeSeriesPlot.addValue(readValue);
-//				            	}
-//				            	else
-//				            	{
-//				            		//System.out.println("temperature: " + readValue)
-//				            		instance.temperatureValue = readValue;
-//				            		instance.temperateSeriesPlot.addValue(instance.temperatureValue);
-//				            		instance.filteredTemperatureValue = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastFilteredValue())));
-//				            		
-//				            	}
+				            	//instance.timeSeriesPlot.addValue(readValue);
+				            	
+			            		if(readValue > 100) {
+				            		instance.timeSeriesPlot.addValue(readValue);
+				            	}
+				            	else
+				            	{
+				            		//System.out.println("temperature: " + readValue)
+				            		instance.temperatureValue = readValue;
+				            		instance.temperateSeriesPlot.addValue(instance.temperatureValue);
+				            		instance.filteredTemperatureValue = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastFilteredValue())));
+				            		
+				            	}
 				            	
 				            }catch(Exception ex)
 				            {
