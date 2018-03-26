@@ -95,7 +95,7 @@ public class HapticController {
 			temperatureTest.println("" + itr + " : " + temperatureLevels.get(itr));
 		}
 		
-		miniPID = new MiniPID(0.25, 0, 0.3);  // no integral part
+		miniPID = new MiniPID(0.1, 0, 0.2);  // no integral part
 		miniPID.setOutputLimits(10);
 		//miniPID.setMaxIOutput(2);
 		//miniPID.setOutputRampRate(3);
@@ -274,41 +274,36 @@ public class HapticController {
 					//the output is desired change in the next step
 					pidOutput = miniPID.getOutput(actual, target);
 					
-					if(pidOutput == prevPidOutput)
+					if(pidOutput >= 0)
 					{
-						//do nothing
+						
+						if(pidOutput >= 10.0f)
+						{
+							pidOutput = 9.99f;
+						}
+						String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+						String valuetosend = valueTwoDecial + "z";
+						float temp = Float.parseFloat(valueTwoDecial);
+						
+						try {
+							temperatureTest.serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+						} catch (Exception ex) {
+							return;
+						}
 					}else
 					{
-						if(pidOutput >= 0)
+						if(pidOutput <= -10.0f)
 						{
-							if(pidOutput >= 10.0f)
-							{
-								pidOutput = 9.99f;
-							}
-							String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
-							String valuetosend = valueTwoDecial + "z";
-							float temp = Float.parseFloat(valueTwoDecial);
-							
-							try {
-								temperatureTest.serialOutput_One.write(valuetosend.getBytes());  //full speed hot
-							} catch (Exception ex) {
-								return;
-							}
-						}else
-						{
-							if(pidOutput <= -10.0f)
-							{
-								pidOutput = -9.99f;
-							}
-							String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
-							String valuetosend = valueTwoDecial + "x";
-							float temp = Float.parseFloat(valueTwoDecial) * (-1);
+							pidOutput = -9.99f;
+						}
+						String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+						String valuetosend = valueTwoDecial + "x";
+						float temp = Float.parseFloat(valueTwoDecial) * (-1);
 
-							try {
-								temperatureTest.serialOutput_One.write(valuetosend.getBytes());  //full speed hot
-							} catch (Exception ex) {
-								return;
-							}
+						try {
+							temperatureTest.serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+						} catch (Exception ex) {
+							return;
 						}
 					}
 					
