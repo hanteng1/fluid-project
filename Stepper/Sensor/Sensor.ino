@@ -26,12 +26,12 @@ void setup() {
 
 void loop() {
   
-  //read pressure
-   pressure_abs = pressureSensor.getPressure(ADC_4096);  //4096
-   //pressure_relative = sealevel(pressure_abs, base_altitude);
-   //altitude_delta = altitude(pressure_abs , pressure_baseline);
-   //send the data to serial
-   Serial.println(pressure_abs);
+//  //read pressure
+//   pressure_abs = pressureSensor.getPressure(ADC_4096);  //4096
+//   //pressure_relative = sealevel(pressure_abs, base_altitude);
+//   //altitude_delta = altitude(pressure_abs , pressure_baseline);
+//   //send the data to serial
+//   Serial.println(pressure_abs);
 
   
   int tempReading = analogRead(temperature);  

@@ -69,7 +69,7 @@ public class TemperatureTest extends PApplet{
 	static OutputStream serialOutput_Two;
 	static String portName_Two;
 	
-	TimeSeriesPlot timeSeriesPlot;
+	//TimeSeriesPlot timeSeriesPlot;
 	
 	float actualTemperature;
 	float targetTemperature;
@@ -148,9 +148,9 @@ public class TemperatureTest extends PApplet{
 		delay(2000);
 		
 		
-		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500, false, false, false);
-		timeSeriesPlot.setShampen(1000);
-		timeSeriesPlot.setMinMax(900, 1200);
+//		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500, false, false, false);
+//		timeSeriesPlot.setShampen(1000);
+//		timeSeriesPlot.setMinMax(900, 1200);
 		
 		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500, true, false, false);
 		temperateSeriesPlot.setMinMax(20, 25);
@@ -353,7 +353,7 @@ public class TemperatureTest extends PApplet{
 		text(promp, windowWidth/2 - textWidth(promp)/2, 200);
 		
 		
-		timeSeriesPlot.draw();
+		//timeSeriesPlot.draw();
 		
 		//show target and actual temperature
 		{
@@ -465,6 +465,13 @@ public class TemperatureTest extends PApplet{
 			delay(100);
 			
 			exit();
+		}else if(key == 's')
+		{
+			if(rendering == 1)
+			{
+				thread("releaseWithAccident");
+			}
+			
 		}else if(key == ' ')
 		{
 			if(workingInProgress && trial > 0)
@@ -501,7 +508,7 @@ public class TemperatureTest extends PApplet{
 							responseTime = 0;
 							
 							//go to next
-							if(trial % 10 == 0)
+							if(trial % 10 == 0 && trial != 0)
 							{
 								workingInProgress = true;
 							}else
@@ -606,7 +613,7 @@ public class TemperatureTest extends PApplet{
 		controller.setTemperature(targetIndex);
 		promp = "rendering...";
 		
-		thread("scheduleTaskReady");
+		//thread("scheduleTaskReady");
 	}
 	
 	public void releaseRender()
@@ -616,7 +623,6 @@ public class TemperatureTest extends PApplet{
 	
 	public void scheduleTaskReady()
 	{
-		delay(10000);
 		rendering = 2;
 		if(isTrainingMode)
 		{
@@ -646,6 +652,29 @@ public class TemperatureTest extends PApplet{
 		}else
 		{
 			promp = "Press SPACE to next";
+		}
+	}
+	
+	public void releaseWithAccident()
+	{
+		promp = "releasing...";
+		releaseRender();
+		rendering = 1;
+		delay(2000);
+		rendering = 0;
+		if(rectOverIndex >= 0)
+		{
+			mouseTriggered.set(rectOverIndex, 0);
+			rectOverIndex = -1;
+		}
+	
+		if(isTrainingMode)
+		{
+			promp = "Train mode, press 123... to try, or SPACE to start";
+		}else
+		{
+			trial--;
+			promp = "Press SPACE to replay the next trial";
 		}
 	}
 	
@@ -682,15 +711,15 @@ class NewSerialListener implements SerialPortEventListener
 				        	inputLine = instance.input_Two.readLine();
 				        	try {
 				            	float readValue = Float.parseFloat(inputLine);         	
-			            		if(readValue > 100) {
-				            		instance.timeSeriesPlot.addValue(readValue);
-				            	}
-				            	else
-				            	{
+//			            		if(readValue > 100) {
+//				            		instance.timeSeriesPlot.addValue(readValue);
+//				            	}
+//				            	else
+//				            	{
 				            		instance.temperateSeriesPlot.addValue(readValue);
 				            		instance.actualTemperature = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastFilteredValue())));
 				            		
-				            	}
+				            	//}
 				            	
 				            }catch(Exception ex)
 				            {

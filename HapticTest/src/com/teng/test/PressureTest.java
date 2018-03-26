@@ -130,7 +130,7 @@ public class PressureTest extends PApplet{
 		
 
 		//ring
-		configurePort_One("COM8");
+		configurePort_One("COM10");
 		connectPort_One();
 		delay(2000);
 		//set to clockwise by default
@@ -159,7 +159,7 @@ public class PressureTest extends PApplet{
 
 					// Set appropriate properties (do not change these)
 					serialPort_One.setSerialPortParams(
-							9600, 
+							115200, 
 							SerialPort.DATABITS_8,
 							SerialPort.STOPBITS_1, 
 							SerialPort.PARITY_NONE);

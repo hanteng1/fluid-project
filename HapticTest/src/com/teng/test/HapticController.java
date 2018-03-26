@@ -269,6 +269,11 @@ public class HapticController {
 				actual = temperatureTest.actualTemperature;
 				float change = target - actual;
 				
+				if(Math.abs(change) <= 1 && temperatureTest.rendering == 1)
+				{
+					temperatureTest.scheduleTaskReady();
+				}
+				
 				if(Math.abs(change) >= 0.1)
 				{
 					//the output is desired change in the next step
