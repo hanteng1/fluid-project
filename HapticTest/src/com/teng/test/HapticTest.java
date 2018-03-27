@@ -230,18 +230,18 @@ float delta = 0.0f;
 //		
 		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500, false, false, true);
 		timeSeriesPlot.setShampen(1000);
-		timeSeriesPlot.setMinMax(900, 1200);
+		timeSeriesPlot.setMinMax(900, 1200, true);
 		
 		//timeSeriesPlot.isTesting = true;
 		
 		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500, true, false, false);
-		temperateSeriesPlot.setMinMax(20, 25);
+		temperateSeriesPlot.setMinMax(20, 25, true);
 		temperateSeriesPlot.setShampen(2);
 		
 		
 		fingerPressurePlot = new TimeSeriesPlot(this, windowWidth / 2, 1000, windowWidth, 200, 500, false, false, false);
 		fingerPressurePlot.setShampen(200);
-		fingerPressurePlot.setMinMax(0, 1000);
+		fingerPressurePlot.setMinMax(0, 1000, true);
 		//fingerPressurePlot.isTesting = true;
 		
 //		

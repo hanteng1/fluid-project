@@ -24,6 +24,9 @@ public class TimeSeriesPlot {
 	float yMax = 0;
 	float yMin = 0;
 	float yHeight = 0;
+	float yMaxSet = 0;
+	float yMinSet = 0;
+	
 	
 	float average = 0;
 	float shampen = 2;
@@ -57,6 +60,9 @@ public class TimeSeriesPlot {
 	boolean isFilter;
 	boolean isFFT;
 	boolean isDataTwo;
+	
+	
+	public float targetLine;
 	
 	public TimeSeriesPlot(PApplet ap, float cx, float cy, float cw, float ch, int sz,
 			boolean applyFilter, boolean applyFFT, boolean applyDataTwo)
@@ -152,7 +158,7 @@ public class TimeSeriesPlot {
 //			if(fftData.size() == fftBins)
 //			{
 //				//perform a fft
-//				double[] fftResults = freq(fftData);
+//				double[] fftResults = freq(fftData);s
 //				
 //				//return a main frequency, 64hz sampling rate, 1hz / bin
 //				mainFrequncy = getFrequency(fftResults);
@@ -235,11 +241,17 @@ public class TimeSeriesPlot {
 	}
 	
 	
-	public void setMinMax(float min, float max)
+	public void setMinMax(float min, float max, boolean isSet)
 	{
 		yMin = min;
 		yMax = max;
 		yHeight = max - min;
+		
+		if(isSet)
+		{
+			yMinSet = min;
+			yMaxSet = max;
+		}
 	}
 	
 	public void setShampen(float _shampen)
@@ -286,15 +298,15 @@ public class TimeSeriesPlot {
 				//made an effective selection 
 				if(releaseValue > readyValue)
 				{
-					setMinMax(readyValue, releaseValue);
+					setMinMax(readyValue, releaseValue, false);
 				}else
 				{
-					setMinMax(releaseValue, readyValue);
+					setMinMax(releaseValue, readyValue, false);
 				}
 			}else
 			{
 				//set to default
-				setMinMax(0, 1000);
+				setMinMax(yMinSet, yMaxSet, false);
 			}
 			
 			readyValue = 0;
@@ -392,23 +404,26 @@ public class TimeSeriesPlot {
 			
 		}
 		
-		app.text("" + lastValue + "", 800, centerY + 30);
 		
-		app.stroke(200, 100, 100);
-		app.noFill();
-		app.strokeWeight(3);
-		
-		for(int itrd = 0; itrd < plotData.size() - 1 ; itrd++)
+		if(!drawFilter)
 		{
-			float valueOne = plotData.get(itrd);
-			float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
-			float xOnAxisOne = plotSegWidth * itrd;
+			app.text("" + lastValue + "", 800, centerY + 30);
+			app.stroke(200, 100, 100);
+			app.noFill();
+			app.strokeWeight(3);
 			
-			float valueTwo = plotData.get(itrd + 1);
-			float yOnAxisTwo = centerY + plotHeight - (valueTwo - yMin) * plotHeight / yHeight;
-			float xOnAxisTwo = plotSegWidth * (itrd + 1);
-			
-			app.line(xOnAxisOne, yOnAxisOne, xOnAxisTwo, yOnAxisTwo);
+			for(int itrd = 0; itrd < plotData.size() - 1 ; itrd++)
+			{
+				float valueOne = plotData.get(itrd);
+				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
+				float xOnAxisOne = plotSegWidth * itrd;
+				
+				float valueTwo = plotData.get(itrd + 1);
+				float yOnAxisTwo = centerY + plotHeight - (valueTwo - yMin) * plotHeight / yHeight;
+				float xOnAxisTwo = plotSegWidth * (itrd + 1);
+				
+				app.line(xOnAxisOne, yOnAxisOne, xOnAxisTwo, yOnAxisTwo);
+			}
 		}
 		
 		
@@ -436,10 +451,21 @@ public class TimeSeriesPlot {
 		
 		if(drawFilter)
 		{
-			app.stroke(100, 100, 200);
+			
+			
+			app.stroke(200, 100, 100);
 			app.noFill();
 			app.strokeWeight(3);
 			
+			if(targetLine != 0)
+			{
+				float yOnAxis = centerY + plotHeight - (targetLine - yMin) * plotHeight / yHeight;
+				app.line(0, yOnAxis, plotWidth, yOnAxis);
+			}
+			
+			app.stroke(100, 100, 200);
+			app.noFill();
+			app.strokeWeight(3);
 			for(int itrd = 0; itrd < plotData.size() - 1 ; itrd++)
 			{
 				float valueOne = plotDataFiltered.get(itrd);

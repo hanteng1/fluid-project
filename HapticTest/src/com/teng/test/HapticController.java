@@ -5,9 +5,10 @@ import java.util.ArrayList;
 public class HapticController {
 	
 	PressureTest pressureTest;
-	float pressureLow = 200.0f;
-	float pressureHigh = 1000.0f;
+	float pressureLow = 1000.0f;
+	float pressureHigh = 1300.0f;
 	ArrayList<Integer> pressureLevels;
+	SetPressure setPressure;
 	
 	VibrationTest vibrationTest;
 	float vibrationLow = 1.0f;
@@ -16,13 +17,14 @@ public class HapticController {
 	Vibration vibration;
 	
 	TemperatureTest temperatureTest;
-	float temperatureLow = 18.0f;
+	float temperatureLow = 20.0f;
 	float temperatureHigh = 40.0f;
 	ArrayList<Integer> temperatureLevels;
 	double pidOutput  = 0;
 	double prevPidOutput = 0;
 	MiniPID miniPID; 
 	AdjustTemperature adjustTemperature;
+	AdjustTemperatureStatic adjustTemperatureStatic;
 	
 	public float levelFactor = 0;
 	
@@ -37,8 +39,16 @@ public class HapticController {
 		for(int itr = 0; itr < levels; itr++)
 		{
 			pressureLevels.add((int) (pressureLow * Math.pow(levelFactor, itr)));
-			//pressureTest.println("" + itr + " : " + pressureLevels.get(itr));
+			pressureTest.println("" + itr + " : " + pressureLevels.get(itr));
 		}
+		
+		miniPID = new MiniPID(0.1, 0, 0.2);  // no integral part
+		miniPID.setOutputLimits(10);
+		//miniPID.setMaxIOutput(2);
+		//miniPID.setOutputRampRate(3);
+		//miniPID.setOutputFilter(.3);
+		miniPID.setSetpointRange(40);
+		
 	}
 	
 	public HapticController(VibrationTest test)
@@ -61,7 +71,7 @@ public class HapticController {
 				}
 			}
 			
-			//vibrationTest.println("" + itr + " : " + vibrationLevels.get(itr));
+			vibrationTest.println("" + itr + " : " + vibrationLevels.get(itr));
 		}
 	}
 	
@@ -92,18 +102,18 @@ public class HapticController {
 		for(int itr = 0; itr < levels; itr++)
 		{
 			temperatureLevels.add((int)(temperatureLow + segment* itr));
-			temperatureTest.println("" + itr + " : " + temperatureLevels.get(itr));
+			temperatureTest.println("" + (itr + 1) + " : " + temperatureLevels.get(itr));
 		}
 		
-		miniPID = new MiniPID(0.1, 0, 0.2);  // no integral part
+		miniPID = new MiniPID(0.2, 0.01, 0.09);  // hot 60+, cold 10-
 		miniPID.setOutputLimits(10);
 		//miniPID.setMaxIOutput(2);
 		//miniPID.setOutputRampRate(3);
 		//miniPID.setOutputFilter(.3);
+		miniPID.setOutputLimits(-1.0, 1.0);
 		miniPID.setSetpointRange(40);
 		
 	}
-	
 	
 	
 	//////////////////////////////////////////////////////////
@@ -111,7 +121,10 @@ public class HapticController {
 	{
 		if(level > 0 && level < 10)
 		{
-			new AddWater(pressureLevels.get(level - 1)).start();
+			//new AddWater(pressureLevels.get(level - 1)).start();
+			
+			setPressure = new SetPressure(pressureLevels.get(level - 1));
+			setPressure.start();
 			
 			//pressureTest.println("render " + level + " : " +  pressureLevels.get(level - 1));
 		}
@@ -149,12 +162,35 @@ public class HapticController {
 		{
 			adjustTemperature = new AdjustTemperature(temperatureLevels.get(level - 1));
 			adjustTemperature.start();
+			temperatureTest.temperateSeriesPlot.targetLine = temperatureLevels.get(level - 1);
 		}
 	}
 	
 	public void stopTemperature()
 	{
-		adjustTemperature.stopWorking();
+		if(adjustTemperature != null)
+		{
+			adjustTemperature.stopWorking();
+		}
+		
+		if(adjustTemperatureStatic != null)
+		{
+			adjustTemperatureStatic.stopWorking();
+		}
+		
+		temperatureTest.valveOpen();
+		
+	}
+	
+	
+	public void setTemperatureStatic(int level)
+	{
+		if(level > 0 && level < 10)
+		{
+			adjustTemperatureStatic = new AdjustTemperatureStatic(temperatureLevels.get(level - 1));
+			adjustTemperatureStatic.start();
+			temperatureTest.temperateSeriesPlot.targetLine = temperatureLevels.get(level - 1);
+		}
 	}
 	
 	//////////////////////////////////////////////////////////////////
@@ -193,6 +229,57 @@ public class HapticController {
 			} catch (Exception ex) {
 				return;
 			}
+			
+		}
+	
+	}
+	
+	class SetPressure extends Thread{
+		float target;
+		float actual;
+		
+		public SetPressure(float _target)
+		{
+			target = _target;
+		}
+		
+		public void run()
+		{
+			
+			//close the value
+			try {
+				pressureTest.serialOutput_One.write('j');
+			} catch (Exception ex) {
+				return;
+			}
+			pressureTest.delay(200);
+			
+			while(actual < target)
+			{
+				actual = pressureTest.pressurePlot.getLastValue();
+				float change = target - actual;
+				pidOutput = miniPID.getOutput(actual, target);
+				
+				if(pidOutput >= 10.0f)
+				{
+					pidOutput = 9.99f;
+				}
+				String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+				String valuetosend = valueTwoDecial + "c";
+				float temp = Float.parseFloat(valueTwoDecial);
+				
+				try {
+					pressureTest.serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+				} catch (Exception ex) {
+					return;
+				}
+				
+				pressureTest.delay(10);
+				
+			}
+			
+			pressureTest.stopWater();
+			pressureTest.scheduleTaskReady();
 			
 		}
 	}
@@ -244,6 +331,94 @@ public class HapticController {
 		
 	}
 	
+	
+	class AdjustTemperatureStatic extends Thread
+	{
+		float target;
+		float actual;
+		boolean working = true;
+		
+		public AdjustTemperatureStatic(float _target)
+		{
+			target = _target;
+		}
+		
+		public void stopWorking()
+		{
+			working = false;
+		}
+		
+		public void run()
+		{
+			temperatureTest.valveOpen();
+			temperatureTest.delay(10);
+			actual = temperatureTest.actualTemperature;
+			if(target > actual)
+			{
+				//use hot pump
+				while(target > actual && working)
+				{
+					actual = temperatureTest.actualTemperature;
+					pidOutput = miniPID.getOutput(actual, target);
+					
+					calculateWater(pidOutput);
+					
+					String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+					String valuetosend = valueTwoDecial + "z";
+					
+					float temp = Float.parseFloat(valueTwoDecial);
+					
+					try {
+						temperatureTest.serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+					} catch (Exception ex) {
+						return;
+					}
+					
+					temperatureTest.delay(10);
+				}
+				
+				temperatureTest.stopWater();
+				temperatureTest.delay(10);
+				temperatureTest.scheduleTaskReady();
+				temperatureTest.valveClose();
+				
+			}else
+			{
+				//use cold pump
+				//use hot pump
+				while(target < actual && working)
+				{
+					actual = temperatureTest.actualTemperature;
+					pidOutput = miniPID.getOutput(actual, target);
+				
+					calculateWater(pidOutput);
+					
+					String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
+					String valuetosend = valueTwoDecial + "z";
+					
+					float temp = Float.parseFloat(valueTwoDecial);
+					
+					try {
+						temperatureTest.serialOutput_One.write(valuetosend.getBytes());  //full speed hot
+					} catch (Exception ex) {
+						return;
+					}
+					
+					temperatureTest.delay(10);
+				}
+				
+				temperatureTest.stopWater();
+				temperatureTest.delay(10);
+				temperatureTest.scheduleTaskReady();  
+				temperatureTest.valveClose();
+			}
+			
+			
+		}
+	}
+	
+	
+	
 	//used for running the temperature
 	class AdjustTemperature extends Thread
 	{
@@ -269,25 +444,26 @@ public class HapticController {
 				actual = temperatureTest.actualTemperature;
 				float change = target - actual;
 				
+				//will keep running
 				if(Math.abs(change) <= 1 && temperatureTest.rendering == 1)
 				{
-					temperatureTest.scheduleTaskReady();
+					temperatureTest.scheduleTaskReady();  //interface function
 				}
 				
-				if(Math.abs(change) >= 0.1)
+				
+				//keep running pid
 				{
 					//the output is desired change in the next step
 					pidOutput = miniPID.getOutput(actual, target);
+					calculateWater(pidOutput);
+					
+					/*send the pid value to arduino */
 					
 					if(pidOutput >= 0)
 					{
-						
-						if(pidOutput >= 10.0f)
-						{
-							pidOutput = 9.99f;
-						}
 						String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
 						String valuetosend = valueTwoDecial + "z";
+						
 						float temp = Float.parseFloat(valueTwoDecial);
 						
 						try {
@@ -297,10 +473,6 @@ public class HapticController {
 						}
 					}else
 					{
-						if(pidOutput <= -10.0f)
-						{
-							pidOutput = -9.99f;
-						}
 						String valueTwoDecial = String.format("%.2f", Math.abs(pidOutput));
 						String valuetosend = valueTwoDecial + "x";
 						float temp = Float.parseFloat(valueTwoDecial) * (-1);
@@ -312,11 +484,9 @@ public class HapticController {
 						}
 					}
 					
-					prevPidOutput = pidOutput;
-					
 				}
 				
-				temperatureTest.delay(100);
+				temperatureTest.delay(500);
 			}
 			
 			//release
@@ -324,5 +494,27 @@ public class HapticController {
 			
 			
 		}
+	}
+	
+	
+	void calculateWater(double pidvalue)
+	{
+//	  if(pidvalue >=0)
+//	  {
+//	    int pumpTwoSpeed = (int)(50 + pidvalue * 150);
+//	    int pumpOneSpeed = (int) (50 + (1 - pidvalue) * 150); 
+//	    
+//	    temperatureTest.println("pid: " +  pidvalue + ", 1 : " + pumpOneSpeed + ", 2 : " + pumpTwoSpeed);
+//	  }else
+//	  {
+//		  int pumpTwoSpeed = (int)(50 + pidvalue * 150);
+//		  int pumpOneSpeed = (int) (50 + (1 - pidvalue) * 150); 
+//	  }
+	  
+	  int pumpTwoSpeed = (int) (125 + 125 * pidvalue);
+	  int pumpOneSpeed = (int) (125 - 125 * pidvalue);
+	  
+	  temperatureTest.println("pid: " +  pidvalue + ", 1 : " + pumpOneSpeed + ", 2 : " + pumpTwoSpeed);
+	  
 	}
 }

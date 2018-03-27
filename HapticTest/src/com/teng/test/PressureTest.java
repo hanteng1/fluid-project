@@ -2,6 +2,7 @@ package com.teng.test;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Random;
@@ -9,6 +10,7 @@ import java.util.Random;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
 import gnu.io.SerialPortEventListener;
 import processing.core.PApplet;
 
@@ -27,7 +29,7 @@ public class PressureTest extends PApplet{
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 1;    // 1, 2, 3
+	int block = 3;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
@@ -59,6 +61,16 @@ public class PressureTest extends PApplet{
 	static BufferedReader input_One;
 	static OutputStream serialOutput_One;
 	static String portName_One;
+	
+	//sensor
+	static SerialPort serialPort_Two;
+	static InputStream serialInput_Two;
+	static BufferedReader input_Two;
+	static OutputStream serialOutput_Two;
+	static String portName_Two;
+	
+	
+	TimeSeriesPlot pressurePlot;
 	
 	//to control pressure
 	HapticController controller;
@@ -133,7 +145,15 @@ public class PressureTest extends PApplet{
 		configurePort_One("COM10");
 		connectPort_One();
 		delay(2000);
-		//set to clockwise by default
+
+		configurePort_Two("COM8");
+		connectPort_Two();
+		delay(2000);
+		
+		pressurePlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500, false, false, false);
+		pressurePlot.setShampen(1000);
+		pressurePlot.setMinMax(900, 1200, true);
+		
 		
 		controller = new HapticController(this);
 		
@@ -177,6 +197,45 @@ public class PressureTest extends PApplet{
 		}		
 	}
 	
+	void configurePort_Two(String _portName)
+	{
+		portName_Two = _portName;
+	}
+	
+	void connectPort_Two() {
+		try {
+			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName_Two);
+			if (portIdentifier.isCurrentlyOwned()) {
+				System.out.println("Error: Port is currently in use");
+			} else {
+				CommPort commPort = portIdentifier.open(this.getClass().getName(), 2000);
+				
+				if (commPort instanceof SerialPort) {
+					serialPort_Two = (SerialPort) commPort;
+
+					// Set appropriate properties (do not change these)
+					serialPort_Two.setSerialPortParams(
+							115200, 
+							SerialPort.DATABITS_8,
+							SerialPort.STOPBITS_1, 
+							SerialPort.PARITY_NONE);
+
+					serialInput_Two = serialPort_Two.getInputStream();
+					input_Two = new BufferedReader(new InputStreamReader(serialInput_Two));				
+					serialOutput_Two = serialPort_Two.getOutputStream();
+					
+					serialPort_Two.addEventListener(new PressureSerialListener(2, this));
+			        serialPort_Two.notifyOnDataAvailable(true);
+			      
+					System.out.println("Connected to port: " + portName_Two);
+				} else {
+					System.out.println("Error: Only serial ports are handled by this example.");
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}		
+	}
 	
 	public void setClockWise()
 	{
@@ -294,8 +353,7 @@ public class PressureTest extends PApplet{
 		
 		
 		//pressure signal
-		
-		
+		pressurePlot.draw();
 		
 		//complete
 		if(blockDone)
@@ -426,6 +484,12 @@ public class PressureTest extends PApplet{
 			delay(100);
 			
 			exit();
+		}else if(key == 's')
+		{
+			if(rendering == 1)
+			{
+				thread("releaseWithAccident");
+			}
 		}else if(key == ' ')
 		{
 			if(workingInProgress && trial > 0)
@@ -570,7 +634,7 @@ public class PressureTest extends PApplet{
 		
 		promp = "rendering...";
 		
-		thread("scheduleTaskReady");
+		//thread("scheduleTaskReady");
 	}
 	
 	public void releaseRender()
@@ -580,7 +644,7 @@ public class PressureTest extends PApplet{
 	
 	public void scheduleTaskReady()
 	{
-		delay(2000);
+		//delay(2000);
 		rendering = 2;
 		
 		if(isTrainingMode)
@@ -628,11 +692,80 @@ public class PressureTest extends PApplet{
 		
 	}
 	
+	public void releaseWithAccident()
+	{
+		promp = "releasing...";
+		releaseRender();
+		rendering = 1;
+		delay(2000);
+		rendering = 0;
+		if(rectOverIndex >= 0)
+		{
+			mouseTriggered.set(rectOverIndex, 0);
+			rectOverIndex = -1;
+		}
+	
+		if(isTrainingMode)
+		{
+			promp = "Train mode, press 123... to try, or SPACE to start";
+		}else
+		{
+			trial--;
+			promp = "Press SPACE to replay the next trial";
+		}
+	}
+	
 	
 	public static void main(String[] args){
 		
 		PApplet.main("com.teng.test.PressureTest");
 		
+	}
+	
+}
+
+
+class PressureSerialListener implements SerialPortEventListener
+{
+	public int index;
+	PressureTest instance;
+	
+	
+	public PressureSerialListener(int _index, PressureTest _instance)
+	{
+		index = _index;
+		instance = _instance;
+	}
+	
+	@Override
+	public synchronized void serialEvent(SerialPortEvent oEvent) {
+		// TODO Auto-generated method stub
+		if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
+		    try {
+		        String inputLine=null;
+		        
+		        if(index == 2)
+		        {
+		        	 if(instance.input_Two.ready()) {
+				        	inputLine = instance.input_Two.readLine();
+				        	try {
+				            	float readValue = Float.parseFloat(inputLine);         	
+
+				            	instance.pressurePlot.addValue(readValue);
+
+				            	
+				            }catch(Exception ex)
+				            {
+				            	return;
+				            }
+				     }
+		        }
+
+		    } catch (Exception e) {
+		        System.err.println(e.toString());
+		    }
+		 }
+		// Ignore all the other eventTypes, but you should consider the other ones.
 	}
 	
 }

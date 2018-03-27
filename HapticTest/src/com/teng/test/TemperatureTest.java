@@ -29,7 +29,7 @@ public class TemperatureTest extends PApplet{
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 3;    // 1, 2, 3
+	int block = 2;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
@@ -133,7 +133,7 @@ public class TemperatureTest extends PApplet{
 		
 		dataStorage = DataStorage.getInstance();
 		dataStorage.userId = userId;
-		dataStorage.sensation = "vibration";
+		dataStorage.sensation = "temperature";
 		dataStorage.levels = levels;
 		
 
@@ -152,9 +152,10 @@ public class TemperatureTest extends PApplet{
 //		timeSeriesPlot.setShampen(1000);
 //		timeSeriesPlot.setMinMax(900, 1200);
 		
-		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 500, true, false, false);
-		temperateSeriesPlot.setMinMax(20, 25);
+		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 700, windowWidth, 200, 5000, true, false, false);
+		temperateSeriesPlot.setMinMax(15, 50, true);
 		temperateSeriesPlot.setShampen(2);
+		temperateSeriesPlot.drawFilter = true;
 		
 		controller = new HapticController(this);
 		
@@ -296,7 +297,7 @@ public class TemperatureTest extends PApplet{
 		delay(200);
 		
 		runWater();
-		delay(5000);
+		delay(1000);
 		stopWater();
 		workingInProgress = false;
 	}
@@ -354,6 +355,8 @@ public class TemperatureTest extends PApplet{
 		
 		
 		//timeSeriesPlot.draw();
+		temperateSeriesPlot.draw();
+		
 		
 		//show target and actual temperature
 		{
@@ -428,6 +431,16 @@ public class TemperatureTest extends PApplet{
 		//render a target
 		mouseTriggered.set(rectOverIndex, 1);
 		renderNext(target);
+	}
+	
+	public void mousePressed()
+	{
+		temperateSeriesPlot.mousePress(mouseX, mouseY);
+	}
+	
+	public void mouseReleased()
+	{
+		temperateSeriesPlot.mouseRelease(mouseX, mouseY);
 	}
 	
 	public void keyPressed() {
@@ -611,6 +624,8 @@ public class TemperatureTest extends PApplet{
 		
 		rendering = 1;
 		controller.setTemperature(targetIndex);
+		//controller.setTemperatureStatic(targetIndex);
+		
 		promp = "rendering...";
 		
 		//thread("scheduleTaskReady");

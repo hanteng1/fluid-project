@@ -175,6 +175,8 @@ void loop() {
 
         //to control the pump
         calculateWater(ratioValue);
+        //setHotWater(ratioValue);
+        
         break;
 
 
@@ -193,49 +195,26 @@ void loop() {
 
         //to control the pump
         calculateWater(ratioValue * (-1));
+        //setColdWater(ratioValue);
+        
+        
         break;
 
         case 'c':
-//        shrink = 1.0f;
-//        for(int itr = 0; itr < digitalCount - 1; itr++)
-//        {
-//          shrink *= 10.0;
-//        }
-//        ratioValue = inString.toFloat() / shrink;
-//        inString = "";
-//        digitalCount = 0;
-//        analogWrite(led, 255);
-//
-//        testWater(ratioValue);
+        shrink = 1.0f;
+        for(int itr = 0; itr < digitalCount - 1; itr++)
+        {
+          shrink *= 10.0;
+        }
+        ratioValue = inString.toFloat() / shrink;
+        inString = "";
+        digitalCount = 0;
+        analogWrite(led, 255);
 
-
-          shrink = 1.0f;
-          if(digitalCount < 4)
-          {
-            for(int itr = 0; itr < digitalCount - 1; itr++)
-            {
-              shrink *= 10.0;
-            }
-          }else
-          {
-            shrink = 100.0;
-          }
-          
-          ratioValue = inString.toFloat() / shrink;
-          //Serial.println(ratioValue);
-
-          
-          
-          
-          inString = "";
-          digitalCount = 0;
-          
-        
+        setColdWater(ratioValue);
         break;
 
-      
-
-        
+    
 
 /////////////////////////valves////////////////////
       case 'v':
@@ -440,35 +419,49 @@ void pumpOff()
 //  }
 //}
 
+//void calculateWater(float pidvalue)
+//{
+//
+//  changePoint = 0.7f;
+//  if(pidValue >= changePoint)
+//  {
+//    pumpTwoSpeed = 250;
+//    pumpOneSpeed = 0;
+//  }else if(pidvalue > 0 && pidvalue < changPoint)
+//    {
+//      alpha = 1.0f + pidvalue * 6.0f;
+//       
+//        if(alpha > 3.5f)
+//        {
+//          alpha = 3.5f;
+//        }
+//        pumpOneSpeed = 70;
+//        pumpTwoSpeed = (int) ( alpha * pumpOneSpeed);
+//    }else if(pidvalue < 0
+//    {
+//      alpha = 1.0f + pidvalue * (-6.0f);
+//       
+//        if(alpha > 3.5f)
+//        {
+//          alpha = 3.5f;
+//        }
+//        pumpTwoSpeed = 0;
+//        pumpOneSpeed = (int) ( alpha * 70);
+//    }
+//    
+//}
 
-float lastpid = 0;
- boolean ispiding = false;
 
 void calculateWater(float pidvalue)
 {
+//  if(pidvalue >=0 && pidvalue <= 1.0)
+//  {
+//    pumpTwoSpeed = (int)(50 + pidvalue * 150);
+//    pumpOneSpeed = (int) (50 + (1 - pidvalue) * 150); 
+//  }
 
-  if(pidvalue > 0)
-    {
-      alpha = 1.0f + pidvalue * 5.0f;
-       
-        if(alpha > 3.5f)
-        {
-          alpha = 3.5f;
-        }
-        pumpOneSpeed = 70;
-        pumpTwoSpeed = (int) ( alpha * pumpOneSpeed);
-    }else
-    {
-      alpha = 1.0f + pidvalue * (-5.0f);
-       
-        if(alpha > 3.5f)
-        {
-          alpha = 3.5f;
-        }
-        pumpTwoSpeed = 70;
-        pumpOneSpeed = (int) ( alpha * pumpTwoSpeed);
-    }
-    
+  pumpTwoSpeed = (int) (125 + 125 * pidvalue);
+  pumpOneSpeed = (int) (125 - 125 * pidvalue);
 }
 
 void testWater(float ratio)
@@ -476,6 +469,27 @@ void testWater(float ratio)
   //ratio is hot / max
   pumpTwoSpeed = (int)(ratio * maxSpeed);
   pumpOneSpeed = (int)((1 - ratio) * maxSpeed);
+}
+
+void setColdWater(float ratio)
+{
+  if(ratio > 1.0f)
+  {
+    ratio = 1.0f; 
+  }
+  pumpOneSpeed = 50 + 200 * ratio;
+  pumpTwoSpeed = 0;
+
+}
+
+void setHotWater(float ratio)
+{
+  if(ratio > 1.0f)
+  {
+    ratio = 1.0f; 
+  }
+  pumpTwoSpeed = 50 + 200 * ratio;
+  pumpOneSpeed = 0;
 }
 
 void clockWise()

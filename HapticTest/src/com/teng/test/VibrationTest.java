@@ -26,7 +26,7 @@ public class VibrationTest extends PApplet{
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 1;    // 1, 2, 3
+	int block = 2;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
