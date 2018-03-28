@@ -84,7 +84,7 @@ public class TemperatureTest extends PApplet{
 	
 	
 	
-	
+	private Client client;
 	
 	
 	public void settings()
@@ -166,7 +166,7 @@ public class TemperatureTest extends PApplet{
 		//get ready
 		thread("getWaterReady");
 		
-		
+		client = new Client("", 9090);
 		
 	}
 	
