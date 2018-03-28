@@ -915,7 +915,7 @@ float delta = 0.0f;
 			delay(1000);
 			
 			disconnectPort();
-			leap.end();
+			//leap.end();
 			exit();
 			
 			
