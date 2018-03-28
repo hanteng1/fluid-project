@@ -5,8 +5,10 @@ import processing.core.*;
 public class Slider {
 	
 	PApplet app;
+	TemperatureTest test;
 	
-	int swidth = 200; 
+	
+	int swidth = 1000; 
 	int sheight = 50;    // width and height of bar
 	float xpos, ypos;       // x and y position of bar
 	float spos, newspos;    // x position of slider
@@ -16,10 +18,38 @@ public class Slider {
 	boolean locked;
 	float ratio;
 
+	float realValueMin;
+	float realValueMax;
+	float realValue;
 	
-	public Slider(PApplet ap, int cx, int cy)
+	boolean prevLocked = false;
+	int index = 0;
+	
+	public Slider(PApplet ap, int cx, int cy, float min, float max)
 	{
 		app = ap;
+		
+		xpos = cx;
+		ypos = cy;
+		
+		int widthtoheight = swidth - sheight;
+	    ratio = (float)swidth / (float)widthtoheight;
+	    spos = 0; //xpos + swidth/2 - sheight/2;
+	    newspos = spos;
+	    sposMin = xpos;
+	    sposMax = xpos + swidth - sheight;
+	    loose = 1;
+	    
+	    realValueMin = min;
+	    realValueMax = max;
+	    
+	}
+	
+	
+	public Slider(TemperatureTest ap, int cx, int cy, float min, float max, int _index)
+	{
+		test = ap;
+		index = _index;
 		xpos = cx;
 		ypos = cy;
 		
@@ -29,31 +59,61 @@ public class Slider {
 	    newspos = spos;
 	    sposMin = xpos;
 	    sposMax = xpos + swidth - sheight;
-	    loose = 16;
+	    loose = 1;
+	    
+	    realValueMin = min;
+	    realValueMax = max;
+	    
 	}
 	
 	
-	void update() {
-	    if (overEvent()) {
+	void update(int mouseX, int mouseY) {
+	    if (overEvent(mouseX, mouseY)) {
 	      over = true;
 	    } else {
 	      over = false;
 	    }
 	    
-//	    if (mousePressed && over) {
-//	      locked = true;
-//	    }
-//	    if (!mousePressed) {
-//	      locked = false;
-//	    }
-//	    
-//	    if (locked) {
-//	      newspos = constrain(mouseX-sheight/2, sposMin, sposMax);
-//	    }
-//	    
-//	    if (Math.abs(newspos - spos) > 1) {
-//	      spos = spos + (newspos-spos)/loose;
-//	    }
+	    if (test.mousePressed && over) {
+	      locked = true;
+	    }
+	    if (!test.mousePressed) {
+	      locked = false;
+	      
+	      if(prevLocked == true)
+	      {
+	    	  //update
+	    	  if(index == 1)
+	    	  {
+	    		  test.controller.updateP(getRealValue());
+	    	  }
+	    	  else if(index == 2)
+	    	  {
+	    		  test.controller.updateI(getRealValue());
+	    	  }
+	    	  else if(index == 3)
+	    	  {
+	    		  test.controller.updateD(getRealValue());
+	    	  }
+	      }
+	    }
+	    
+	    
+	    
+	    
+	    prevLocked  = locked;
+	    
+	    
+	    if (locked) {
+	      newspos = constrain(mouseX-sheight/2, sposMin, sposMax);
+	    }
+	    
+	    
+	    
+	    
+	    if (Math.abs(newspos - spos) > 1) {
+	      spos = spos + (newspos-spos)/loose;
+	    }
 	}
 	
 	
@@ -61,27 +121,30 @@ public class Slider {
 	    return Math.min(Math.max(val, minv), maxv);
 	}
 
-	boolean overEvent() {
-//	    if (mouseX > xpos && mouseX < xpos+swidth &&
-//	       mouseY > ypos && mouseY < ypos+sheight) {
-//	      return true;
-//	    } else {
-//	      return false;
-//	    }
-		
-		return true;
+	boolean overEvent(int mouseX, int mouseY) {
+	    if (mouseX > xpos && mouseX < xpos+swidth &&
+	       mouseY > ypos && mouseY < ypos+sheight) {
+	      return true;
+	    } else {
+	      return false;
+	    }
 	}
 
 	void draw() {
-	    app.noStroke();
-	    app.fill(204);
-	    app.rect(xpos, ypos, swidth, sheight);
+	    test.noStroke();
+	    test.fill(204);
+	    test.rect(xpos, ypos, swidth, sheight);
 	    if (over || locked) {
-	      app.fill(0, 0, 0);
+	      test.fill(0, 0, 0);
 	    } else {
-	      app.fill(102, 102, 102);
+	      test.fill(102, 102, 102);
 	    }
-	    app.rect(spos, ypos, sheight, sheight);
+	    test.rect(spos, ypos, sheight, sheight);
+	    
+	    test.fill(120);
+	    String sposValue = "" + getRealValue();
+	    test.textSize(24);
+	    test.text(sposValue, spos, ypos);
 	}
 
 	float getPos() {
@@ -89,6 +152,16 @@ public class Slider {
 	    // 0 and the total width of the scrollbar
 	    return spos * ratio;
 	}
+	
+	public float getRealValue()
+	{
+		float zoom = (float)swidth / (float)(realValueMax - realValueMin);
+		float result = getPos() / zoom;
+		return Float.parseFloat(String.format("%.3f", result));
+	}
+	
+	
+	
 	
 	
 }

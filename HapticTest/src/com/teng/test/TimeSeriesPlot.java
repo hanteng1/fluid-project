@@ -61,6 +61,8 @@ public class TimeSeriesPlot {
 	boolean isFFT;
 	boolean isDataTwo;
 	
+	boolean withFixation;
+	
 	
 	public float targetLine;
 	
@@ -133,7 +135,21 @@ public class TimeSeriesPlot {
 		}
 		
 		plotData.remove(0);
-		plotData.add(value);
+		
+		float y;
+		if(withFixation)
+		{
+			float temmp = (float) (1.560724055   * value - 4.941140821  * Math.sqrt(value) + 10.4967101);
+			y = Float.parseFloat(String.format("%.1f", temmp));
+			
+			plotData.add(y);
+			lastValue = y;  
+		}else
+		{
+			plotData.add(value);
+			lastValue = value;
+		}
+		
 		
 		if(isTesting)
 		{
@@ -178,7 +194,7 @@ public class TimeSeriesPlot {
 			lastFilteredValue = average;
 		}
 		
-		lastValue = value;
+		
 		
 	}
 	
@@ -231,6 +247,7 @@ public class TimeSeriesPlot {
 //			return plotDataFiltered.get(plotDataFiltered.size() - 1);
 //		}
 //		return 0;
+		
 		
 		return lastValue;
 	}
@@ -408,7 +425,19 @@ public class TimeSeriesPlot {
 		if(!drawFilter)
 		{
 			app.text("" + lastValue + "", 800, centerY + 30);
+			
 			app.stroke(200, 100, 100);
+			app.noFill();
+			app.strokeWeight(3);
+			
+			if(targetLine != 0)
+			{
+				float yOnAxis = centerY + plotHeight - (targetLine - yMin) * plotHeight / yHeight;
+				app.line(0, yOnAxis, plotWidth, yOnAxis);
+			}
+			
+			
+			app.stroke(100, 100, 200);
 			app.noFill();
 			app.strokeWeight(3);
 			

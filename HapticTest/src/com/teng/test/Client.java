@@ -24,9 +24,14 @@ public class Client {
     
     SocketClientReceiveThread socketClientReceiveThread;
     
-    public Client(String addr, int port) {
+    TemperatureTest temperatureTest;
+    PressureTest pressureTest;
+    VibrationTest vibrationTest;
+    
+    public Client(String addr, int port, TemperatureTest instance) {
         dstAddress = addr;
         dstPort = port;
+        temperatureTest = instance;
         
         Thread socketClientThread = new Thread(new SocketClientThread());
         socketClientThread.start();
@@ -105,8 +110,6 @@ public class Client {
     	@Override
         public void run() {
         	printStream.print(msgSend);
-        
-        	System.out.println("check point");
         } 
     }
     
@@ -160,7 +163,22 @@ public class Client {
 					
 		
 					//do sth
-				
+					if(values.length > 0)
+					{
+						if(values[0].equals("s"));
+						//copy the trial sequence
+						temperatureTest.levels =  Integer.parseInt(values[1]);
+						temperatureTest.totalTrials = Integer.parseInt(values[2]);
+						
+						for(int itr = 0; itr < temperatureTest.totalTrials ; itr++)
+						{
+							temperatureTest.trialSequence.add(Integer.parseInt(values[itr + 3] ));
+						}
+						
+						temperatureTest.isTrialSequenceSet = true;
+					}
+					
+					
 					
 				}catch (IOException e) {
                     //e.printStackTrace();

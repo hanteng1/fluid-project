@@ -23,6 +23,6 @@ void loop()
   // They'll be floats, calculated out to the unit you set with setUnit().
     Serial.println(String(therm.object(), 2));
   }
-  delay(200);
+  delay(100);
 }
 

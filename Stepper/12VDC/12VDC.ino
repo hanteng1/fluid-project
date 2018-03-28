@@ -385,12 +385,12 @@ void pumpOff()
 
 //void calculateWater(float ratio)
 //{
-//  changePoint = 0.7;
+//  changePoint = 5.0;
 //  
 //  if(ratio > changePoint)
 //  {
 //    //full speed
-//    pumpTwoSpeed = 250;
+//    pumpTwoSpeed = 200;
 //    pumpOneSpeed = 0;
 //  }else if(ratio <= changePoint && ratio >= 0)
 //  {
@@ -415,17 +415,17 @@ void pumpOff()
 //  }else if(ratio < (changePoint * (-1)))
 //  {
 //    pumpTwoSpeed = 0;
-//    pumpOneSpeed = 250;
+//    pumpOneSpeed = 200;
 //  }
 //}
-
+//
 //void calculateWater(float pidvalue)
 //{
 //
 //  changePoint = 0.7f;
 //  if(pidValue >= changePoint)
 //  {
-//    pumpTwoSpeed = 250;
+//    pumpTwoSpeed = 150;
 //    pumpOneSpeed = 0;
 //  }else if(pidvalue > 0 && pidvalue < changPoint)
 //    {
@@ -437,7 +437,10 @@ void pumpOff()
 //        }
 //        pumpOneSpeed = 70;
 //        pumpTwoSpeed = (int) ( alpha * pumpOneSpeed);
-//    }else if(pidvalue < 0
+//    }else if(pidvalue < 0 && ratio >= (changePoint * (-1)))
+//    {
+//      
+//    }
 //    {
 //      alpha = 1.0f + pidvalue * (-6.0f);
 //       
@@ -454,14 +457,10 @@ void pumpOff()
 
 void calculateWater(float pidvalue)
 {
-//  if(pidvalue >=0 && pidvalue <= 1.0)
-//  {
-//    pumpTwoSpeed = (int)(50 + pidvalue * 150);
-//    pumpOneSpeed = (int) (50 + (1 - pidvalue) * 150); 
-//  }
+  float value = pidvalue;
 
-  pumpTwoSpeed = (int) (125 + 125 * pidvalue);
-  pumpOneSpeed = (int) (125 - 125 * pidvalue);
+  pumpTwoSpeed = (int) (90 + 90 * value);
+  pumpOneSpeed = (int) (90 - 90 * value);
 }
 
 void testWater(float ratio)
