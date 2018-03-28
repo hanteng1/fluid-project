@@ -405,7 +405,7 @@ public class TimeSeriesPlot {
 		}
 		
 		
-		if(drawFilter)
+		if(!drawFilter)
 		{
 			app.text("" + lastValue + "", 800, centerY + 30);
 			app.stroke(200, 100, 100);

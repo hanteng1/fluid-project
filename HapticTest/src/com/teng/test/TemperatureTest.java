@@ -84,7 +84,7 @@ public class TemperatureTest extends PApplet{
 	
 	
 	
-	private Client client;
+	public Client client;
 	
 	
 	public void settings()
@@ -156,17 +156,17 @@ public class TemperatureTest extends PApplet{
 //		timeSeriesPlot.setShampen(1000);
 //		timeSeriesPlot.setMinMax(900, 1200);
 		
-		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 700, windowWidth, 200, 5000, true, false, false);
-		temperateSeriesPlot.setMinMax(15, 50, true);
-		temperateSeriesPlot.setShampen(2);
-		temperateSeriesPlot.drawFilter = true;
+		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 700, windowWidth, 200, 1000, false, false, false);
+		temperateSeriesPlot.setMinMax(15, 70, true);
+		temperateSeriesPlot.setShampen(100);
+		//temperateSeriesPlot.drawFilter = true;
 		
 		controller = new HapticController(this);
 		
 		//get ready
 		thread("getWaterReady");
 		
-		client = new Client("", 9090);
+		client = new Client("10.142.197.9", 9090);
 		
 	}
 	
@@ -223,7 +223,7 @@ public class TemperatureTest extends PApplet{
 
 					// Set appropriate properties (do not change these)
 					serialPort_Two.setSerialPortParams(
-							115200, 
+							9600, 
 							SerialPort.DATABITS_8,
 							SerialPort.STOPBITS_1, 
 							SerialPort.PARITY_NONE);
@@ -482,6 +482,7 @@ public class TemperatureTest extends PApplet{
 			}
 			
 			delay(100);
+			client.onDestroy();
 			
 			exit();
 		}else if(key == 's')
@@ -754,7 +755,17 @@ class NewSerialListener implements SerialPortEventListener
 				            	float readValue = Float.parseFloat(inputLine);         	
 
 				            		instance.temperateSeriesPlot.addValue(readValue);
-				            		instance.actualTemperature = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastFilteredValue())));
+				            		
+				            		if(instance.temperateSeriesPlot.isFilter)
+				            		{
+				            			instance.actualTemperature = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastFilteredValue())));
+					            		
+				            		}else
+				            		{
+				            			instance.actualTemperature = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastValue())));
+				            		}
+				            		
+				            		instance.client.sendMessage("t" + "," + instance.actualTemperature + "\n");
 				            		
 				            	
 				            }catch(Exception ex)

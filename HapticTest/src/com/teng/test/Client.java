@@ -22,9 +22,35 @@ public class Client {
     private OutputStream outputStream = null;
     private PrintStream printStream;
     
+    SocketClientReceiveThread socketClientReceiveThread;
+    
     public Client(String addr, int port) {
         dstAddress = addr;
         dstPort = port;
+        
+        Thread socketClientThread = new Thread(new SocketClientThread());
+        socketClientThread.start();
+        
+    }
+    
+    public void onDestroy()
+    {
+    	 if (socket != null) {
+           try {
+           	
+        	if(printStream != null)
+        	{
+        	   printStream.close();
+        	}
+        	//outputStream.close();
+           	//inputStream.close();
+            socket.close();
+            System.out.println("socket closed");
+           } catch (IOException e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+           }
+       }
     }
     
     public class SocketClientThread extends Thread{
@@ -51,28 +77,20 @@ public class Client {
 //                    byteArrayOutputStream.write(buffer, 0, bytesRead);
 //                    response += byteArrayOutputStream.toString("UTF-8");
 //                }
+                
+                
+                //run the receiving 
+                socketClientReceiveThread = new SocketClientReceiveThread();
+                socketClientReceiveThread.run();
 
             } catch (UnknownHostException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-                response = "UnknownHostException: " + e.toString();
+               
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-                response = "IOException: " + e.toString();
-            } finally {
-                if (socket != null) {
-                    try {
-                    	printStream.close();
-                    	outputStream.close();
-                    	inputStream.close();
-                        socket.close();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            }
+            } 
 		}
     }
     
@@ -87,16 +105,17 @@ public class Client {
     	@Override
         public void run() {
         	printStream.print(msgSend);
+        
+        	System.out.println("check point");
         } 
     }
     
-    
-    
     public void sendMessage(String msg)
     {
-    	SocketClientSendThread socketServerSendThread = new SocketClientSendThread(msg);
-    	socketServerSendThread.run();
+    	SocketClientSendThread socketClientSendThread = new SocketClientSendThread(msg);
+    	socketClientSendThread.run();
     }
+    
     
     private class SocketClientReceiveThread extends Thread {
 		public boolean keepReading = true;
@@ -115,7 +134,7 @@ public class Client {
 			while(!Thread.currentThread().isInterrupted() && keepReading)
 			{
 				try {
-					if(socket.isConnected())
+					if(socket.isConnected() && !socket.isClosed())
 					{
 						
 					}else
@@ -135,7 +154,7 @@ public class Client {
 						}else
 						{
 							keepReading = false;
-							continue;
+							break;
 						}
 					}
 					
@@ -144,7 +163,7 @@ public class Client {
 				
 					
 				}catch (IOException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
 			}
 		}
