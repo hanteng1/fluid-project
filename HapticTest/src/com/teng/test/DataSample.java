@@ -14,6 +14,11 @@ public class DataSample {
     public long responseTime;
     public int iscorrect;  // 1 - correct, 0 - incorrect
 
+    
+    public float baseline;
+    public float observe;
+    
+    
     public DataSample(int _trial, int _sensation, int _levels, int _target, int _answer, long _responseTime,
                       int _iscorrect)
     {
@@ -42,4 +47,27 @@ public class DataSample {
 
         return stringbuilder.toString();
     }
+    
+    
+    public DataSample(float _baseline, float _observe)
+    {
+    	baseline = _baseline;
+    	observe = _observe;
+    }
+    
+    public static String toCSVOffline(ArrayList<DataSample> arrayList)
+    {
+    	 StringBuilder stringbuilder = new StringBuilder();
+
+         for(Iterator<DataSample> iterator = arrayList.iterator(); iterator.hasNext();)
+         {
+             DataSample sample = iterator.next();
+             stringbuilder.append("" + sample.baseline + "," + sample.observe + "," + "\r\n");
+            
+         }
+
+         return stringbuilder.toString();
+    }
+    
+    
 }

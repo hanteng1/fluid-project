@@ -83,6 +83,10 @@ public class TemperatureTest extends PApplet{
 	public int rendering = 0;  //0 - nothing, 1 - render, 2 - ready
 	
 	
+	
+	
+	
+	
 	public void settings()
 	{
 		windowWidth = 1000;
@@ -161,6 +165,8 @@ public class TemperatureTest extends PApplet{
 		
 		//get ready
 		thread("getWaterReady");
+		
+		
 		
 	}
 	
@@ -485,7 +491,27 @@ public class TemperatureTest extends PApplet{
 				thread("releaseWithAccident");
 			}
 			
-		}else if(key == ' ')
+		}else if(key == 'h')
+		{
+			try {
+				serialOutput_One.write('e');  //both slow speed
+			} catch (Exception ex) {
+				return;
+			}
+		}else if(key == 'c')
+		{
+			try {
+				serialOutput_One.write('w');  //both slow speed
+			} catch (Exception ex) {
+				return;
+			}
+		}else if(key == 'f')
+		{
+			stopWater();
+		}
+		
+		
+		else if(key == ' ')
 		{
 			if(workingInProgress && trial > 0)
 			{
@@ -726,25 +752,21 @@ class NewSerialListener implements SerialPortEventListener
 				        	inputLine = instance.input_Two.readLine();
 				        	try {
 				            	float readValue = Float.parseFloat(inputLine);         	
-//			            		if(readValue > 100) {
-//				            		instance.timeSeriesPlot.addValue(readValue);
-//				            	}
-//				            	else
-//				            	{
+
 				            		instance.temperateSeriesPlot.addValue(readValue);
 				            		instance.actualTemperature = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastFilteredValue())));
 				            		
-				            	//}
 				            	
 				            }catch(Exception ex)
 				            {
+				            	System.out.println(" 1 "  + ex.toString());
 				            	return;
 				            }
 				     }
 		        }
 
 		    } catch (Exception e) {
-		        System.err.println(e.toString());
+		        System.out.println("2" + e.toString());
 		    }
 		 }
 		// Ignore all the other eventTypes, but you should consider the other ones.

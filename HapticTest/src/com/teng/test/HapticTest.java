@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
@@ -131,6 +132,11 @@ float delta = 0.0f;
 	//demo squeeze
 	Squeeze squeeze;
 	
+	
+	//for offline calibration
+		ArrayList<Float> groundValues;
+		ArrayList<Float> observedValues;
+	DataStorage dataStorage;
 	
 	public static HapticTest instance;
 	public static HapticTest getInstance()
@@ -286,6 +292,11 @@ float delta = 0.0f;
 		
 		
 		//thread("setValueTwoOffset");
+		groundValues = new ArrayList<Float>();
+		observedValues= new ArrayList<Float>();
+		
+		dataStorage = DataStorage.getInstance();
+		
 		
 	}
 	
@@ -897,6 +908,8 @@ float delta = 0.0f;
 //				return;
 //			}
 			
+			dataStorage.saveOffline();
+			
 			thread("pumpOff");
 		
 			delay(1000);
@@ -970,23 +983,26 @@ float delta = 0.0f;
 				
 				float inputValue = Float.parseFloat(inputText);
 				
-				if(inputValue > 0 && inputValue < 60)
+				if(inputValue > 0 && inputValue < 100)
 				{
-					targetSet = true;
-					targetTemperature = inputValue;
+//					targetSet = true;
+//					targetTemperature = inputValue;
+//					
+//					if(targetTemperature > filteredTemperatureValue)
+//					{
+//						actualTarget = targetTemperature + 0;
+//					}else
+//					{
+//						actualTarget = targetTemperature - 0;
+//					}
+//					
+//					temperatureworking = true;
+//					thread("temperatureThread");
+//					
+//					mouseTriggered[2] = 1;
 					
-					if(targetTemperature > filteredTemperatureValue)
-					{
-						actualTarget = targetTemperature + 0;
-					}else
-					{
-						actualTarget = targetTemperature - 0;
-					}
 					
-					temperatureworking = true;
-					thread("temperatureThread");
-					
-					mouseTriggered[2] = 1;
+					DataStorage.AddSampleOffline(inputValue, filteredTemperatureValue);
 				}
 				
 				
