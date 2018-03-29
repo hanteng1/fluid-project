@@ -29,17 +29,18 @@ public class PressureTest extends PApplet{
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 3;    // 1, 2, 3
-	
+	int block = 0;    // 1, 2, 3
 	
 	int levels = 0;   //3, 5, 7 (or 9)
-	int trial = 0;
+	public int trial = 0;
 	int totalTrials = 0;
-	int repetition = 5;
 	ArrayList<Integer> trialSequence;
+	ArrayList<Integer> trainSequence;
+	int trainTrial = 0;
 	int target = 0;
 	int answer = 0;
 	boolean waitingForAnswer = false;
+	public boolean isTrialSequenceSet;
 	
 	boolean isTrainingMode = true;
 	
@@ -52,7 +53,6 @@ public class PressureTest extends PApplet{
 	long trialStartTime = 0;
 	
 	public static DataStorage dataStorage;
-	
 	
 	//ring
 	//serial - for pump and valves
@@ -69,15 +69,16 @@ public class PressureTest extends PApplet{
 	static OutputStream serialOutput_Two;
 	static String portName_Two;
 	
-	
 	TimeSeriesPlot pressurePlot;
 	
 	//to control pressure
 	HapticController controller;
-
 	
 	boolean workingInProgress = false;
 	public int rendering = 0;  //0 - nothing, 1 - render, 2 - ready
+	
+	
+	public Client client;
 	
 	
 	public void settings()
@@ -93,54 +94,8 @@ public class PressureTest extends PApplet{
 		rectColor = color(211, 211, 211);
 		rectHighlight = color(105, 105, 105);
 		
-		levels = block * 2 + 1;  // need pilot
-		totalTrials = levels * repetition;
 		trialSequence = new ArrayList<Integer>();
-		ArrayList<Integer> oldSequence = new ArrayList<Integer>();
 		
-		for(int itr = 1; itr < levels + 1; itr++)
-		{
-			for(int i = 0; i < repetition; i++)
-			{
-				oldSequence.add(itr);
-			}
-		}
-		
-		trialSequence = randomize(oldSequence);
-		
-//		for(int itr = 0; itr < trialSequence.size(); itr++)
-//		{
-//			print(trialSequence.get(itr) + ",");
-//		}
-//		println();
-		
-		
-		rectWidth = windowWidth /( 2 * levels + 1);
-		rectHeight = 50;
-		rectXs = new ArrayList<Integer>();
-		for(int itr = 0; itr < levels; itr++)
-		{
-			rectXs.add((2 * itr + 1) * rectWidth );
-		}
-		rectY = 300;
-		
-		mouseTriggered = new ArrayList<Integer>();
-		for(int itr = 0; itr < levels; itr++)
-		{
-			mouseTriggered.add(0);
-		}
-		
-		if(isTrainingMode)
-		{
-			promp = "Train mode, press 123.. to try, or SPACE to start";
-		}
-		
-		dataStorage = DataStorage.getInstance();
-		dataStorage.userId = userId;
-		dataStorage.sensation = "pressure";
-		dataStorage.levels = levels;
-		
-
 		//ring
 		configurePort_One("COM10");
 		connectPort_One();
@@ -153,13 +108,80 @@ public class PressureTest extends PApplet{
 		pressurePlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500, false, false, false);
 		pressurePlot.setShampen(1000);
 		pressurePlot.setMinMax(900, 1200, true);
+	
+		//client
+		client = new Client("10.142.197.9", 9090, this);	
+		delay(1000);
 		
+		
+		//waiting for setup of trial sequence
+		while(isTrialSequenceSet == false)
+		{
+			
+		}
+		println("sequence set");
+		
+		rectWidth = windowWidth /( 2 * levels + 1);
+		rectHeight = 50;
+		rectXs = new ArrayList<Integer>();
+		
+		for(int itr = 0; itr < levels; itr++)
+		{
+			rectXs.add((2 * itr + 1) * rectWidth );
+		}
+		rectY = 300;
+		
+		mouseTriggered = new ArrayList<Integer>();
+		for(int itr = 0; itr < levels; itr++)
+		{
+			mouseTriggered.add(0);
+		}
+		
+		
+		trainSequence = new ArrayList<Integer>();
+		for(int itr = 1; itr < levels + 1; itr++)
+		{
+			trainSequence.add(itr);
+		}
+		for(int itr = 1; itr < levels + 1; itr++)
+		{
+			trainSequence.add(itr);
+		}
+		for(int itr = 1; itr < levels + 1; itr++)
+		{
+			trainSequence.add(itr);
+		}
 		
 		controller = new HapticController(this);
 		
+		delay(1000);
+		
+		dataStorage = DataStorage.getInstance();
+		dataStorage.userId = userId;
+		dataStorage.sensation = "pressure";
+		dataStorage.levels = levels;
+		
+		//read the current progress
+		if(trial == 0)
+		{
+			isTrainingMode = true;
+			if(isTrainingMode)
+			{
+				promp = "Train mode, press SPACE to the next";
+			}
+		}else
+		{
+			trial -= 1;
+			isTrainingMode = false;
+			if(isTrainingMode)
+			{
+				promp = "Press SPACE to next";
+			}
+		}
+		
 		//get ready
 		thread("getWaterReady");
-		
+				
 	}
 	
 	void configurePort_One(String _portName) {
@@ -292,7 +314,7 @@ public class PressureTest extends PApplet{
 		delay(200);
 		
 		runWater();
-		delay(5000);
+		delay(2000);
 		stopWater();
 		workingInProgress = false;
 	}
@@ -303,8 +325,8 @@ public class PressureTest extends PApplet{
 		
 		//block
 		textSize(48);
-		fill(120);
-		text("Block " + block, 100, 100);
+//		fill(120);
+//		text("Block " + block, 100, 100);
 		
 		//current trial / total trial
 		fill(120);
@@ -386,61 +408,6 @@ public class PressureTest extends PApplet{
 		
 	}
 	
-	
-	private void update(int x, int y)
-	{
-		for(int itrr = 0; itrr < levels; itrr++)
-		{
-			if(overRect(rectXs.get(itrr), rectY, rectWidth, rectHeight))
-			{
-				rectOverIndex = itrr;
-				return;
-			}
-		}
-		
-		rectOverIndex = -1;
-	}
-	
-	private boolean overRect(int x, int y, int width, int height)
-	{
-		if (mouseX >= x && mouseX <= x+width && 
-			      mouseY >= y && mouseY <= y+height) {
-		    return true;
-		} 
-		else {
-			return false;
-		}
-	}
-	
-	
-	
-	public ArrayList<Integer> randomize(ArrayList<Integer> data)
-	{
-		ArrayList<Integer> newData = new ArrayList<Integer>();
-		int size = data.size();
-		Random rand = new Random();
-		
-		for(int i = 0; i < size; i++)
-		{
-			//pick a random number from sequence
-			int pick = rand.nextInt(data.size());
-			newData.add(data.get(pick));
-			data.remove(pick);
-		}
-		
-		return newData;
-		
-	}
-	
-	public void mousePressed()
-	{
-//		if(rectOverIndex >= 0)
-//		{
-//			thread("makeChoice");
-//		}
-		
-	}
-	
 	public void makeChoice()
 	{
 		mouseTriggered.set(rectOverIndex, 1);
@@ -452,17 +419,18 @@ public class PressureTest extends PApplet{
 		waitingForAnswer = false;
 	}
 	
-	public void makePractice()
-	{
-		//render a target
-		mouseTriggered.set(rectOverIndex, 1);
-		
-		renderNext(target, isTrainingMode);  //render with releasing		
-	}
+//	public void makePractice()
+//	{
+//		//render a target
+//		mouseTriggered.set(rectOverIndex, 1);
+//		
+//		renderNext(target, isTrainingMode);  //render with releasing		
+//	}
 	
 	
 	public void keyPressed() {
 		if (key == 'q') {
+			
 			dataStorage.save();
 			
 			stopWater();
@@ -483,6 +451,8 @@ public class PressureTest extends PApplet{
 			
 			delay(100);
 			
+			client.onDestroy();
+			
 			exit();
 		}else if(key == 's')
 		{
@@ -496,9 +466,21 @@ public class PressureTest extends PApplet{
 			{
 				isTrainingMode = true;
 				workingInProgress = false;
-				promp = "Train mode, press 123... to try, or SPACE to start";
+				promp = "Train mode, press SPACE to next";
+				
+				//update the status to server: to the next trian/trial, the status
+				//istrainingmode, workinginprogress, trial, target
+				String msg = "m,";
+				msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+				msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+				msg += "" + trial + ",";
+				msg += "" + target + ",";
+				msg += "\n";
+				client.sendMessage(msg);
+				
 				return;
 			}
+			
 			
 			if(workingInProgress || rendering == 1)
 			{
@@ -512,15 +494,21 @@ public class PressureTest extends PApplet{
 				{
 					if(isTrainingMode)
 					{
-						isTrainingMode = false;
-						//start
-						nextTrial();
+						
+						//render next train
+						nextTrain();
+						
+//						isTrainingMode = false;
+//						//start
+//						nextTrial();
 					}else
 					{
 						if(waitingForAnswer == false)
 						{
 							//record the data
 							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
+							//send to server the answer for recording
+							
 							
 							answer = 0;
 							responseTime = 0;
@@ -541,6 +529,19 @@ public class PressureTest extends PApplet{
 			}
 			
 			
+			
+			//update the status to server: to the next trian/trial, the status
+			//istrainingmode, workinginprogress, trial, target
+			String msg = "m,";
+			msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+			msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+			msg += "" + trial + ",";
+			msg += "" + target + ",";
+			msg += "" + rectOverIndex + ",";
+			msg += "\n";
+			client.sendMessage(msg);
+			
+			
 		}else
 		{
 			
@@ -551,32 +552,32 @@ public class PressureTest extends PApplet{
 			{
 				String inpuText = "" + key;
 				
-				if(isTrainingMode)
-				{
-					if(rendering > 0)
-					{
-						return;
-					}else
-					{
-						int inputValue = -1;
-						try {
-							inputValue = Integer.parseInt(inpuText);
-						}catch(Exception ex)
-						{
-							return;
-						}
-						
-						if(inputValue > 0 && inputValue < (levels + 1))
-						{			
-							rectOverIndex = inputValue - 1 ;
-							target = inputValue;
-							makePractice();
-						}
-					}
-					
-					
-				}else
-				{
+//				if(isTrainingMode)
+//				{
+//					if(rendering > 0)
+//					{
+//						return;
+//					}else
+//					{
+//						int inputValue = -1;
+//						try {
+//							inputValue = Integer.parseInt(inpuText);
+//						}catch(Exception ex)
+//						{
+//							return;
+//						}
+//						
+//						if(inputValue > 0 && inputValue < (levels + 1))
+//						{			
+//							rectOverIndex = inputValue - 1 ;
+//							target = inputValue;
+//							makePractice();
+//						}
+//					}
+//					
+//					
+//				}else
+				if(!isTrainingMode){
 					if((waitingForAnswer || rectOverIndex >= 0) && rendering == 2)
 					{
 						int inputValue = -1;
@@ -595,12 +596,83 @@ public class PressureTest extends PApplet{
 							}
 							rectOverIndex = inputValue - 1 ;
 							makeChoice();
+							
+							//update the status to serve : made a selection
+							//the choice
+							String msg = "c,";
+							msg += "" + inputValue + ",";
+							msg += "\n";
+							client.sendMessage(msg);
+							
+							
 						}
 					}
 				}
 			}
+			
+			
+			
 		}
 	}
+	
+	
+	public void nextTrain()
+	{	
+		if(trial == 0)  //begining
+		{
+			//begin, all
+			if(trainTrial <=  (2 * levels - 1))
+			{
+				//continue train
+				target = trainSequence.get(trainTrial);
+				trainTrial ++; 
+				
+				if(rectOverIndex > -1)
+				{
+					mouseTriggered.set(rectOverIndex, 0);
+					rectOverIndex = -1;
+				}
+				
+				rectOverIndex = target - 1;
+				mouseTriggered.set(rectOverIndex, 1);
+				
+				renderNext(target);
+				
+			}else
+			{
+				//start to trail
+				nextTrial();
+				isTrainingMode = false;
+				trainTrial = 0;
+			}
+			
+		}else  //in the middle 
+		{
+			//middle, just one round 
+			if(trainTrial <=  (1 * levels - 1))
+			{
+				//continue train
+				target = trainSequence.get(trainTrial);
+				trainTrial ++; 
+				
+				if(rectOverIndex > -1)
+				{
+					mouseTriggered.set(rectOverIndex, 0);
+					rectOverIndex = -1;
+				}
+				
+				renderNext(target);
+			}else
+			{
+				//start to trail
+				nextTrial();
+				isTrainingMode = false;
+				trainTrial = 0;
+			}
+		}
+		
+	}
+	
 	
 	public void nextTrial()
 	{
@@ -617,7 +689,7 @@ public class PressureTest extends PApplet{
 			}
 			
 			//render the target
-			renderNext(target, isTrainingMode);
+			renderNext(target);
 			
 		}else
 		{
@@ -627,7 +699,7 @@ public class PressureTest extends PApplet{
 	}
 	
 	
-	public void renderNext(int targetIndex, boolean isTraining)
+	public void renderNext(int targetIndex)
 	{
 		rendering = 1;
 		controller.addPressure(targetIndex);
@@ -678,15 +750,19 @@ public class PressureTest extends PApplet{
 		rendering = 1;
 		delay(2000);
 		rendering = 0;
-		mouseTriggered.set(rectOverIndex, 0);
-		rectOverIndex = -1;
+		
+		if(rectOverIndex > -1)
+		{
+			mouseTriggered.set(rectOverIndex, 0);
+			rectOverIndex = -1;
+		}
 		
 		if(isTrainingMode)
 		{
-			promp = "Train mode, press 123... to try, or SPACE to start";
+			promp = "Train mode, press SPACE to next";
 		}else
 		{
-			promp = "Press SPACE to next";
+			promp = "Trial mode, Press SPACE to next";
 		}
 		
 		
@@ -707,7 +783,7 @@ public class PressureTest extends PApplet{
 	
 		if(isTrainingMode)
 		{
-			promp = "Train mode, press 123... to try, or SPACE to start";
+			promp = "Train mode, press SPACE to next";
 		}else
 		{
 			trial--;
@@ -752,7 +828,7 @@ class PressureSerialListener implements SerialPortEventListener
 				            	float readValue = Float.parseFloat(inputLine);         	
 
 				            	instance.pressurePlot.addValue(readValue);
-
+				            	instance.client.sendMessage("t" + "," + readValue + "\n");
 				            	
 				            }catch(Exception ex)
 				            {

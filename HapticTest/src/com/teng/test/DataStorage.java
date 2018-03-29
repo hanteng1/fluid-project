@@ -41,28 +41,6 @@ public class DataStorage {
             samples.add(sample);
         }
     }
-    
-    
-    public static boolean AddSampleOffline(float _baseline, float _observe)
-    {
-    	if(instance != null)
-        {
-            instance.addOffline(_baseline, _observe);
-            return true;
-        }
-
-        return false;
-    }
-    
-    public void addOffline(float _baseline, float _observe)
-    {
-    	if(samples != null)
-        {
-            DataSample sample = new DataSample(_baseline, _observe);
-            samples.add(sample);
-        }
-    }
-
 
 
     public static DataStorage getInstance()
@@ -122,59 +100,6 @@ public class DataStorage {
             OutputStreamWriter outputstreamwriter = new OutputStreamWriter( new FileOutputStream(file, true));
 
             outputstreamwriter.write( DataSample.toCSV(samples) );
-            outputstreamwriter.close();
-            System.out.println("write samples completes.");
-
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-            System.out.println(e.toString());
-        }
-
-        return surfix;
-    }
-
-    //for temperature offline record
-    public String saveOffline(){
-        return save(null);
-    }
-
-    public String saveOffline(String surfix)
-    {
-    	
-    	userId = 0;
-        if(samples == null || samples.size() == 0)
-        {
-            return "";
-        }
-
-        if(surfix == null)
-        {
-            surfix = "LogData";
-        }
-        if(!surfix.startsWith("_"))
-        {
-            surfix = "_" + surfix;
-        }
-
-        File dir;
-        dir = new File("C:\\Users\\t_hant\\Dropbox\\FluidHaptic\\study_2\\user_" + userId);
-
-        String time = String.valueOf(System.currentTimeMillis());
-        String filename = time + surfix + "_offline_samples.csv";
-
-        File file = new File(dir, filename);
-
-        if(!dir.exists())
-        {
-            dir.mkdir();
-        }
-
-        try
-        {
-            OutputStreamWriter outputstreamwriter = new OutputStreamWriter( new FileOutputStream(file, true));
-
-            outputstreamwriter.write( DataSample.toCSVOffline(samples) );
             outputstreamwriter.close();
             System.out.println("write samples completes.");
 

@@ -316,7 +316,7 @@ void coldWater()
 //  }
 //  pumpTwoSpeed = maxSpeed - pumpOneSpeed;
 
-  pumpOneSpeed = 250;  //200 is safe?
+  pumpOneSpeed = 200;  //200 is safe?
   pumpTwoSpeed = 0;
 }
 
@@ -329,7 +329,7 @@ void hotWater()
 //  }
 //  pumpTwoSpeed = maxSpeed - pumpOneSpeed;
   pumpOneSpeed = 0;
-  pumpTwoSpeed = 250;
+  pumpTwoSpeed = 200;
 }
 
 void coldWaterSlow()

@@ -86,7 +86,7 @@ public class TimeSeriesPlot {
 		yHeight = yMax - yMin;
 		
 		plotData = new ArrayList<Float>();
-		for(int itrd = 0; itrd < plotPointSize; itrd++)
+		for(int itrd = 0; itrd < plotPointSize + 100; itrd++)
 		{
 			plotData.add(plotHeight / 2 + centerY );
 		}
@@ -95,7 +95,7 @@ public class TimeSeriesPlot {
 		if(isFilter)
 		{
 			plotDataFiltered = new ArrayList<Float>();
-			for(int itrd = 0; itrd < plotPointSize; itrd++)
+			for(int itrd = 0; itrd < plotPointSize + 100; itrd++)
 			{
 				plotDataFiltered.add(plotHeight / 2 + centerY );
 			}
@@ -113,7 +113,7 @@ public class TimeSeriesPlot {
 		if(isDataTwo)
 		{
 			plotDataTwo = new ArrayList<Float>();
-			for(int itrd = 0; itrd < plotPointSize; itrd++)
+			for(int itrd = 0; itrd < plotPointSize + 100; itrd++)
 			{
 				plotDataTwo.add(plotHeight / 2 + centerY );
 			}
@@ -134,7 +134,7 @@ public class TimeSeriesPlot {
 			}
 		}
 		
-		plotData.remove(0);
+		plotData.remove(0);  //this might be a problem
 		
 		float y;
 		if(withFixation)
@@ -441,7 +441,10 @@ public class TimeSeriesPlot {
 			app.noFill();
 			app.strokeWeight(3);
 			
-			for(int itrd = 0; itrd < plotData.size() - 1 ; itrd++)
+			//if it is drawing, stop updating
+			
+			
+			for(int itrd = 99; itrd < plotPointSize  + 99 - 1 ; itrd++)
 			{
 				float valueOne = plotData.get(itrd);
 				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
@@ -462,7 +465,7 @@ public class TimeSeriesPlot {
 			app.fill(100, 100, 200);
 			app.text("" + lastValueTwo + "", 800, centerY + 80);
 			
-			for(int itrd = 0; itrd < plotDataTwo.size() - 1 ; itrd++)
+			for(int itrd = 99; itrd < plotPointSize  + 99 - 1 ; itrd++)
 			{
 				float valueOne = plotDataTwo.get(itrd);
 				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
@@ -495,7 +498,7 @@ public class TimeSeriesPlot {
 			app.stroke(100, 100, 200);
 			app.noFill();
 			app.strokeWeight(3);
-			for(int itrd = 0; itrd < plotData.size() - 1 ; itrd++)
+			for(int itrd = 99; itrd < plotPointSize  + 99 - 1; itrd++)
 			{
 				float valueOne = plotDataFiltered.get(itrd);
 				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;

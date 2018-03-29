@@ -114,8 +114,8 @@ public class HapticTest extends PApplet{
 	float coldTemp = 25;
 	
 
-float alpha = 0.0f;
-float delta = 0.0f;
+	float alpha = 0.0f;
+	float delta = 0.0f;
 	
 	
 	// 0 - stop, 1 - fast hot, 2 - slow hot, 3 - fast cold, 4 - slow cold
@@ -907,8 +907,7 @@ float delta = 0.0f;
 //			} catch (Exception ex) {
 //				return;
 //			}
-			
-			dataStorage.saveOffline();
+		
 			
 			thread("pumpOff");
 		
@@ -1001,8 +1000,7 @@ float delta = 0.0f;
 //					
 //					mouseTriggered[2] = 1;
 					
-					
-					DataStorage.AddSampleOffline(inputValue, filteredTemperatureValue);
+			
 				}
 				
 				

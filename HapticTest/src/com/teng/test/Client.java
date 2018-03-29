@@ -27,15 +27,36 @@ public class Client {
     TemperatureTest temperatureTest;
     PressureTest pressureTest;
     VibrationTest vibrationTest;
+    int testIndex = 0;
     
     public Client(String addr, int port, TemperatureTest instance) {
         dstAddress = addr;
         dstPort = port;
         temperatureTest = instance;
+        testIndex = 3;
         
         Thread socketClientThread = new Thread(new SocketClientThread());
         socketClientThread.start();
+    }
+    
+    public Client(String addr, int port, PressureTest instance) {
+        dstAddress = addr;
+        dstPort = port;
+        pressureTest = instance;
+        testIndex = 1;
         
+        Thread socketClientThread = new Thread(new SocketClientThread());
+        socketClientThread.start();
+    }
+    
+    public Client(String addr, int port, VibrationTest instance) {
+        dstAddress = addr;
+        dstPort = port;
+        vibrationTest = instance;
+        testIndex = 2;
+        
+        Thread socketClientThread = new Thread(new SocketClientThread());
+        socketClientThread.start();
     }
     
     public void onDestroy()
@@ -163,20 +184,66 @@ public class Client {
 					
 		
 					//do sth
-					if(values.length > 0)
+					if(testIndex == 1)
 					{
-						if(values[0].equals("s"));
-						//copy the trial sequence
-						temperatureTest.levels =  Integer.parseInt(values[1]);
-						temperatureTest.totalTrials = Integer.parseInt(values[2]);
-						
-						for(int itr = 0; itr < temperatureTest.totalTrials ; itr++)
+						if(values.length > 0)
 						{
-							temperatureTest.trialSequence.add(Integer.parseInt(values[itr + 3] ));
+							if(values[0].equals("s")) {
+								//copy the trial sequence
+								pressureTest.levels =  Integer.parseInt(values[1]);
+								pressureTest.totalTrials = Integer.parseInt(values[2]);
+								pressureTest.trial = Integer.parseInt(values[3]);
+								for(int itr = 0; itr < pressureTest.totalTrials ; itr++)
+								{
+									pressureTest.trialSequence.add(Integer.parseInt(values[itr + 4] ));
+								}
+								
+								pressureTest.isTrialSequenceSet = true;
+							}
+							
+						}
+					}else if(testIndex == 2)
+					{
+						if(values.length > 0)
+						{
+							if(values[0].equals("s"))
+							{
+								//copy the trial sequence
+								vibrationTest.levels =  Integer.parseInt(values[1]);
+								vibrationTest.totalTrials = Integer.parseInt(values[2]);
+								
+								for(int itr = 0; itr < vibrationTest.totalTrials ; itr++)
+								{
+									vibrationTest.trialSequence.add(Integer.parseInt(values[itr + 3] ));
+								}
+								
+								vibrationTest.isTrialSequenceSet = true;
+							}
+							
+						}
+					}else if(testIndex == 3)
+					{
+						if(values.length > 0)
+						{
+							if(values[0].equals("s"))
+							{
+								//copy the trial sequence
+								temperatureTest.levels =  Integer.parseInt(values[1]);
+								temperatureTest.totalTrials = Integer.parseInt(values[2]);
+								
+								for(int itr = 0; itr < temperatureTest.totalTrials ; itr++)
+								{
+									temperatureTest.trialSequence.add(Integer.parseInt(values[itr + 3] ));
+								}
+								
+								temperatureTest.isTrialSequenceSet = true;
+							}
+							
 						}
 						
-						temperatureTest.isTrialSequenceSet = true;
 					}
+					
+					
 					
 					
 					

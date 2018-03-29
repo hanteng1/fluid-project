@@ -32,8 +32,8 @@ public class VibrationTest extends PApplet{
 	int levels = 0;   //3, 5, 7 (or 9)
 	int trial = 0;
 	int totalTrials = 0;
-	int repetition = 5;
 	ArrayList<Integer> trialSequence;
+	public boolean isTrialSequenceSet;
 	int target = 0;
 	int answer = 0;
 	boolean waitingForAnswer = false;
@@ -79,20 +79,8 @@ public class VibrationTest extends PApplet{
 		rectColor = color(211, 211, 211);
 		rectHighlight = color(105, 105, 105);
 		
-		levels = block * 2 + 1;  // need pilot
-		totalTrials = levels * repetition;
-		trialSequence = new ArrayList<Integer>();
 		ArrayList<Integer> oldSequence = new ArrayList<Integer>();
 		
-		for(int itr = 1; itr < levels + 1; itr++)
-		{
-			for(int i = 0; i < repetition; i++)
-			{
-				oldSequence.add(itr);
-			}
-		}
-		
-		trialSequence = randomize(oldSequence);
 		
 		rectWidth = windowWidth /( 2 * levels + 1);
 		rectHeight = 50;
