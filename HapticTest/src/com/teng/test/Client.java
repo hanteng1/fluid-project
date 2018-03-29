@@ -199,6 +199,10 @@ public class Client {
 								}
 								
 								pressureTest.isTrialSequenceSet = true;
+							}else if(values[0].equals("sos"))
+							{
+								//stop
+								pressureTest.sosAction();
 							}
 							
 						}

@@ -83,7 +83,7 @@ public class DataStorage {
         }
 
         File dir;
-        dir = new File("C:\\Users\\t_hant\\Dropbox\\FluidHaptic\\study_2\\user_" + userId);
+        dir = new File("C:\\Users\\t_hant\\Dropbox\\fluiddatafromclient\\user_" + userId);
 
         String time = String.valueOf(System.currentTimeMillis());
         String filename = time + surfix + "_" + sensation + "_" + levels + "_levels_samples.csv";

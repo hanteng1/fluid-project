@@ -510,19 +510,28 @@ public class PressureTest extends PApplet{
 							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
 							//send to server the answer for recording
 							
+							String msg = "d,";
+							msg += "" + trial + ",";
+							msg += "" + sensation + ",";
+							msg += "" + levels + ",";
+							msg += "" + target + ",";
+							msg += "" + answer + ",";
+							msg += "" + responseTime + ",";
+							msg += "" + (answer == target ? 1 : 0) + ",";
+							msg += "\n";
+							client.sendMessage(msg);
 							
 							answer = 0;
 							responseTime = 0;
 							
 							//go to next
-							if(trial % 10 == 0)
+							if(trial % 10 == 0 && trial > 0)
 							{
 								workingInProgress = true;
 							}else
 							{
 								nextTrial();
 							}
-							
 							
 						}	
 					}
@@ -609,8 +618,6 @@ public class PressureTest extends PApplet{
 					}
 				}
 			}
-			
-			
 			
 		}
 	}
@@ -724,6 +731,12 @@ public class PressureTest extends PApplet{
 		controller.releasePressure();
 	}
 	
+	public void releaseRenderAccident()
+	{
+		controller.releasePressureAccident();
+	}
+	
+	
 	public void scheduleTaskReady()
 	{
 		//delay(2000);
@@ -814,20 +827,34 @@ public class PressureTest extends PApplet{
 		{
 			promp = "Trial mode, Press SPACE to next";
 		}
-		
-		
-		
-		
-		
+	}
+	
+	
+	public void sosAction()
+	{
+		thread("releaseWithAccident");
 	}
 	
 	public void releaseWithAccident()
 	{
 		promp = "releasing...";
-		releaseRender();
+		releaseRenderAccident();
 		rendering = 1;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
 		delay(2000);
 		rendering = 0;
+		
+		msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		
 		if(rectOverIndex >= 0)
 		{
 			mouseTriggered.set(rectOverIndex, 0);
@@ -842,6 +869,15 @@ public class PressureTest extends PApplet{
 			trial--;
 			promp = "Press SPACE to replay the next trial";
 		}
+		
+		msg = "m,";
+		msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+		msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+		msg += "" + trial + ",";
+		msg += "" + target + ",";
+		msg += "" + rectOverIndex + ",";
+		msg += "\n";
+		client.sendMessage(msg);
 	}
 	
 	

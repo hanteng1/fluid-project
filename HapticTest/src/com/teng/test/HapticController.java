@@ -142,6 +142,12 @@ public class HapticController {
 		//pressureTest.println("level: " + pressureLevel);
 	}
 	
+	public void releasePressureAccident()
+	{
+		pressureTest.valveOpen();
+		setPressure.stopWorking();
+	}
+	
 	//////////////////////////////////////////////////////////////
 	
 	public void startVibration(int level)
@@ -220,8 +226,6 @@ public class HapticController {
 		System.out.println("d set to " + d);
 	}
 	
-	
-	
 	//////////////////////////////////////////////////////////////////
 	
 	
@@ -266,10 +270,17 @@ public class HapticController {
 	class SetPressure extends Thread{
 		float target;
 		float actual;
+		boolean working = true;
+		
 		
 		public SetPressure(float _target)
 		{
 			target = _target;
+		}
+		
+		public void stopWorking()
+		{
+			working = false;
 		}
 		
 		public void run()
@@ -283,7 +294,7 @@ public class HapticController {
 			}
 			pressureTest.delay(200);
 			
-			while(actual < target)
+			while(actual < target && working == true)
 			{
 				actual = pressureTest.pressurePlot.getLastValue();
 				float change = target - actual;
@@ -308,7 +319,11 @@ public class HapticController {
 			}
 			
 			pressureTest.stopWater();
-			pressureTest.scheduleTaskReady();
+			
+			if(working == true)
+			{
+				pressureTest.scheduleTaskReady();
+			}
 			
 		}
 	}
