@@ -475,6 +475,7 @@ public class PressureTest extends PApplet{
 				msg += "" + (workingInProgress == true ? "1" : "0") + ",";
 				msg += "" + trial + ",";
 				msg += "" + target + ",";
+				msg += "" + rectOverIndex + ",";
 				msg += "\n";
 				client.sendMessage(msg);
 				
@@ -660,6 +661,9 @@ public class PressureTest extends PApplet{
 					rectOverIndex = -1;
 				}
 				
+				rectOverIndex = target - 1;
+				mouseTriggered.set(rectOverIndex, 1);
+				
 				renderNext(target);
 			}else
 			{
@@ -792,10 +796,20 @@ public class PressureTest extends PApplet{
 		}
 		
 		
-		
 		if(isTrainingMode)
 		{
-			promp = "Train mode, press SPACE to next";
+			
+			if(trial == 0 && trainTrial ==  (2 * levels))
+			{
+				promp = "press space to enter test!";
+			}else if(trial > 0 && trainTrial ==  (1 * levels))
+			{	
+				promp = "press space to continue test!";
+			}else
+			{
+				promp = "Train mode, press SPACE to next";
+			}
+			
 		}else
 		{
 			promp = "Trial mode, Press SPACE to next";
