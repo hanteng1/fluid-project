@@ -17,7 +17,7 @@ public class HapticController {
 	Vibration vibration;
 	
 	TemperatureTest temperatureTest;
-	float temperatureLow = 20.0f;
+	float temperatureLow = 15.0f;
 	float temperatureHigh = 40.0f;
 	ArrayList<Integer> temperatureLevels;
 	double pidOutput  = 0;

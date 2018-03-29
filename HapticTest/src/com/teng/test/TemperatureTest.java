@@ -133,7 +133,7 @@ public class TemperatureTest extends PApplet{
 		
 		
 		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 700, windowWidth, 200, 1000, false, false, false);
-		temperateSeriesPlot.setMinMax(15, 70, true);
+		temperateSeriesPlot.setMinMax(15, 50, true);
 		temperateSeriesPlot.setShampen(100);
 		//temperateSeriesPlot.drawFilter = true;
 		temperateSeriesPlot.withFixation = true;
@@ -187,9 +187,9 @@ public class TemperatureTest extends PApplet{
 		
 		controller = new HapticController(this);
 		
-		sliderP = new Slider(this, 0, 400, 0, 1, 1);
-		sliderI = new Slider(this, 0, 480, 0, 1, 2);
-		sliderD = new Slider(this, 0, 560, 0, 1, 3);
+		sliderP = new Slider(this, 0, 400, 0, 0.5f, 1);
+		sliderI = new Slider(this, 0, 480, 0, 0.5f, 2);
+		sliderD = new Slider(this, 0, 560, 0, 0.5f, 3);
 		
 		//get ready
 		thread("getWaterReady");
