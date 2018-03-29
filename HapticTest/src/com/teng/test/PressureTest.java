@@ -526,21 +526,20 @@ public class PressureTest extends PApplet{
 						}	
 					}
 				}
+				
+
+				//update the status to server: to the next trian/trial, the status
+				//istrainingmode, workinginprogress, trial, target
+				String msg = "m,";
+				msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+				msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+				msg += "" + trial + ",";
+				msg += "" + target + ",";
+				msg += "" + rectOverIndex + ",";
+				msg += "\n";
+				client.sendMessage(msg);
 			}
-			
-			
-			
-			//update the status to server: to the next trian/trial, the status
-			//istrainingmode, workinginprogress, trial, target
-			String msg = "m,";
-			msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
-			msg += "" + (workingInProgress == true ? "1" : "0") + ",";
-			msg += "" + trial + ",";
-			msg += "" + target + ",";
-			msg += "" + rectOverIndex + ",";
-			msg += "\n";
-			client.sendMessage(msg);
-			
+
 			
 		}else
 		{
@@ -702,6 +701,13 @@ public class PressureTest extends PApplet{
 	public void renderNext(int targetIndex)
 	{
 		rendering = 1;
+		
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
 		controller.addPressure(targetIndex);
 		
 		promp = "rendering...";
@@ -718,6 +724,12 @@ public class PressureTest extends PApplet{
 	{
 		//delay(2000);
 		rendering = 2;
+		
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
 		
 		if(isTrainingMode)
 		{
@@ -748,14 +760,38 @@ public class PressureTest extends PApplet{
 		promp = "releasing...";
 		releaseRender();
 		rendering = 1;
+		
+		//send the render status to server
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+	
 		delay(2000);
 		rendering = 0;
+		
+		msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
 		
 		if(rectOverIndex > -1)
 		{
 			mouseTriggered.set(rectOverIndex, 0);
 			rectOverIndex = -1;
+			
+			msg = "m,";
+			msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+			msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+			msg += "" + trial + ",";
+			msg += "" + target + ",";
+			msg += "" + rectOverIndex + ",";
+			msg += "\n";
+			client.sendMessage(msg);
+			
 		}
+		
+		
 		
 		if(isTrainingMode)
 		{
@@ -764,6 +800,9 @@ public class PressureTest extends PApplet{
 		{
 			promp = "Trial mode, Press SPACE to next";
 		}
+		
+		
+		
 		
 		
 	}

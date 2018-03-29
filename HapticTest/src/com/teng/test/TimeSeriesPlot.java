@@ -444,7 +444,7 @@ public class TimeSeriesPlot {
 			//if it is drawing, stop updating
 			
 			
-			for(int itrd = 99; itrd < plotPointSize  + 99 - 1 ; itrd++)
+			for(int itrd = 0; itrd < plotPointSize - 1 ; itrd++)
 			{
 				float valueOne = plotData.get(itrd);
 				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
@@ -465,7 +465,7 @@ public class TimeSeriesPlot {
 			app.fill(100, 100, 200);
 			app.text("" + lastValueTwo + "", 800, centerY + 80);
 			
-			for(int itrd = 99; itrd < plotPointSize  + 99 - 1 ; itrd++)
+			for(int itrd = 0; itrd < plotPointSize - 1 ; itrd++)
 			{
 				float valueOne = plotDataTwo.get(itrd);
 				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
@@ -498,7 +498,7 @@ public class TimeSeriesPlot {
 			app.stroke(100, 100, 200);
 			app.noFill();
 			app.strokeWeight(3);
-			for(int itrd = 99; itrd < plotPointSize  + 99 - 1; itrd++)
+			for(int itrd = 0; itrd < plotPointSize - 1; itrd++)
 			{
 				float valueOne = plotDataFiltered.get(itrd);
 				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
