@@ -26,9 +26,15 @@ public class Server {
 	private String message = "";
 	private String activityTag;
 	
-	public Server() throws IOException
+	
+	public Monitor monitor;
+	
+	public Server(Monitor instance) throws IOException
 	{
 		byteArray = new ArrayList<Integer>();
+		
+		monitor = instance;
+		
 		Thread socketServerThread = new Thread(new SocketServerThread());
 		socketServerThread.start();
 	}
@@ -68,8 +74,8 @@ public class Server {
 				printStream = new PrintStream(outputStream);
 				
 				//reply a connection confirmation
-				//SocketServerReplyThread socketServerReplyThread = new SocketServerReplyThread();
-            	//socketServerReplyThread.run();
+				SocketServerReplyThread socketServerReplyThread = new SocketServerReplyThread();
+            	socketServerReplyThread.run();
 				
             	//keep listening
             	SocketServerReceiveThread socketServerReceiveThread = new SocketServerReceiveThread();
@@ -91,7 +97,7 @@ public class Server {
 
         @Override
         public void run() {
-            String msgReply = "Hello from Server";
+            String msgReply = monitor.getSequenceString();
             printStream.print(msgReply);
         } 
     }
@@ -164,18 +170,97 @@ public class Server {
 						}else
 						{
 							keepReading = false;
-							continue;
+							break;
 						}
 					}
 					
 		
 					//do sth
-					
+					if(values.length > 0)
+					{
+						if(values[0].equals("t") && values.length == 2)
+						{
+							float at = Float.parseFloat(values[1]);
+							//monitor.actualTemperature = at;
+							monitor.seriesPlot.addValue(at);
+						}else if(values[0].equals("m"))
+						{
+							//status
+							int training = Integer.parseInt(values[1]);
+							int working = Integer.parseInt(values[2]);
+							int trial = Integer.parseInt(values[3]);
+							int target = Integer.parseInt(values[4]);
+							
+							monitor.isTrainingMode = (training == 1 ? true : false);
+							monitor.workingInProgress = (working == 1 ? true : false);
+							monitor.trial = trial;
+							monitor.target = target;
+							
+							if(monitor.isTrainingMode == true)
+							{
+								monitor.promp = "train mode";
+							}else
+							{
+								monitor.promp = "trail mode";
+							}
+							
+							if(monitor.rectOverIndex >= 0)
+							{
+								monitor.mouseTriggered.set(monitor.rectOverIndex, 0);
+								monitor.rectOverIndex = -1;
+							}
+							
+							monitor.rectOverIndex = Integer.parseInt(values[5]);
+							if(monitor.rectOverIndex >= 0)
+							{
+								monitor.mouseTriggered.set(monitor.rectOverIndex, 1);
+							}
+							
+						}else if(values[0].equals("c"))
+						{
+							//choice
+							int choice = Integer.parseInt(values[1]);
+							if(choice > 0)
+							{
+								if(monitor.rectOverIndex >= 0)
+								{
+									monitor.mouseTriggered.set(monitor.rectOverIndex, 0);
+								}
+								monitor.rectOverIndex = choice - 1;
+								monitor.mouseTriggered.set(monitor.rectOverIndex, 1);
+								
+							}
+						}else if(values[0].equals("r"))
+						{
+							int rendering = Integer.parseInt(values[1]);
+							monitor.updateRenderStatus(rendering);
+							
+						}else if(values[0].equals("d"))
+						{
+							int trial = Integer.parseInt(values[1]);
+							int sensation = Integer.parseInt(values[2]);
+							int levels = Integer.parseInt(values[3]);
+							int target = Integer.parseInt(values[4]);
+							int answer = Integer.parseInt(values[5]);
+							long responsetime  = Long.parseLong(values[6]);
+							int iscorrect = Integer.parseInt(values[7]);
+							
+							monitor.dataStorage.AddSample(trial, sensation, levels, target, answer, responsetime, iscorrect);
+						}
+							
+					}
 					
 			
 					
 				}catch (IOException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
+					keepReading = false;
+					System.out.println("client might lost");
+					
+					
+					//re-waiting for a connection
+					Thread socketServerThread = new Thread(new SocketServerThread());
+					socketServerThread.start();
                 }
 			}
 		}

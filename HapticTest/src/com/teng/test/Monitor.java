@@ -1,18 +1,9 @@
 package com.teng.test;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Random;
 
-import gnu.io.CommPort;
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
-import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
 import processing.core.PApplet;
 
 
@@ -30,11 +21,11 @@ public class Monitor extends PApplet{
 	int rectOverIndex = -1;
 	
 	//****************************//
-	int sensation = 3;   
+	int sensation = 1;   
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 2;    // 1, 2, 3
+	int block = 1;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
@@ -59,21 +50,19 @@ public class Monitor extends PApplet{
 	float actualTemperature;
 	float targetTemperature;
 	boolean targetSet = false;
-	TimeSeriesPlot temperateSeriesPlot;
+	TimeSeriesPlot seriesPlot;
 	
 	boolean workingInProgress = false;
 	public int rendering = 0;  //0 - nothing, 1 - render, 2 - ready
 	
 	public static DataStorage dataStorage;
-	
-	
 	private Server server;
 	
 	
 	public void settings()
 	{
 		windowWidth = 1000;
-		windowHeight = 1000;
+		windowHeight = 750;
 		size(windowWidth, windowHeight);
 	}
 	
@@ -115,27 +104,63 @@ public class Monitor extends PApplet{
 		
 		if(isTrainingMode)
 		{
-			promp = "Train mode, press 123.. to try, or SPACE to start";
+			promp = "train mode";
 		}
 		
 		dataStorage = DataStorage.getInstance();
 		dataStorage.userId = userId;
-		dataStorage.sensation = "temperature";
+		if(sensation == 1)
+		{
+			dataStorage.sensation = "pressure";
+		}else if(sensation == 2)
+		{
+			dataStorage.sensation = "vibration";
+		}else if(sensation == 3)
+		{
+			dataStorage.sensation = "temperature";
+		}
 		dataStorage.levels = levels;
 		
-		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 700, windowWidth, 200, 5000, true, false, false);
-		temperateSeriesPlot.setMinMax(15, 50, true);
-		temperateSeriesPlot.setShampen(2);
-		temperateSeriesPlot.drawFilter = true;
-
+		seriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 1000, false, false, false);
+		
+		if(sensation == 1 || sensation == 2)
+		{
+			seriesPlot.setMinMax(900, 1200, true);
+			seriesPlot.setShampen(1000);
+		}else if(sensation == 3)
+		{
+			seriesPlot.setMinMax(15, 50, true);
+			seriesPlot.setShampen(100);
+		}
+		
 		
 		try {
-			server = new Server();
+			server = new Server(this);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+			
+	
+	}
+	
+	public String getSequenceString()
+	{
+		String sequenceString = "s,";
+		sequenceString += ("" + levels + ",");
+		sequenceString += ("" + totalTrials + ",");
+		sequenceString += ("" + trial + ",");
+		for(int itr = 0; itr < trialSequence.size(); itr++)
+		{
+			sequenceString += ("" + trialSequence.get(itr) + ",");
+		}
+		sequenceString += "\n";
+		return sequenceString;
+	}
+	
+	public void updateRenderStatus(int render)
+	{
+		rendering = render;
 	}
 	
 	public void draw()
@@ -145,7 +170,7 @@ public class Monitor extends PApplet{
 		//block
 		textSize(48);
 		fill(120);
-		text("Block " + block, 100, 100);
+		text("Target " + target, 100, 100);
 		
 		//current trial / total trial
 		fill(120);
@@ -164,6 +189,8 @@ public class Monitor extends PApplet{
 		}
 		noStroke();
 		ellipse(800, 85, 100, 100);
+		
+		
 		
 		//choices
 		for(int itr = 0; itr < levels; itr++)
@@ -191,15 +218,14 @@ public class Monitor extends PApplet{
 		
 		
 		//timeSeriesPlot.draw();
-		temperateSeriesPlot.draw();
+		seriesPlot.draw();
 		
 		
 		//show target and actual temperature
 		{
 			String textShown = "" + actualTemperature + " C";
-			text(textShown, windowWidth / 2 - textWidth(textShown) /2 , 600); 
+			text(textShown, windowWidth / 2 - textWidth(textShown) /2 , 450); 
 		}
-	
 		
 		//complete
 		if(blockDone)
@@ -253,44 +279,26 @@ public class Monitor extends PApplet{
 	
 	public void mousePressed()
 	{
-		temperateSeriesPlot.mousePress(mouseX, mouseY);
+		seriesPlot.mousePress(mouseX, mouseY);
 	}
 	
 	public void mouseReleased()
 	{
-		temperateSeriesPlot.mouseRelease(mouseX, mouseY);
+		seriesPlot.mouseRelease(mouseX, mouseY);
 	}
 	
 	public void keyPressed() {
 		if (key == 'q') {
 			dataStorage.save();
+			server.onDestroy();
 			exit();
+		}else if(key == 's')
+		{
+			//stop action 
+			server.sendMessage("sos,\n");
 		}
 	}
 	
-	public void nextTrial()
-	{
-		if(trial <= (totalTrials - 1))
-		{
-			target = trialSequence.get(trial);
-			//println("target: " + target);
-			trial++;
-			
-			if(rectOverIndex > -1)
-			{
-				mouseTriggered.set(rectOverIndex, 0);
-				rectOverIndex = -1;
-			}
-			
-			//render the target
-			//renderNext(target);
-			
-		}else
-		{
-			//block finish
-			blockDone = true;
-		}
-	}
 	
 	public void releaseWithAccident()
 	{
