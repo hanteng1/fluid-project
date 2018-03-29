@@ -444,15 +444,15 @@ public class TimeSeriesPlot {
 			//if it is drawing, stop updating
 			
 			
-			for(int itrd = 0; itrd < plotPointSize - 1 ; itrd++)
+			for(int itrd = 99; itrd < plotPointSize  + 99- 1 ; itrd++)
 			{
 				float valueOne = plotData.get(itrd);
 				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
-				float xOnAxisOne = plotSegWidth * itrd;
+				float xOnAxisOne = plotSegWidth * (itrd - 99);
 				
 				float valueTwo = plotData.get(itrd + 1);
 				float yOnAxisTwo = centerY + plotHeight - (valueTwo - yMin) * plotHeight / yHeight;
-				float xOnAxisTwo = plotSegWidth * (itrd + 1);
+				float xOnAxisTwo = plotSegWidth * (itrd - 99 + 1);
 				
 				app.line(xOnAxisOne, yOnAxisOne, xOnAxisTwo, yOnAxisTwo);
 			}
@@ -465,15 +465,15 @@ public class TimeSeriesPlot {
 			app.fill(100, 100, 200);
 			app.text("" + lastValueTwo + "", 800, centerY + 80);
 			
-			for(int itrd = 0; itrd < plotPointSize - 1 ; itrd++)
+			for(int itrd = 99; itrd < plotPointSize + 99 - 1 ; itrd++)
 			{
 				float valueOne = plotDataTwo.get(itrd);
 				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
-				float xOnAxisOne = plotSegWidth * itrd;
+				float xOnAxisOne = plotSegWidth * (itrd - 99);
 				
 				float valueTwo = plotDataTwo.get(itrd + 1);
 				float yOnAxisTwo = centerY + plotHeight - (valueTwo - yMin) * plotHeight / yHeight;
-				float xOnAxisTwo = plotSegWidth * (itrd + 1);
+				float xOnAxisTwo = plotSegWidth * (itrd - 99 + 1);
 				
 				app.line(xOnAxisOne, yOnAxisOne, xOnAxisTwo, yOnAxisTwo);
 			}
@@ -498,15 +498,15 @@ public class TimeSeriesPlot {
 			app.stroke(100, 100, 200);
 			app.noFill();
 			app.strokeWeight(3);
-			for(int itrd = 0; itrd < plotPointSize - 1; itrd++)
+			for(int itrd = 99; itrd < plotPointSize + 99 - 1; itrd++)
 			{
 				float valueOne = plotDataFiltered.get(itrd);
 				float yOnAxisOne = centerY + plotHeight - (valueOne - yMin) * plotHeight / yHeight;
-				float xOnAxisOne = plotSegWidth * itrd;
+				float xOnAxisOne = plotSegWidth * (itrd - 99);
 				
 				float valueTwo = plotDataFiltered.get(itrd + 1);
 				float yOnAxisTwo = centerY + plotHeight - (valueTwo - yMin) * plotHeight / yHeight;
-				float xOnAxisTwo = plotSegWidth * (itrd + 1);
+				float xOnAxisTwo = plotSegWidth * (itrd - 99 + 1);
 				
 				app.line(xOnAxisOne, yOnAxisOne, xOnAxisTwo, yOnAxisTwo);
 			}
