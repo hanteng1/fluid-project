@@ -165,6 +165,11 @@ public class HapticController {
 		vibration.stopWorking();
 	}
 	
+	public void stopVibrationAccident()
+	{
+		vibration.stopWorking();
+	}
+	
 	///////////////////////////////////////////////////////////////
 	
 	public void setTemperature(int level)
@@ -369,6 +374,7 @@ public class HapticController {
 				vibrationTest.delay(duration);
 			}
 			
+			//valve is open 
 			vibrationTest.stopWater();
 		}
 		

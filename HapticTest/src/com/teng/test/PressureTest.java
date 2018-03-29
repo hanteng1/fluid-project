@@ -165,18 +165,14 @@ public class PressureTest extends PApplet{
 		if(trial == 0)
 		{
 			isTrainingMode = true;
-			if(isTrainingMode)
-			{
-				promp = "Train mode, press SPACE to the next";
-			}
+			promp = "train mode, press SPACE to the next";
+			
 		}else
 		{
 			trial -= 1;
 			isTrainingMode = false;
-			if(isTrainingMode)
-			{
-				promp = "Press SPACE to next";
-			}
+		    promp = "trail mode, press SPACE to next";
+			
 		}
 		
 		//get ready
@@ -444,6 +440,19 @@ public class PressureTest extends PApplet{
 				serialInput_One.close();
 				serialOutput_One.close();
 				serialPort_One.close();
+				
+			} catch (Exception ex){
+				ex.printStackTrace();
+			}
+			
+			delay(100);
+			
+			
+			try {
+				System.out.println("Disconnecting from port: " + portName_Two);
+				serialInput_Two.close();
+				serialOutput_Two.close();
+				serialPort_Two.close();
 				
 			} catch (Exception ex){
 				ex.printStackTrace();

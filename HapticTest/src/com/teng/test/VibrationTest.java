@@ -2,6 +2,7 @@ package com.teng.test;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Random;
@@ -9,6 +10,8 @@ import java.util.Random;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
+import gnu.io.SerialPortEventListener;
 import processing.core.PApplet;
 
 public class VibrationTest extends PApplet{
@@ -26,13 +29,15 @@ public class VibrationTest extends PApplet{
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 2;    // 1, 2, 3
+	int block = 0;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
 	int trial = 0;
 	int totalTrials = 0;
 	ArrayList<Integer> trialSequence;
+	ArrayList<Integer> trainSequence;
+	int trainTrial = 0;
 	public boolean isTrialSequenceSet;
 	int target = 0;
 	int answer = 0;
@@ -50,7 +55,6 @@ public class VibrationTest extends PApplet{
 	
 	public static DataStorage dataStorage;
 	
-	
 	//ring
 	//serial - for pump and valves
 	static SerialPort serialPort_One;
@@ -59,11 +63,21 @@ public class VibrationTest extends PApplet{
 	static OutputStream serialOutput_One;
 	static String portName_One;
 	
+	//sensor
+	static SerialPort serialPort_Two;
+	static InputStream serialInput_Two;
+	static BufferedReader input_Two;
+	static OutputStream serialOutput_Two;
+	static String portName_Two;
+	
 	//to control pressure
 	HapticController controller;
 	
 	boolean workingInProgress = false;
 	public int rendering = 0;  //0 - nothing, 1 - render, 2 - ready
+	
+	
+	public Client client;
 	
 	
 	public void settings()
@@ -79,7 +93,30 @@ public class VibrationTest extends PApplet{
 		rectColor = color(211, 211, 211);
 		rectHighlight = color(105, 105, 105);
 		
-		ArrayList<Integer> oldSequence = new ArrayList<Integer>();
+		trialSequence = new ArrayList<Integer>();
+		
+		//ring
+		configurePort_One("COM10");
+		connectPort_One();
+		delay(2000);
+		
+		//sensor
+		configurePort_Two("COM8");
+		connectPort_Two();
+		delay(2000);
+		
+		//client
+		client = new Client("10.142.197.9", 9090, this);	
+		delay(1000);
+		
+		
+		//waiting for setup of trial sequence
+		while(isTrialSequenceSet == false)
+		{
+			
+		}
+		println("sequence set");
+		
 		
 		
 		rectWidth = windowWidth /( 2 * levels + 1);
@@ -108,13 +145,36 @@ public class VibrationTest extends PApplet{
 		dataStorage.levels = levels;
 		
 
-		//ring
-		configurePort_One("COM10");
-		connectPort_One();
-		delay(2000);
-		//set to clockwise by default
+		trainSequence = new ArrayList<Integer>();
+		for(int itr = 1; itr < levels + 1; itr++)
+		{
+			trainSequence.add(itr);
+		}
+		for(int itr = 1; itr < levels + 1; itr++)
+		{
+			trainSequence.add(itr);
+		}
+		for(int itr = 1; itr < levels + 1; itr++)
+		{
+			trainSequence.add(itr);
+		}
+		
 		
 		controller = new HapticController(this);
+		delay(1000);
+		
+		if(trial == 0)
+		{
+			isTrainingMode = true;
+			promp = "train mode, press SPACE to the next";
+			
+		}else
+		{
+			trial -= 1;
+			isTrainingMode = false;
+		    promp = "trail mode, press SPACE to next";
+			
+		}
 		
 		//get ready
 		thread("getWaterReady");
@@ -147,6 +207,47 @@ public class VibrationTest extends PApplet{
 					serialOutput_One = serialPort_One.getOutputStream();
 			      
 					System.out.println("Connected to port: " + portName_One);
+				} else {
+					System.out.println("Error: Only serial ports are handled by this example.");
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}		
+	}
+	
+	
+	void configurePort_Two(String _portName)
+	{
+		portName_Two = _portName;
+	}
+	
+	void connectPort_Two() {
+		try {
+			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName_Two);
+			if (portIdentifier.isCurrentlyOwned()) {
+				System.out.println("Error: Port is currently in use");
+			} else {
+				CommPort commPort = portIdentifier.open(this.getClass().getName(), 2000);
+				
+				if (commPort instanceof SerialPort) {
+					serialPort_Two = (SerialPort) commPort;
+
+					// Set appropriate properties (do not change these)
+					serialPort_Two.setSerialPortParams(
+							115200, 
+							SerialPort.DATABITS_8,
+							SerialPort.STOPBITS_1, 
+							SerialPort.PARITY_NONE);
+
+					serialInput_Two = serialPort_Two.getInputStream();
+					input_Two = new BufferedReader(new InputStreamReader(serialInput_Two));				
+					serialOutput_Two = serialPort_Two.getOutputStream();
+					
+					serialPort_Two.addEventListener(new VibrationSerialListener(2, this));
+			        serialPort_Two.notifyOnDataAvailable(true);
+			      
+					System.out.println("Connected to port: " + portName_Two);
 				} else {
 					System.out.println("Error: Only serial ports are handled by this example.");
 				}
@@ -221,11 +322,7 @@ public class VibrationTest extends PApplet{
 	{
 		background(225, 225, 225);
 		
-		//block
 		textSize(48);
-		fill(120);
-		text("Block " + block, 100, 100);
-		
 		//current trial / total trial
 		fill(120);
 		text("Trial " + trial + " / " + totalTrials , 400, 100);
@@ -298,25 +395,6 @@ public class VibrationTest extends PApplet{
 		}
 		
 	}
-	
-	public ArrayList<Integer> randomize(ArrayList<Integer> data)
-	{
-		ArrayList<Integer> newData = new ArrayList<Integer>();
-		int size = data.size();
-		Random rand = new Random();
-		
-		for(int i = 0; i < size; i++)
-		{
-			//pick a random number from sequence
-			int pick = rand.nextInt(data.size());
-			newData.add(data.get(pick));
-			data.remove(pick);
-		}
-		
-		return newData;
-		
-	}
-	
 
 	public void makeChoice()
 	{
@@ -327,13 +405,6 @@ public class VibrationTest extends PApplet{
 		responseTime = System.currentTimeMillis() - trialStartTime;
 		promp = "Press SPACE to release";
 		waitingForAnswer = false;
-	}
-	
-	public void makePractice()
-	{
-		//render a target
-		mouseTriggered.set(rectOverIndex, 1);
-		renderNext(target);
 	}
 	
 	public void keyPressed() {
@@ -358,7 +429,27 @@ public class VibrationTest extends PApplet{
 			
 			delay(100);
 			
+			try {
+				System.out.println("Disconnecting from port: " + portName_Two);
+				serialInput_Two.close();
+				serialOutput_Two.close();
+				serialPort_Two.close();
+				
+			} catch (Exception ex){
+				ex.printStackTrace();
+			}
+			
+			delay(100);
+			
+			client.onDestroy();
+			
 			exit();
+		}else if(key == 's')
+		{
+			if(rendering == 1)
+			{
+				thread("releaseWithAccident");
+			}
 		}else if(key == ' ')
 		{
 			if(workingInProgress && trial > 0)
@@ -366,6 +457,16 @@ public class VibrationTest extends PApplet{
 				isTrainingMode = true;
 				workingInProgress = false;
 				promp = "Train mode, press 123... to try, or SPACE to start";
+				
+				String msg = "m,";
+				msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+				msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+				msg += "" + trial + ",";
+				msg += "" + target + ",";
+				msg += "" + rectOverIndex + ",";
+				msg += "\n";
+				client.sendMessage(msg);
+				
 				return;
 			}
 			
@@ -381,9 +482,7 @@ public class VibrationTest extends PApplet{
 				{
 					if(isTrainingMode)
 					{
-						isTrainingMode = false;
-						//start
-						nextTrial();
+						nextTrain();
 					}else
 					{
 						if(waitingForAnswer == false)
@@ -391,11 +490,24 @@ public class VibrationTest extends PApplet{
 							//record the data
 							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
 							
+							
+							String msg = "d,";
+							msg += "" + trial + ",";
+							msg += "" + sensation + ",";
+							msg += "" + levels + ",";
+							msg += "" + target + ",";
+							msg += "" + answer + ",";
+							msg += "" + responseTime + ",";
+							msg += "" + (answer == target ? 1 : 0) + ",";
+							msg += "\n";
+							client.sendMessage(msg);
+							
+							
 							answer = 0;
 							responseTime = 0;
 							
 							//go to next
-							if(trial % 10 == 0)
+							if(trial % 10 == 0 && trial > 0)
 							{
 								workingInProgress = true;
 							}else
@@ -405,6 +517,16 @@ public class VibrationTest extends PApplet{
 						}	
 					}
 				}
+				
+				String msg = "m,";
+				msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+				msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+				msg += "" + trial + ",";
+				msg += "" + target + ",";
+				msg += "" + rectOverIndex + ",";
+				msg += "\n";
+				client.sendMessage(msg);
+				
 			}
 			
 			
@@ -418,31 +540,7 @@ public class VibrationTest extends PApplet{
 			{
 				String inpuText = "" + key;
 				
-				if(isTrainingMode)
-				{
-					if(rendering > 0)
-					{
-						return;
-					}else
-					{
-						int inputValue = -1;
-						try {
-							inputValue = Integer.parseInt(inpuText);
-						}catch(Exception ex)
-						{
-							return;
-						}
-						
-						if(inputValue > 0 && inputValue < (levels + 1))
-						{			
-							rectOverIndex = inputValue - 1 ;
-							target = inputValue;
-							makePractice();
-						}
-					}
-					
-					
-				}else
+				if(!isTrainingMode)
 				{
 					if((waitingForAnswer || rectOverIndex >= 0) && rendering == 2)
 					{
@@ -462,12 +560,83 @@ public class VibrationTest extends PApplet{
 							}
 							rectOverIndex = inputValue - 1 ;
 							makeChoice();
+							
+							String msg = "c,";
+							msg += "" + inputValue + ",";
+							msg += "\n";
+							client.sendMessage(msg);
+							
 						}
 					}
 				}
 			}
 		}
 	}
+	
+	
+	
+	public void nextTrain()
+	{	
+		if(trial == 0)  //begining
+		{
+			//begin, all
+			if(trainTrial <=  (2 * levels - 1))
+			{
+				//continue train
+				target = trainSequence.get(trainTrial);
+				trainTrial ++; 
+				
+				if(rectOverIndex > -1)
+				{
+					mouseTriggered.set(rectOverIndex, 0);
+					rectOverIndex = -1;
+				}
+				
+				rectOverIndex = target - 1;
+				mouseTriggered.set(rectOverIndex, 1);
+				
+				renderNext(target);
+				
+			}else
+			{
+				//start to trail
+				
+				
+				nextTrial();
+				isTrainingMode = false;
+				trainTrial = 0;
+			}
+			
+		}else  //in the middle 
+		{
+			//middle, just one round 
+			if(trainTrial <=  (1 * levels - 1))
+			{
+				//continue train
+				target = trainSequence.get(trainTrial);
+				trainTrial ++; 
+				
+				if(rectOverIndex > -1)
+				{
+					mouseTriggered.set(rectOverIndex, 0);
+					rectOverIndex = -1;
+				}
+				
+				rectOverIndex = target - 1;
+				mouseTriggered.set(rectOverIndex, 1);
+				
+				renderNext(target);
+			}else
+			{
+				//start to trail
+				nextTrial();
+				isTrainingMode = false;
+				trainTrial = 0;
+			}
+		}
+		
+	}
+	
 	
 	public void nextTrial()
 	{
@@ -497,6 +666,13 @@ public class VibrationTest extends PApplet{
 	{
 		
 		rendering = 1;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		
 		controller.startVibration(targetIndex);
 		promp = "rendering...";
 	}
@@ -506,9 +682,22 @@ public class VibrationTest extends PApplet{
 		controller.stopVibration();
 	}
 	
+	public void releaseRenderAccident()
+	{
+		controller.stopVibrationAccident();
+	}
+	
+	
 	public void scheduleTaskReady()
 	{
 		rendering = 2;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		
 		if(isTrainingMode)
 		{
 			promp = "press SPACE to release ...";
@@ -526,24 +715,158 @@ public class VibrationTest extends PApplet{
 		promp = "releasing...";
 		releaseRender();
 		rendering = 1;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		
 		delay(2000);
 		rendering = 0;
-		mouseTriggered.set(rectOverIndex, 0);
-		rectOverIndex = -1;
+		
+		msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		if(rectOverIndex > -1)
+		{
+			mouseTriggered.set(rectOverIndex, 0);
+			rectOverIndex = -1;
+			
+			msg = "m,";
+			msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+			msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+			msg += "" + trial + ",";
+			msg += "" + target + ",";
+			msg += "" + rectOverIndex + ",";
+			msg += "\n";
+			client.sendMessage(msg);
+			
+		}
 		
 		if(isTrainingMode)
 		{
-			promp = "Train mode, press 123... to try, or SPACE to start";
+			
+			if(trial == 0 && trainTrial ==  (2 * levels))
+			{
+				promp = "press space to enter test!";
+			}else if(trial > 0 && trainTrial ==  (1 * levels))
+			{	
+				promp = "press space to continue test!";
+			}else
+			{
+				promp = "Train mode, press SPACE to next";
+			}
+			
 		}else
 		{
-			promp = "Press SPACE to next";
+			promp = "Trial mode, Press SPACE to next";
 		}
 	}
+	
+
+	public void sosAction()
+	{
+		thread("releaseWithAccident");
+	}
+	
+	
+	public void releaseWithAccident()
+	{
+		promp = "releasing...";
+		releaseRenderAccident();
+		rendering = 1;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		delay(2000);
+		rendering = 0;
+		
+		msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		
+		if(rectOverIndex >= 0)
+		{
+			mouseTriggered.set(rectOverIndex, 0);
+			rectOverIndex = -1;
+		}
+	
+		if(isTrainingMode)
+		{
+			promp = "Train mode, press SPACE to next";
+		}else
+		{
+			trial--;
+			promp = "Press SPACE to replay the next trial";
+		}
+		
+		msg = "m,";
+		msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+		msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+		msg += "" + trial + ",";
+		msg += "" + target + ",";
+		msg += "" + rectOverIndex + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+	}
+	
 	
 	
 	public static void main(String[] args){
 		
 		PApplet.main("com.teng.test.VibrationTest");
+	}
+	
+}
+
+
+class VibrationSerialListener implements SerialPortEventListener
+{
+	public int index;
+	VibrationTest instance;
+	
+	
+	public VibrationSerialListener(int _index, VibrationTest _instance)
+	{
+		index = _index;
+		instance = _instance;
+	}
+	
+	@Override
+	public synchronized void serialEvent(SerialPortEvent oEvent) {
+		// TODO Auto-generated method stub
+		if (oEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
+		    try {
+		        String inputLine=null;
+		        
+		        if(index == 2)
+		        {
+		        	 if(instance.input_Two.ready()) {
+				        	inputLine = instance.input_Two.readLine();
+				        	try {
+				            	float readValue = Float.parseFloat(inputLine);         	
+				            	instance.client.sendMessage("t" + "," + readValue + "\n");
+				            	
+				            }catch(Exception ex)
+				            {
+				            	return;
+				            }
+				     }
+		        }
+
+		    } catch (Exception e) {
+		        System.err.println(e.toString());
+		    }
+		 }
+		// Ignore all the other eventTypes, but you should consider the other ones.
 	}
 	
 }

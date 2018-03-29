@@ -173,7 +173,7 @@ public class Client {
 					{
 						if((msg = input.readLine()) != null)  //when lost, will read null
 						{
-							System.out.println(msg);
+							//System.out.println(msg);
 							values = msg.split(",");
 						}else
 						{
@@ -215,13 +215,20 @@ public class Client {
 								//copy the trial sequence
 								vibrationTest.levels =  Integer.parseInt(values[1]);
 								vibrationTest.totalTrials = Integer.parseInt(values[2]);
+								vibrationTest.trial = Integer.parseInt(values[3]);
 								
 								for(int itr = 0; itr < vibrationTest.totalTrials ; itr++)
 								{
-									vibrationTest.trialSequence.add(Integer.parseInt(values[itr + 3] ));
+									vibrationTest.trialSequence.add(Integer.parseInt(values[itr + 4] ));
 								}
 								
 								vibrationTest.isTrialSequenceSet = true;
+							}
+							
+							else if(values[0].equals("sos"))
+							{
+								//stop
+								vibrationTest.sosAction();
 							}
 							
 						}
@@ -234,13 +241,20 @@ public class Client {
 								//copy the trial sequence
 								temperatureTest.levels =  Integer.parseInt(values[1]);
 								temperatureTest.totalTrials = Integer.parseInt(values[2]);
+								temperatureTest.trial = Integer.parseInt(values[3]);
 								
 								for(int itr = 0; itr < temperatureTest.totalTrials ; itr++)
 								{
-									temperatureTest.trialSequence.add(Integer.parseInt(values[itr + 3] ));
+									temperatureTest.trialSequence.add(Integer.parseInt(values[itr + 4] ));
 								}
 								
 								temperatureTest.isTrialSequenceSet = true;
+							}
+							
+							else if(values[0].equals("sos"))
+							{
+								//stop
+								//temperatureTest.sosAction();
 							}
 							
 						}
