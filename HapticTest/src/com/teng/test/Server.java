@@ -57,29 +57,36 @@ public class Server {
 	
 	private class SocketServerThread extends Thread {
 		
+		int count = 0;
+		
 		@Override
 		public void run()
 		{
 			try{
 				serverSocket = new ServerSocket(socketServerPORT);
-				//incoming socket connection
-				clientSocket = serverSocket.accept();
-				message = "#1" + " from "
-                        + clientSocket.getInetAddress() + ":"
-                        + clientSocket.getPort() + "\n";
 				
-				System.out.println(message);
-				
-				outputStream = clientSocket.getOutputStream();
-				printStream = new PrintStream(outputStream);
-				
-				//reply a connection confirmation
-				SocketServerReplyThread socketServerReplyThread = new SocketServerReplyThread();
-            	socketServerReplyThread.run();
-				
-            	//keep listening
-            	SocketServerReceiveThread socketServerReceiveThread = new SocketServerReceiveThread();
-            	socketServerReceiveThread.run();
+				while(true)
+				{
+					//incoming socket connection
+					clientSocket = serverSocket.accept();
+					count++;
+					message = "#" + count +  " from "
+	                        + clientSocket.getInetAddress() + ":"
+	                        + clientSocket.getPort() + "\n";
+					
+					System.out.println(message);
+					
+					outputStream = clientSocket.getOutputStream();
+					printStream = new PrintStream(outputStream);
+					
+					//reply a connection confirmation
+					SocketServerReplyThread socketServerReplyThread = new SocketServerReplyThread();
+	            	socketServerReplyThread.run();
+					
+	            	//keep listening
+	            	SocketServerReceiveThread socketServerReceiveThread = new SocketServerReceiveThread();
+	            	socketServerReceiveThread.run();
+				}
             	
 			}catch (IOException e) {
                 // TODO Auto-generated catch block
@@ -256,11 +263,6 @@ public class Server {
                     //e.printStackTrace();
 					keepReading = false;
 					System.out.println("client might lost");
-					
-					
-					//re-waiting for a connection
-					Thread socketServerThread = new Thread(new SocketServerThread());
-					socketServerThread.start();
                 }
 			}
 		}
