@@ -17,7 +17,7 @@ public class Monitor extends PApplet{
 	ArrayList<Integer> rectXs;
 	int rectY = 0;
 	ArrayList<Integer> mouseTriggered;
-	int  rectWidth, rectHeight;
+	int  rectWidth, rectHeight;//'
 	int rectOverIndex = -1;
 	
 	//****************************//

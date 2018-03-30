@@ -251,13 +251,18 @@ public class Server {
 							int answer = Integer.parseInt(values[5]);
 							long responsetime  = Long.parseLong(values[6]);
 							int iscorrect = Integer.parseInt(values[7]);
+							float targetValue = Float.parseFloat(values[8]);
+							float answerValue = Float.parseFloat(values[9]);
 							
-							monitor.dataStorage.AddSample(trial, sensation, levels, target, answer, responsetime, iscorrect);
+							monitor.dataStorage.AddSample(trial, sensation, levels, target, answer, responsetime, iscorrect,
+									targetValue, answerValue);
+						}else if(values[0].equals("a"))
+						{
+							float target = Float.parseFloat(values[1]);
+							monitor.seriesPlot.targetLine = target;
 						}
 							
 					}
-					
-			
 					
 				}catch (IOException e) {
                     //e.printStackTrace();
