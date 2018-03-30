@@ -177,7 +177,7 @@ public class TemperatureTest extends PApplet{
 		
 		dataStorage = DataStorage.getInstance();
 		dataStorage.userId = userId;
-		dataStorage.sensation = "pressure";
+		dataStorage.sensation = "temperature";
 		dataStorage.levels = levels;
 		
 		
@@ -583,7 +583,7 @@ public class TemperatureTest extends PApplet{
 							
 							
 							//go to next
-							if(trial % 5 == 0 && trial != 0  && trial != totalTrials)
+							if(trial % 5 == 0 && trial != 0  && trial != totalTrials && trial < 20)
 							{
 								workingInProgress = true;
 							}else

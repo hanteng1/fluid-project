@@ -189,9 +189,9 @@ public class HapticController {
 		if(level > 0 && level < 10)
 		{
 			String msg = "a,";
-			msg += "" + pressureLevels.get(level - 1) + ",";
+			msg += "" + temperatureLevels.get(level - 1) + ",";
 			msg += "\n";
-			pressureTest.client.sendMessage(msg);
+			temperatureTest.client.sendMessage(msg);
 			
 			adjustTemperature = new AdjustTemperature(temperatureLevels.get(level - 1));
 			adjustTemperature.start();
