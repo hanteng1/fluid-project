@@ -21,17 +21,17 @@ public class Monitor extends PApplet{
 	int rectOverIndex = -1;
 	
 	//****************************//
-	int sensation = 1;   
+	int sensation = 3;   
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 1;    // 1, 2, 3
+	int block = 2;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
 	int trial = 0;
 	int totalTrials = 0;
-	int repetition = 5;
+	int repetition = 3;
 	ArrayList<Integer> trialSequence;
 	int target = 0;
 	int answer = 0;
@@ -56,7 +56,11 @@ public class Monitor extends PApplet{
 	public int rendering = 0;  //0 - nothing, 1 - render, 2 - ready
 	
 	public static DataStorage dataStorage;
-	private Server server;
+	public Server server;
+	
+	Slider sliderP;
+	Slider sliderI;
+	Slider sliderD;
 	
 	
 	public void settings()
@@ -94,7 +98,7 @@ public class Monitor extends PApplet{
 		{
 			rectXs.add((2 * itr + 1) * rectWidth );
 		}
-		rectY = 300;
+		rectY = 200;
 		
 		mouseTriggered = new ArrayList<Integer>();
 		for(int itr = 0; itr < levels; itr++)
@@ -131,8 +135,11 @@ public class Monitor extends PApplet{
 		{
 			seriesPlot.setMinMax(15, 50, true);
 			seriesPlot.setShampen(100);
+			
+			sliderP = new Slider(this, 0, 300, 0, 0.5f, 1);
+			sliderI = new Slider(this, 0, 370, 0, 0.5f, 2);
+			sliderD = new Slider(this, 0, 440, 0, 0.5f, 3);
 		}
-		
 		
 		try {
 			server = new Server(this);
@@ -214,18 +221,32 @@ public class Monitor extends PApplet{
 		
 		textSize(24);
 		fill(120);
-		text(promp, windowWidth/2 - textWidth(promp)/2, 200);
+		text(promp, windowWidth/2 - textWidth(promp)/2, 180);
 		
 		
 		//timeSeriesPlot.draw();
 		seriesPlot.draw();
 		
 		
-		//show target and actual temperature
+		
+		if(sensation == 3)
 		{
-			String textShown = "" + actualTemperature + " C";
-			text(textShown, windowWidth / 2 - textWidth(textShown) /2 , 450); 
+			sliderP.update(mouseX, mouseY);
+			sliderP.draw();
+			
+			sliderI.update(mouseX, mouseY);
+			sliderI.draw();
+			
+			sliderD.update(mouseX, mouseY);
+			sliderD.draw();
 		}
+
+		
+		//show target and actual temperature
+//		{
+//			String textShown = "" + actualTemperature + " C";
+//			text(textShown, windowWidth / 2 - textWidth(textShown) /2 , 450); 
+//		}
 		
 		//complete
 		if(blockDone)

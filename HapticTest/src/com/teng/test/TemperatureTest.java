@@ -85,9 +85,7 @@ public class TemperatureTest extends PApplet{
 
 	public static DataStorage dataStorage;
 	
-	Slider sliderP;
-	Slider sliderI;
-	Slider sliderD;
+	
 	
 	boolean workingInProgress = true;
 	public int rendering = 0;  //0 - nothing, 1 - render, 2 - ready
@@ -179,11 +177,6 @@ public class TemperatureTest extends PApplet{
 		dataStorage.userId = userId;
 		dataStorage.sensation = "temperature";
 		dataStorage.levels = levels;
-		
-		
-		sliderP = new Slider(this, 0, 400, 0, 0.5f, 1);
-		sliderI = new Slider(this, 0, 480, 0, 0.5f, 2);
-		sliderD = new Slider(this, 0, 560, 0, 0.5f, 3);
 		
 		//read the current progress
 		if(trial == 0)
@@ -388,17 +381,6 @@ public class TemperatureTest extends PApplet{
 		textSize(24);
 		fill(120);
 		text(promp, windowWidth/2 - textWidth(promp)/2, 200);
-		
-		sliderP.update(mouseX, mouseY);
-		sliderP.draw();
-		
-		
-		sliderI.update(mouseX, mouseY);
-		sliderI.draw();
-		
-		sliderD.update(mouseX, mouseY);
-		sliderD.draw();
-		
 		
 		//complete
 		if(blockDone)

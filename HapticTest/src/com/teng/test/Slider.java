@@ -5,8 +5,7 @@ import processing.core.*;
 public class Slider {
 	
 	PApplet app;
-	TemperatureTest test;
-	
+	Monitor monitor;
 	
 	int swidth = 1000; 
 	int sheight = 50;    // width and height of bar
@@ -46,9 +45,9 @@ public class Slider {
 	}
 	
 	
-	public Slider(TemperatureTest ap, int cx, int cy, float min, float max, int _index)
+	public Slider(Monitor ap, int cx, int cy, float min, float max, int _index)
 	{
-		test = ap;
+		monitor = ap;
 		index = _index;
 		xpos = cx;
 		ypos = cy;
@@ -74,10 +73,10 @@ public class Slider {
 	      over = false;
 	    }
 	    
-	    if (test.mousePressed && over) {
+	    if (monitor.mousePressed && over) {
 	      locked = true;
 	    }
-	    if (!test.mousePressed) {
+	    if (!monitor.mousePressed) {
 	      locked = false;
 	      
 	      if(prevLocked == true)
@@ -85,31 +84,33 @@ public class Slider {
 	    	  //update
 	    	  if(index == 1)
 	    	  {
-	    		  test.controller.updateP(getRealValue());
+	    		  String msg = "pid,p,";
+	    		  msg += "" + getRealValue() + ",";
+	    		  msg += "\n";
+	    		  monitor.server.sendMessage(msg);
+	    		  
 	    	  }
 	    	  else if(index == 2)
 	    	  {
-	    		  test.controller.updateI(getRealValue());
+	    		  String msg = "pid,i,";
+	    		  msg += "" + getRealValue() + ",";
+	    		  msg += "\n";
+	    		  monitor.server.sendMessage(msg);
 	    	  }
 	    	  else if(index == 3)
 	    	  {
-	    		  test.controller.updateD(getRealValue());
+	    		  String msg = "pid,d,";
+	    		  msg += "" + getRealValue() + ",";
+	    		  msg += "\n";
+	    		  monitor.server.sendMessage(msg);
 	    	  }
 	      }
 	    }
 	    
-	    
-	    
-	    
 	    prevLocked  = locked;
-	    
-	    
 	    if (locked) {
 	      newspos = constrain(mouseX-sheight/2, sposMin, sposMax);
 	    }
-	    
-	    
-	    
 	    
 	    if (Math.abs(newspos - spos) > 1) {
 	      spos = spos + (newspos-spos)/loose;
@@ -131,20 +132,20 @@ public class Slider {
 	}
 
 	void draw() {
-	    test.noStroke();
-	    test.fill(204);
-	    test.rect(xpos, ypos, swidth, sheight);
+		monitor.noStroke();
+		monitor.fill(204);
+		monitor.rect(xpos, ypos, swidth, sheight);
 	    if (over || locked) {
-	      test.fill(0, 0, 0);
+	    	monitor.fill(0, 0, 0);
 	    } else {
-	      test.fill(102, 102, 102);
+	    	monitor.fill(102, 102, 102);
 	    }
-	    test.rect(spos, ypos, sheight, sheight);
+	    monitor.rect(spos, ypos, sheight, sheight);
 	    
-	    test.fill(120);
+	    monitor.fill(120);
 	    String sposValue = "" + getRealValue();
-	    test.textSize(24);
-	    test.text(sposValue, spos, ypos);
+	    monitor.textSize(24);
+	    monitor.text(sposValue, spos, ypos);
 	}
 
 	float getPos() {
