@@ -28,20 +28,23 @@ public class TemperatureTest extends PApplet{
 	int sensation = 3;   
 	//****************************//
 	int userId = 1;
-	//****************************//
-	int block = 2;    // 1, 2, 3
-	
+
 	
 	int levels = 5;   //3, 5, 7 (or 9)
 	int trial = 0;
 	int totalTrials = 0;
 	int repetition = 5;
 	ArrayList<Integer> trialSequence;
-	
+	ArrayList<Integer> trainSequence;
+	int trainTrial = 0;
 	public boolean isTrialSequenceSet;
 	
 	int target = 0;
 	int answer = 0;
+	
+	float targetValue = 0;
+	float answerValue = 0;
+	
 	boolean waitingForAnswer = false;
 	
 	boolean isTrainingMode = true;
@@ -74,10 +77,13 @@ public class TemperatureTest extends PApplet{
 	float actualTemperature;
 	float targetTemperature;
 	boolean targetSet = false;
+	
 	TimeSeriesPlot temperateSeriesPlot;
 	
 	//to control pressure
 	public HapticController controller;
+
+	public static DataStorage dataStorage;
 	
 	Slider sliderP;
 	Slider sliderI;
@@ -86,7 +92,6 @@ public class TemperatureTest extends PApplet{
 	boolean workingInProgress = true;
 	public int rendering = 0;  //0 - nothing, 1 - render, 2 - ready
 	
-	boolean isClient = false;
 	public Client client;
 	
 	
@@ -103,41 +108,8 @@ public class TemperatureTest extends PApplet{
 		rectColor = color(211, 211, 211);
 		rectHighlight = color(105, 105, 105);
 		
-		
-		if(isClient == false)
-		{
-			levels = block * 2 + 1;  // need pilot
-			totalTrials = levels * repetition;
-			trialSequence = new ArrayList<Integer>();
-			ArrayList<Integer> oldSequence = new ArrayList<Integer>();
-			for(int itr = 1; itr < levels + 1; itr++)
-			{
-				for(int i = 0; i < repetition; i++)
-				{
-					oldSequence.add(itr);
-				}
-			}
-			
-			trialSequence = randomize(oldSequence);
-			
-			isTrialSequenceSet = true;
-		}
-		
 		trialSequence = new ArrayList<Integer>();
 
-		if(isTrainingMode)
-		{
-			promp = "Train mode, press 123.. to try, or SPACE to start";
-		}
-		
-		
-		
-		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 700, windowWidth, 200, 1000, false, false, false);
-		temperateSeriesPlot.setMinMax(15, 50, true);
-		temperateSeriesPlot.setShampen(100);
-		//temperateSeriesPlot.drawFilter = true;
-		temperateSeriesPlot.withFixation = true;
-		
 		//ring
 		configurePort_One("COM10");
 		connectPort_One();
@@ -149,16 +121,14 @@ public class TemperatureTest extends PApplet{
 		delay(2000);
 		
 		
-//		timeSeriesPlot = new TimeSeriesPlot(this, windowWidth /2, 760, windowWidth, 200, 500, false, false, false);
-//		timeSeriesPlot.setShampen(1000);
-//		timeSeriesPlot.setMinMax(900, 1200);
+		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 700, windowWidth, 200, 1000, false, false, false);
+		temperateSeriesPlot.setMinMax(15, 50, true);
+		temperateSeriesPlot.setShampen(100);
+		//temperateSeriesPlot.drawFilter = true;
+		temperateSeriesPlot.withFixation = true;
 		
 		
-		if(isClient)
-		{
-			client = new Client("10.142.197.9", 9090, this);	
-		}
-		
+		client = new Client("10.142.197.9", 9090, this);	
 		delay (1000);
 		
 		//waiting for setup of trial sequence
@@ -185,11 +155,49 @@ public class TemperatureTest extends PApplet{
 			mouseTriggered.add(0);
 		}
 		
+		
+		trainSequence = new ArrayList<Integer>();
+		for(int itr = 1; itr < levels + 1; itr++)
+		{
+			trainSequence.add(itr);
+		}
+		for(int itr = 1; itr < levels + 1; itr++)
+		{
+			trainSequence.add(itr);
+		}
+		for(int itr = 1; itr < levels + 1; itr++)
+		{
+			trainSequence.add(itr);
+		}
+		
+		
 		controller = new HapticController(this);
+		
+		delay(1000);
+		
+		dataStorage = DataStorage.getInstance();
+		dataStorage.userId = userId;
+		dataStorage.sensation = "pressure";
+		dataStorage.levels = levels;
+		
 		
 		sliderP = new Slider(this, 0, 400, 0, 0.5f, 1);
 		sliderI = new Slider(this, 0, 480, 0, 0.5f, 2);
 		sliderD = new Slider(this, 0, 560, 0, 0.5f, 3);
+		
+		//read the current progress
+		if(trial == 0)
+		{
+			isTrainingMode = true;
+			promp = "train mode, press SPACE to the next";
+			
+		}else
+		{
+			trial -= 1;
+			isTrainingMode = false;
+		    promp = "trail mode, press SPACE to next";
+			
+		}
 		
 		//get ready
 		thread("getWaterReady");
@@ -339,9 +347,6 @@ public class TemperatureTest extends PApplet{
 		
 		//block
 		textSize(48);
-		fill(120);
-		text("Block " + block, 100, 100);
-		
 		//current trial / total trial
 		fill(120);
 		text("Trial " + trial + " / " + totalTrials , 400, 100);
@@ -384,18 +389,6 @@ public class TemperatureTest extends PApplet{
 		fill(120);
 		text(promp, windowWidth/2 - textWidth(promp)/2, 200);
 		
-		
-		//timeSeriesPlot.draw();
-		temperateSeriesPlot.draw();
-		
-		
-		//show target and actual temperature
-		{
-			String textShown = "" + actualTemperature + " C";
-			text(textShown, windowWidth / 2 - textWidth(textShown) /2 , 600); 
-		}
-	
-		
 		sliderP.update(mouseX, mouseY);
 		sliderP.draw();
 		
@@ -436,29 +429,7 @@ public class TemperatureTest extends PApplet{
 			text(textShown, windowWidth/ 2 - textWidth(textShown) / 2, windowHeight / 2); 
 		}
 		
-		
-		
-	
-		
-		
-	}
-	
-	public ArrayList<Integer> randomize(ArrayList<Integer> data)
-	{
-		ArrayList<Integer> newData = new ArrayList<Integer>();
-		int size = data.size();
-		Random rand = new Random();
-		
-		for(int i = 0; i < size; i++)
-		{
-			//pick a random number from sequence
-			int pick = rand.nextInt(data.size());
-			newData.add(data.get(pick));
-			data.remove(pick);
-		}
-		
-		return newData;
-		
+
 	}
 	
 
@@ -467,31 +438,23 @@ public class TemperatureTest extends PApplet{
 		mouseTriggered.set(rectOverIndex, 1);
 		answer = rectOverIndex + 1;
 		
+		if(answerValue == 0)
+		{
+			answerValue = actualTemperature;
+		}
+		
+		
 		//record/update the duration
 		responseTime = System.currentTimeMillis() - trialStartTime;
 		promp = "Press SPACE to release";
 		waitingForAnswer = false;
 	}
 	
-	public void makePractice()
-	{
-		//render a target
-		mouseTriggered.set(rectOverIndex, 1);
-		renderNext(target);
-	}
-	
-	public void mousePressed()
-	{
-		temperateSeriesPlot.mousePress(mouseX, mouseY);
-	}
-	
-	public void mouseReleased()
-	{
-		temperateSeriesPlot.mouseRelease(mouseX, mouseY);
-	}
 	
 	public void keyPressed() {
 		if (key == 'q') {
+			
+			dataStorage.save();
 			
 			stopWater();
 			delay(200);
@@ -523,10 +486,8 @@ public class TemperatureTest extends PApplet{
 			
 			delay(100);
 			
-			if(isClient)
-			{
-				client.onDestroy();
-			}
+		
+			client.onDestroy();
 		
 			exit();
 		}else if(key == 's')
@@ -536,17 +497,20 @@ public class TemperatureTest extends PApplet{
 				thread("releaseWithAccident");
 			}
 			
-		}else if(key == 'h')
+		}
+		
+		
+		else if(key == 'h')
 		{
 			try {
-				serialOutput_One.write('e');  //both slow speed
+				serialOutput_One.write('e');  
 			} catch (Exception ex) {
 				return;
 			}
 		}else if(key == 'c')
 		{
 			try {
-				serialOutput_One.write('w');  //both slow speed
+				serialOutput_One.write('w');  
 			} catch (Exception ex) {
 				return;
 			}
@@ -556,13 +520,25 @@ public class TemperatureTest extends PApplet{
 		}
 		
 		
+		
+		
 		else if(key == ' ')
 		{
 			if(workingInProgress && trial > 0)
 			{
 				isTrainingMode = true;
 				workingInProgress = false;
-				promp = "Train mode, press 123... to try, or SPACE to start";
+				promp = "Train mode, press SPACE to start";
+				
+				String msg = "m,";
+				msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+				msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+				msg += "" + trial + ",";
+				msg += "" + target + ",";
+				msg += "" + rectOverIndex + ",";
+				msg += "\n";
+				client.sendMessage(msg);
+				
 				return;
 			}
 			
@@ -578,21 +554,36 @@ public class TemperatureTest extends PApplet{
 				{
 					if(isTrainingMode)
 					{
-						isTrainingMode = false;
-						//start
-						nextTrial();
+						nextTrain();
 					}else
 					{
 						if(waitingForAnswer == false)
 						{
 							//record the data
-							//DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
+							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0,
+									targetValue, answerValue);
+							
+							String msg = "d,";
+							msg += "" + trial + ",";
+							msg += "" + sensation + ",";
+							msg += "" + levels + ",";
+							msg += "" + target + ",";
+							msg += "" + answer + ",";
+							msg += "" + responseTime + ",";
+							msg += "" + (answer == target ? 1 : 0) + ",";
+							msg += "" + targetValue + ",";
+							msg += "" + answerValue + ",";
+							msg += "\n";
+							client.sendMessage(msg);
 							
 							answer = 0;
 							responseTime = 0;
+							targetValue = 0;
+							answerValue = 0;
+							
 							
 							//go to next
-							if(trial % 10 == 0 && trial != 0)
+							if(trial % 5 == 0 && trial != 0  && trial != totalTrials)
 							{
 								workingInProgress = true;
 							}else
@@ -602,6 +593,19 @@ public class TemperatureTest extends PApplet{
 						}	
 					}
 				}
+				
+				
+				
+				String msg = "m,";
+				msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+				msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+				msg += "" + trial + ",";
+				msg += "" + target + ",";
+				msg += "" + rectOverIndex + ",";
+				msg += "\n";
+				client.sendMessage(msg);
+				
+				
 			}
 			
 			
@@ -615,31 +619,7 @@ public class TemperatureTest extends PApplet{
 			{
 				String inpuText = "" + key;
 				
-				if(isTrainingMode)
-				{
-					if(rendering > 0)
-					{
-						return;
-					}else
-					{
-						int inputValue = -1;
-						try {
-							inputValue = Integer.parseInt(inpuText);
-						}catch(Exception ex)
-						{
-							return;
-						}
-						
-						if(inputValue > 0 && inputValue < (levels + 1))
-						{			
-							rectOverIndex = inputValue - 1 ;
-							target = inputValue;
-							makePractice();
-						}
-					}
-					
-					
-				}else
+				if(!isTrainingMode)
 				{
 					if((waitingForAnswer || rectOverIndex >= 0) && rendering == 2)
 					{
@@ -659,12 +639,80 @@ public class TemperatureTest extends PApplet{
 							}
 							rectOverIndex = inputValue - 1 ;
 							makeChoice();
+							
+							String msg = "c,";
+							msg += "" + inputValue + ",";
+							msg += "\n";
+							client.sendMessage(msg);
+							
 						}
 					}
 				}
 			}
 		}
 	}
+	
+	
+	public void nextTrain()
+	{	
+		if(trial == 0)  //begining
+		{
+			//begin, all
+			if(trainTrial <=  (2 * levels - 1))
+			{
+				//continue train
+				target = trainSequence.get(trainTrial);
+				trainTrial ++; 
+				
+				if(rectOverIndex > -1)
+				{
+					mouseTriggered.set(rectOverIndex, 0);
+					rectOverIndex = -1;
+				}
+				
+				rectOverIndex = target - 1;
+				mouseTriggered.set(rectOverIndex, 1);
+				
+				renderNext(target);
+				
+			}else
+			{
+				//start to trail
+				nextTrial();
+				isTrainingMode = false;
+				trainTrial = 0;
+			}
+			
+		}else  //in the middle 
+		{
+			//middle, just one round 
+			if(trainTrial <=  (1 * levels - 1))
+			{
+				//continue train
+				target = trainSequence.get(trainTrial);
+				trainTrial ++; 
+				
+				if(rectOverIndex > -1)
+				{
+					mouseTriggered.set(rectOverIndex, 0);
+					rectOverIndex = -1;
+				}
+				
+				rectOverIndex = target - 1;
+				mouseTriggered.set(rectOverIndex, 1);
+				
+				renderNext(target);
+			}else
+			{
+				//start to trail
+				nextTrial();
+				isTrainingMode = false;
+				trainTrial = 0;
+			}
+		}
+		
+	}
+	
 	
 	public void nextTrial()
 	{
@@ -694,6 +742,12 @@ public class TemperatureTest extends PApplet{
 	{
 		
 		rendering = 1;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
 		controller.setTemperature(targetIndex);
 		//controller.setTemperatureStatic(targetIndex);
 		
@@ -710,6 +764,12 @@ public class TemperatureTest extends PApplet{
 	public void scheduleTaskReady()
 	{
 		rendering = 2;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
 		if(isTrainingMode)
 		{
 			promp = "press SPACE to release ...";
@@ -727,18 +787,60 @@ public class TemperatureTest extends PApplet{
 		promp = "releasing...";
 		releaseRender();
 		rendering = 1;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
 		delay(2000);
 		rendering = 0;
-		mouseTriggered.set(rectOverIndex, 0);
-		rectOverIndex = -1;
+		
+		msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		if(rectOverIndex > -1)
+		{
+			mouseTriggered.set(rectOverIndex, 0);
+			rectOverIndex = -1;
+			
+			msg = "m,";
+			msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+			msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+			msg += "" + trial + ",";
+			msg += "" + target + ",";
+			msg += "" + rectOverIndex + ",";
+			msg += "\n";
+			client.sendMessage(msg);
+			
+		}
+		
 		
 		if(isTrainingMode)
 		{
-			promp = "Train mode, press 123... to try, or SPACE to start";
+			
+			if(trial == 0 && trainTrial ==  (2 * levels))
+			{
+				promp = "press space to enter test!";
+			}else if(trial > 0 && trainTrial ==  (1 * levels))
+			{	
+				promp = "press space to continue test!";
+			}else
+			{
+				promp = "Train mode, press SPACE to next";
+			}
+			
 		}else
 		{
-			promp = "Press SPACE to next";
+			promp = "Trial mode, Press SPACE to next";
 		}
+	}
+	
+	public void sosAction()
+	{
+		thread("releaseWithAccident");
 	}
 	
 	public void releaseWithAccident()
@@ -746,8 +848,20 @@ public class TemperatureTest extends PApplet{
 		promp = "releasing...";
 		releaseRender();
 		rendering = 1;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
 		delay(2000);
 		rendering = 0;
+		
+		msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
 		if(rectOverIndex >= 0)
 		{
 			mouseTriggered.set(rectOverIndex, 0);
@@ -762,6 +876,16 @@ public class TemperatureTest extends PApplet{
 			trial--;
 			promp = "Press SPACE to replay the next trial";
 		}
+		
+		msg = "m,";
+		msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+		msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+		msg += "" + trial + ",";
+		msg += "" + target + ",";
+		msg += "" + rectOverIndex + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
 	}
 	
 	
@@ -799,21 +923,8 @@ class NewSerialListener implements SerialPortEventListener
 				            	float readValue = Float.parseFloat(inputLine);         	
 
 				            		instance.temperateSeriesPlot.addValue(readValue);
-				            		
-				            		if(instance.temperateSeriesPlot.isFilter)
-				            		{
-				            			instance.actualTemperature = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastFilteredValue())));
-					            		
-				            		}else
-				            		{
-				            			instance.actualTemperature = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastValue())));
-				            		}
-				            		
-				            		if(instance.isClient)
-				            		{
-				            			instance.client.sendMessage("t" + "," + instance.actualTemperature + "\n");
-				            		}
-				            		
+				            		instance.actualTemperature = Float.parseFloat(String.format("%.1f", Math.abs( instance.temperateSeriesPlot.getLastValue())));
+				            		instance.client.sendMessage("t" + "," + instance.actualTemperature + "\n");
 				            		
 				            	
 				            }catch(Exception ex)

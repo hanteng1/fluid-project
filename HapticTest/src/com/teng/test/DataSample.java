@@ -11,11 +11,15 @@ public class DataSample {
     public int target;
     public int answer;
 
+    public float targetValue;
+    public float answerValue;
+    
+    
     public long responseTime;
     public int iscorrect;  // 1 - correct, 0 - incorrect
  
     public DataSample(int _trial, int _sensation, int _levels, int _target, int _answer, long _responseTime,
-                      int _iscorrect)
+                      int _iscorrect, float _targetValue, float _answerValue)
     {
         trial = _trial;
         sensation = _sensation;
@@ -24,6 +28,10 @@ public class DataSample {
         answer = _answer;
         responseTime = _responseTime;
         iscorrect = _iscorrect;
+        
+        targetValue = _targetValue;
+        answerValue = _answerValue;
+        
     }
 
     public static String toCSV(ArrayList<DataSample> arrayList)
@@ -36,7 +44,10 @@ public class DataSample {
             stringbuilder.append("" + sample.trial + "," + sample.sensation + "," + sample.levels + "," 
             		+ sample.target + "," + sample.answer + ","
                     + sample.responseTime + ","
-                    + sample.iscorrect + "," + "\r\n");
+                    + sample.iscorrect + "," 
+                    + sample.targetValue + ","
+                    + sample.answerValue + ","
+                    + "\r\n");
            
         }
 

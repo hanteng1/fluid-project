@@ -254,7 +254,7 @@ public class Client {
 							else if(values[0].equals("sos"))
 							{
 								//stop
-								//temperatureTest.sosAction();
+								temperatureTest.sosAction();
 							}
 							
 						}

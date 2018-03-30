@@ -41,6 +41,10 @@ public class VibrationTest extends PApplet{
 	public boolean isTrialSequenceSet;
 	int target = 0;
 	int answer = 0;
+	
+	float targetValue = 0;
+	float answerValue = 0;
+	
 	boolean waitingForAnswer = false;
 	
 	boolean isTrainingMode = true;
@@ -488,7 +492,8 @@ public class VibrationTest extends PApplet{
 						if(waitingForAnswer == false)
 						{
 							//record the data
-							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
+							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0,
+									targetValue, answerValue);
 							
 							
 							String msg = "d,";
@@ -499,15 +504,20 @@ public class VibrationTest extends PApplet{
 							msg += "" + answer + ",";
 							msg += "" + responseTime + ",";
 							msg += "" + (answer == target ? 1 : 0) + ",";
+							msg += "" + targetValue + ",";
+							msg += "" + answerValue + ",";
 							msg += "\n";
 							client.sendMessage(msg);
 							
 							
 							answer = 0;
 							responseTime = 0;
+							targetValue = 0;
+							answerValue = 0;
+							
 							
 							//go to next
-							if(trial % 10 == 0 && trial > 0)
+							if(trial % 5 == 0 && trial > 0  && trial != totalTrials)
 							{
 								workingInProgress = true;
 							}else

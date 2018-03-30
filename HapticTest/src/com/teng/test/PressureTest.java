@@ -39,6 +39,11 @@ public class PressureTest extends PApplet{
 	int trainTrial = 0;
 	int target = 0;
 	int answer = 0;
+	
+	float targetValue = 0;
+	float answerValue = 0;
+	
+	
 	boolean waitingForAnswer = false;
 	public boolean isTrialSequenceSet;
 	
@@ -369,10 +374,6 @@ public class PressureTest extends PApplet{
 		fill(120);
 		text(promp, windowWidth/2 - textWidth(promp)/2, 200);
 		
-		
-		//pressure signal
-		pressurePlot.draw();
-		
 		//complete
 		if(blockDone)
 		{
@@ -409,19 +410,18 @@ public class PressureTest extends PApplet{
 		mouseTriggered.set(rectOverIndex, 1);
 		answer = rectOverIndex + 1;
 		
+		if(answerValue == 0)
+		{
+			answerValue = pressurePlot.getLastValue();
+		}
+		
+		
+		
 		//record/update the duration
 		responseTime = System.currentTimeMillis() - trialStartTime;
 		promp = "Press SPACE to release";
 		waitingForAnswer = false;
 	}
-	
-//	public void makePractice()
-//	{
-//		//render a target
-//		mouseTriggered.set(rectOverIndex, 1);
-//		
-//		renderNext(target, isTrainingMode);  //render with releasing		
-//	}
 	
 	
 	public void keyPressed() {
@@ -516,7 +516,7 @@ public class PressureTest extends PApplet{
 						if(waitingForAnswer == false)
 						{
 							//record the data
-							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0);
+							DataStorage.AddSample(trial, sensation, levels, target, answer, responseTime, answer == target ? 1 : 0, targetValue, answerValue);
 							//send to server the answer for recording
 							
 							String msg = "d,";
@@ -527,14 +527,19 @@ public class PressureTest extends PApplet{
 							msg += "" + answer + ",";
 							msg += "" + responseTime + ",";
 							msg += "" + (answer == target ? 1 : 0) + ",";
+							msg += "" + targetValue + ",";
+							msg += "" + answerValue + ",";
 							msg += "\n";
 							client.sendMessage(msg);
 							
 							answer = 0;
 							responseTime = 0;
+							targetValue = 0;
+							answerValue = 0;
+							
 							
 							//go to next
-							if(trial % 10 == 0 && trial > 0)
+							if(trial % 5 == 0 && trial != 0 && trial != totalTrials)
 							{
 								workingInProgress = true;
 							}else
@@ -721,7 +726,6 @@ public class PressureTest extends PApplet{
 	public void renderNext(int targetIndex)
 	{
 		rendering = 1;
-		
 		
 		String msg = "r,";
 		msg += "" + rendering + ",";
@@ -926,6 +930,7 @@ class PressureSerialListener implements SerialPortEventListener
 				            	float readValue = Float.parseFloat(inputLine);         	
 
 				            	instance.pressurePlot.addValue(readValue);
+				            	
 				            	instance.client.sendMessage("t" + "," + readValue + "\n");
 				            	
 				            }catch(Exception ex)

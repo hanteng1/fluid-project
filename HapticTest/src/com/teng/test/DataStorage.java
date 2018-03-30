@@ -19,12 +19,12 @@ public class DataStorage {
 
     //for study 2
     public static boolean AddSample(int _trial, int _sensation, int _levels, int _target, int _answer, long _responseTime,
-            int _iscorrect)
+            int _iscorrect, float _targetValue, float _answerValue)
     {
         if(instance != null)
         {
             instance.add(_trial, _sensation, _levels, _target, _answer, _responseTime,
-                    _iscorrect );
+                    _iscorrect, _targetValue, _answerValue );
             return true;
         }
 
@@ -32,12 +32,12 @@ public class DataStorage {
     }
 
     public void add(int _trial, int _sensation, int _levels, int _target, int _answer, long _responseTime,
-            int _iscorrect)
+            int _iscorrect, float _targetValue, float _answerValue)
     {
         if(samples != null)
         {
             DataSample sample = new DataSample(_trial, _sensation, _levels, _target, _answer,  _responseTime,
-                    _iscorrect);
+                    _iscorrect, _targetValue, _answerValue);
             samples.add(sample);
         }
     }

@@ -5,14 +5,14 @@ import java.util.ArrayList;
 public class HapticController {
 	
 	PressureTest pressureTest;
-	float pressureLow = 1000.0f;
+	float pressureLow = 1050.0f;
 	float pressureHigh = 1300.0f;
 	ArrayList<Integer> pressureLevels;
 	SetPressure setPressure;
 	
 	VibrationTest vibrationTest;
-	float vibrationLow = 1.0f;
-	float vibrationHigh = 40.0f;
+	float vibrationLow = 2.0f;
+	float vibrationHigh = 32.0f;
 	ArrayList<Integer> vibrationLevels;
 	Vibration vibration;
 	
@@ -40,7 +40,7 @@ public class HapticController {
 		
 		int levels = pressureTest.levels;
 		levelFactor = (float) Math.pow(pressureHigh / pressureLow, 1.0/ (levels - 1));
-		//pressureTest.println(levelFactor);
+		pressureTest.println(levelFactor);
 		for(int itr = 0; itr < levels; itr++)
 		{
 			pressureLevels.add((int) (pressureLow * Math.pow(levelFactor, itr)));
@@ -63,7 +63,7 @@ public class HapticController {
 		
 		int levels = vibrationTest.levels;
 		levelFactor = (float) Math.pow(vibrationHigh / vibrationLow, 1.0/ (levels - 1));
-		//vibrationTest.println(levelFactor);
+		vibrationTest.println(levelFactor);
 		for(int itr = 0; itr < levels; itr++)
 		{
 			vibrationLevels.add((int) (vibrationLow * Math.pow(levelFactor, itr)));
@@ -110,7 +110,7 @@ public class HapticController {
 			temperatureTest.println("" + (itr + 1) + " : " + temperatureLevels.get(itr));
 		}
 		
-		miniPID = new MiniPID(0, 0, 0);  // hot 60+, cold 10-
+		miniPID = new MiniPID(00.0347, 0.0016, 0.0768);  // hot 60+, cold 10-
 		//miniPID.setOutputLimits(10);
 		//miniPID.setMaxIOutput(2);
 		//miniPID.setOutputRampRate(3);
@@ -127,6 +127,15 @@ public class HapticController {
 		if(level > 0 && level < 10)
 		{
 			//new AddWater(pressureLevels.get(level - 1)).start();
+			
+			//send to server
+			String msg = "a,";
+			msg += "" + pressureLevels.get(level - 1) + ",";
+			msg += "\n";
+			pressureTest.client.sendMessage(msg);
+			
+			
+			pressureTest.targetValue =  pressureLevels.get(level - 1);
 			
 			setPressure = new SetPressure(pressureLevels.get(level - 1));
 			setPressure.start();
@@ -155,6 +164,9 @@ public class HapticController {
 		if(level > 0 && level < 10)
 		{
 			int duration = (int)(500 / vibrationLevels.get(level - 1));
+			
+			vibrationTest.targetValue =  vibrationLevels.get(level - 1);
+			
 			vibration = new Vibration(duration);
 			vibration.start();
 		}
@@ -176,9 +188,16 @@ public class HapticController {
 	{
 		if(level > 0 && level < 10)
 		{
+			String msg = "a,";
+			msg += "" + pressureLevels.get(level - 1) + ",";
+			msg += "\n";
+			pressureTest.client.sendMessage(msg);
+			
 			adjustTemperature = new AdjustTemperature(temperatureLevels.get(level - 1));
 			adjustTemperature.start();
 			temperatureTest.temperateSeriesPlot.targetLine = temperatureLevels.get(level - 1);
+			
+			temperatureTest.targetValue = temperatureLevels.get(level - 1);
 		}
 	}
 	
@@ -374,7 +393,7 @@ public class HapticController {
 				vibrationTest.delay(duration);
 			}
 			
-			//valve is open 
+			//valve is open at the 
 			vibrationTest.stopWater();
 		}
 		
