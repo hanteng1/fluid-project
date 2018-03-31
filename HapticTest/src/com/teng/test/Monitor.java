@@ -21,9 +21,9 @@ public class Monitor extends PApplet{
 	int rectOverIndex = -1;
 	
 	//****************************//
-	int sensation = 3;   
+	int sensation = 2;   
 	//****************************//
-	int userId = 1;
+	int userId = 9;
 	//****************************//
 	int block = 2;    // 1, 2, 3
 	
@@ -136,9 +136,13 @@ public class Monitor extends PApplet{
 			seriesPlot.setMinMax(15, 50, true);
 			seriesPlot.setShampen(100);
 			
-			sliderP = new Slider(this, 0, 300, 0, 0.5f, 1);
-			sliderI = new Slider(this, 0, 370, 0, 0.5f, 2);
-			sliderD = new Slider(this, 0, 440, 0, 0.5f, 3);
+			sliderP = new Slider(this, 0, 300, 0, 0.2f, 1);
+			sliderI = new Slider(this, 0, 370, 0, 0.02f, 2);
+			sliderD = new Slider(this, 0, 440, 0, 0.2f, 3);
+			
+			sliderP.setInitialValue(0.0347f);
+			sliderI.setInitialValue(0.0016f);
+			sliderD.setInitialValue(0.0768f);
 		}
 		
 		try {
@@ -226,8 +230,6 @@ public class Monitor extends PApplet{
 		
 		//timeSeriesPlot.draw();
 		seriesPlot.draw();
-		
-		
 		
 		if(sensation == 3)
 		{

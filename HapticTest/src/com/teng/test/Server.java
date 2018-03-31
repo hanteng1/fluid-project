@@ -260,6 +260,16 @@ public class Server {
 						{
 							float target = Float.parseFloat(values[1]);
 							monitor.seriesPlot.targetLine = target;
+						}else if(values[0].equals("pida"))
+						{
+							System.out.println("received pid request");
+				
+				            	String msgPID = "pida," +  monitor.sliderP.getRealValue() + "," 
+				            			+  monitor.sliderI.getRealValue() + ","
+				            			+  monitor.sliderD.getRealValue() + ","
+				            			+ "\n";
+				            	printStream.print(msgPID);
+				        
 						}
 							
 					}

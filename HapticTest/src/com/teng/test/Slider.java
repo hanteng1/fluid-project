@@ -161,7 +161,13 @@ public class Slider {
 		return Float.parseFloat(String.format("%.4f", result));
 	}
 	
-	
+	public void setInitialValue(float value)
+	{
+		float zoom = (float)swidth / (float)(realValueMax - realValueMin);
+		float pos = zoom * value;
+		spos = pos / ratio;
+		newspos = spos;
+	}
 	
 	
 	
