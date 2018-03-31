@@ -255,6 +255,28 @@ public class Client {
 							{
 								//stop
 								temperatureTest.sosAction();
+							}else if(values[0].equals("pid"))
+							{
+								if(values[1].equals("p"))
+								{
+									temperatureTest.controller.updateP(Float.parseFloat(values[2]));
+								}else if(values[1].equals("i"))
+								{
+									temperatureTest.controller.updateI(Float.parseFloat(values[2]));
+								}else if(values[1].equals("d"))
+								{
+									temperatureTest.controller.updateD(Float.parseFloat(values[2]));
+								}
+							}
+							
+							else if(values[0].equals("pida"))
+							{
+								System.out.println("get pid response");
+								
+									temperatureTest.controller.updateP(Float.parseFloat(values[1]));
+									temperatureTest.controller.updateI(Float.parseFloat(values[2]));
+									temperatureTest.controller.updateD(Float.parseFloat(values[3]));
+								
 							}
 							
 						}

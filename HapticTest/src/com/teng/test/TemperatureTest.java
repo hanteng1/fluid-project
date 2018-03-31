@@ -27,8 +27,7 @@ public class TemperatureTest extends PApplet{
 	//****************************//
 	int sensation = 3;   
 	//****************************//
-	int userId = 1;
-
+	int userId = 9;
 	
 	int levels = 5;   //3, 5, 7 (or 9)
 	int trial = 0;
@@ -108,6 +107,13 @@ public class TemperatureTest extends PApplet{
 		
 		trialSequence = new ArrayList<Integer>();
 
+		
+		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 700, windowWidth, 200, 1000, false, false, false);
+		temperateSeriesPlot.setMinMax(15, 50, true);
+		temperateSeriesPlot.setShampen(100);
+		//temperateSeriesPlot.drawFilter = true;
+		temperateSeriesPlot.withFixation = true;
+		
 		//ring
 		configurePort_One("COM10");
 		connectPort_One();
@@ -117,13 +123,6 @@ public class TemperatureTest extends PApplet{
 		configurePort_Two("COM8");
 		connectPort_Two();
 		delay(2000);
-		
-		
-		temperateSeriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 700, windowWidth, 200, 1000, false, false, false);
-		temperateSeriesPlot.setMinMax(15, 50, true);
-		temperateSeriesPlot.setShampen(100);
-		//temperateSeriesPlot.drawFilter = true;
-		temperateSeriesPlot.withFixation = true;
 		
 		
 		client = new Client("10.142.197.9", 9090, this);	
@@ -170,6 +169,8 @@ public class TemperatureTest extends PApplet{
 		
 		
 		controller = new HapticController(this);
+		
+		client.sendMessage("pida,\n");
 		
 		delay(1000);
 		
@@ -382,6 +383,9 @@ public class TemperatureTest extends PApplet{
 		fill(120);
 		text(promp, windowWidth/2 - textWidth(promp)/2, 200);
 		
+		
+		//temperateSeriesPlot.draw();
+		
 		//complete
 		if(blockDone)
 		{
@@ -565,7 +569,7 @@ public class TemperatureTest extends PApplet{
 							
 							
 							//go to next
-							if(trial % 5 == 0 && trial != 0  && trial != totalTrials && trial < 20)
+							if(trial % 5 == 0 && trial != 0  && trial != totalTrials && trial < 19)
 							{
 								workingInProgress = true;
 							}else
@@ -576,8 +580,6 @@ public class TemperatureTest extends PApplet{
 					}
 				}
 				
-				
-				
 				String msg = "m,";
 				msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
 				msg += "" + (workingInProgress == true ? "1" : "0") + ",";
@@ -586,8 +588,6 @@ public class TemperatureTest extends PApplet{
 				msg += "" + rectOverIndex + ",";
 				msg += "\n";
 				client.sendMessage(msg);
-				
-				
 			}
 			
 			
@@ -629,7 +629,24 @@ public class TemperatureTest extends PApplet{
 							
 						}
 					}
+				}else
+				{
+//					//set a aim
+//					int inputValue = -1;
+//					try {
+//						inputValue = Integer.parseInt(inpuText);
+//					}catch(Exception ex)
+//					{
+//						return;
+//					}
+//					
+//					if(inputValue > 0 && inputValue < (levels + 1))
+//					{
+//						renderNext(inputValue);
+//					}
 				}
+				
+				
 			}
 		}
 	}
@@ -738,13 +755,40 @@ public class TemperatureTest extends PApplet{
 		//thread("scheduleTaskReady");
 	}
 	
+	
+	public void reset()
+	{
+		rendering = 1;
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		controller.resetTemperature(24);
+		
+		promp = "reseting";
+	}
+	
+	
 	public void releaseRender()
 	{
 		controller.stopTemperature();
 	}
 	
+	
 	public void scheduleTaskReady()
 	{
+		thread("scheduleready");
+	}
+	
+	public void scheduleready()
+	{
+		delay(8000);
+		
+//		stopWater();
+//		delay(10);
+//		valveClose();
+		
 		rendering = 2;
 		
 		String msg = "r,";
@@ -764,21 +808,12 @@ public class TemperatureTest extends PApplet{
 		
 	}
 	
-	public void releaseWithSpace()
+	
+	public void resetSuccess()
 	{
-		promp = "releasing...";
-		releaseRender();
-		rendering = 1;
-		
-		String msg = "r,";
-		msg += "" + rendering + ",";
-		msg += "\n";
-		client.sendMessage(msg);
-		
-		delay(2000);
 		rendering = 0;
 		
-		msg = "r,";
+		String msg = "r,";
 		msg += "" + rendering + ",";
 		msg += "\n";
 		client.sendMessage(msg);
@@ -818,6 +853,65 @@ public class TemperatureTest extends PApplet{
 		{
 			promp = "Trial mode, Press SPACE to next";
 		}
+	}
+	
+	public void releaseWithSpace()
+	{
+		promp = "releasing...";
+		releaseRender();
+		rendering = 1;
+		
+		String msg = "r,";
+		msg += "" + rendering + ",";
+		msg += "\n";
+		client.sendMessage(msg);
+		
+		delay(500);
+		
+		reset();
+		
+//		rendering = 0;
+//		
+//		msg = "r,";
+//		msg += "" + rendering + ",";
+//		msg += "\n";
+//		client.sendMessage(msg);
+//		
+//		if(rectOverIndex > -1)
+//		{
+//			mouseTriggered.set(rectOverIndex, 0);
+//			rectOverIndex = -1;
+//			
+//			msg = "m,";
+//			msg += "" + (isTrainingMode == true ? "1" : "0") + ",";
+//			msg += "" + (workingInProgress == true ? "1" : "0") + ",";
+//			msg += "" + trial + ",";
+//			msg += "" + target + ",";
+//			msg += "" + rectOverIndex + ",";
+//			msg += "\n";
+//			client.sendMessage(msg);
+//			
+//		}
+//		
+//		
+//		if(isTrainingMode)
+//		{
+//			
+//			if(trial == 0 && trainTrial ==  (2 * levels))
+//			{
+//				promp = "press space to enter test!";
+//			}else if(trial > 0 && trainTrial ==  (1 * levels))
+//			{	
+//				promp = "press space to continue test!";
+//			}else
+//			{
+//				promp = "Train mode, press SPACE to next";
+//			}
+//			
+//		}else
+//		{
+//			promp = "Trial mode, Press SPACE to next";
+//		}
 	}
 	
 	public void sosAction()
@@ -911,7 +1005,7 @@ class NewSerialListener implements SerialPortEventListener
 				            	
 				            }catch(Exception ex)
 				            {
-				            	System.out.println(" 1 "  + ex.toString());
+				            	//System.out.println(" 1 "  + ex.toString());
 				            	return;
 				            }
 				     }

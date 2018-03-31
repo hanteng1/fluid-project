@@ -27,12 +27,12 @@ public class VibrationTest extends PApplet{
 	//****************************//
 	int sensation = 2;   
 	//****************************//
-	int userId = 1;
+	int userId = 9;
 	//****************************//
-	int block = 0;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
+	
 	int trial = 0;
 	int totalTrials = 0;
 	ArrayList<Integer> trialSequence;
@@ -57,7 +57,7 @@ public class VibrationTest extends PApplet{
 	long responseTime = 0;
 	long trialStartTime = 0;
 	
-	public static DataStorage dataStorage;
+	public static DataStorage dataStorage; 
 	
 	//ring
 	//serial - for pump and valves
@@ -517,7 +517,7 @@ public class VibrationTest extends PApplet{
 							
 							
 							//go to next
-							if(trial % 5 == 0 && trial > 0  && trial != totalTrials)
+							if(trial % 5 == 0 && trial > 0  &&  trial < 19  && trial != totalTrials)
 							{
 								workingInProgress = true;
 							}else

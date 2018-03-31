@@ -27,9 +27,8 @@ public class PressureTest extends PApplet{
 	//****************************//
 	int sensation = 1;   
 	//****************************//
-	int userId = 1;
+	int userId = 9;
 	//****************************//
-	int block = 0;    // 1, 2, 3
 	
 	int levels = 0;   //3, 5, 7 (or 9)
 	public int trial = 0;
@@ -539,7 +538,7 @@ public class PressureTest extends PApplet{
 							
 							
 							//go to next
-							if(trial % 5 == 0 && trial != 0 && trial != totalTrials)
+							if(trial % 5 == 0 && trial != 0 && trial < 19  && trial != totalTrials)
 							{
 								workingInProgress = true;
 							}else
