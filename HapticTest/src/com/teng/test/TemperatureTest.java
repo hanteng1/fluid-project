@@ -506,7 +506,11 @@ public class TemperatureTest extends PApplet{
 		}
 		
 		
-		
+		else if(key == 'n')
+		{
+			trainTrial =  1 * levels;
+			promp = "press space to continue test!";
+		}
 		
 		else if(key == ' ')
 		{
