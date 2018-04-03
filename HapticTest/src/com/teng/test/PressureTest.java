@@ -27,7 +27,7 @@ public class PressureTest extends PApplet{
 	//****************************//
 	int sensation = 1;   
 	//****************************//
-	int userId = 9;
+	int userId = 12;
 	//****************************//
 	
 	int levels = 0;   //3, 5, 7 (or 9)

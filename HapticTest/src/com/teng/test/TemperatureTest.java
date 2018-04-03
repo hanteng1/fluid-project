@@ -27,7 +27,7 @@ public class TemperatureTest extends PApplet{
 	//****************************//
 	int sensation = 3;   
 	//****************************//
-	int userId = 9;
+	int userId = 1;
 	
 	int levels = 5;   //3, 5, 7 (or 9)
 	int trial = 0;
@@ -812,9 +812,17 @@ public class TemperatureTest extends PApplet{
 		
 	}
 	
-	
 	public void resetSuccess()
 	{
+		thread("resetSuccess1");
+	}
+	
+	public void resetSuccess1()
+	{
+		
+		delay(8000);
+		//release
+		stopWater();
 		rendering = 0;
 		
 		String msg = "r,";

@@ -27,7 +27,7 @@ public class VibrationTest extends PApplet{
 	//****************************//
 	int sensation = 2;   
 	//****************************//
-	int userId = 9;
+	int userId = 12;
 	//****************************//
 	
 	

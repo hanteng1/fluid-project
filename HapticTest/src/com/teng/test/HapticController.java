@@ -672,9 +672,6 @@ public class HapticController {
 				temperatureTest.delay(500);  //adjust every 0.5sec
 			}
 			
-			//release
-			temperatureTest.stopWater();
-			
 		}
 	}
 	
