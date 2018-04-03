@@ -21,11 +21,11 @@ public class Monitor extends PApplet{
 	int rectOverIndex = -1;
 	
 	//****************************//
-	int sensation = 2;   
+	int sensation = 3;   
 	//****************************//
-	int userId = 9;
+	int userId = 1;
 	//****************************//
-	int block = 2;    // 1, 2, 3
+	int block = 3;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
