@@ -21,11 +21,11 @@ public class Monitor extends PApplet{
 	int rectOverIndex = -1;
 	
 	//****************************//
-	int sensation = 3;   
+	int sensation = 2;   
 	//****************************//
 	int userId = 1;
 	//****************************//
-	int block = 3;    // 1, 2, 3
+	int block = 2;    // 1, 2, 3
 	
 	
 	int levels = 0;   //3, 5, 7 (or 9)
@@ -65,14 +65,16 @@ public class Monitor extends PApplet{
 	
 	public void settings()
 	{
-		windowWidth = 1000;
-		windowHeight = 750;
-		size(windowWidth, windowHeight);
+		windowWidth = 1280;
+		windowHeight = 800;
+		//size(windowWidth, windowHeight);
+		fullScreen();
 	}
 	
 	public void setup()
 	{
-		fill(120, 50, 240);
+		
+		fill(255, 255, 255);
 		rectColor = color(211, 211, 211);
 		rectHighlight = color(105, 105, 105);
 		
@@ -125,15 +127,22 @@ public class Monitor extends PApplet{
 		}
 		dataStorage.levels = levels;
 		
-		seriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 500, windowWidth, 200, 1000, false, false, false);
+		seriesPlot = new TimeSeriesPlot(this, windowWidth / 2, 0, windowWidth, windowHeight, 1000, false, false, false);
 		
-		if(sensation == 1 || sensation == 2)
+		if(sensation == 1)
 		{
-			seriesPlot.setMinMax(900, 1200, true);
+			seriesPlot.setMinMax(900, 1400, true);
 			seriesPlot.setShampen(1000);
-		}else if(sensation == 3)
+		}else if(sensation == 2)
 		{
-			seriesPlot.setMinMax(15, 50, true);
+			seriesPlot.setMinMax(0, 400, true);
+			seriesPlot.setShampen(1000);
+			seriesPlot.drawFilter = false;
+		}
+		
+		else if(sensation == 3)
+		{
+			seriesPlot.setMinMax(10, 50, true);
 			seriesPlot.setShampen(100);
 			
 			sliderP = new Slider(this, 0, 300, 0, 0.2f, 1);
@@ -176,72 +185,72 @@ public class Monitor extends PApplet{
 	
 	public void draw()
 	{
-		background(225, 225, 225);
+		background(255, 255, 255);
 		
-		//block
-		textSize(48);
-		fill(120);
-		text("Target " + target, 100, 100);
-		
-		//current trial / total trial
-		fill(120);
-		text("Trial " + trial + " / " + totalTrials , 400, 100);
-		
-		//ready?
-		if(rendering == 0)
-		{
-			fill(200, 0, 0);
-		}else if(rendering == 1)
-		{
-			fill(200, 200, 0);
-		}else if(rendering == 2)
-		{
-			fill(0, 200, 0);
-		}
-		noStroke();
-		ellipse(800, 85, 100, 100);
-		
-		
-		
-		//choices
-		for(int itr = 0; itr < levels; itr++)
-		{
-			if(mouseTriggered.get(itr) == 1)
-			{
-				fill(rectHighlight);
-			}else
-			{
-				fill(rectColor);
-			}
-			
-			rect(rectXs.get(itr), rectY, rectWidth, rectHeight);
-			
-			fill(0, 102, 153);
-			textSize(32);
-			String textShown = "" + (itr + 1);
-			text(textShown, rectXs.get(itr) + rectWidth/ 2 - textWidth(textShown) / 2, rectY + 2 * rectHeight / 3); 
-			
-		}
-		
-		textSize(24);
-		fill(120);
-		text(promp, windowWidth/2 - textWidth(promp)/2, 180);
-		
-		
+//		//block
+//		textSize(48);
+//		fill(120);
+//		text("Target " + target, 100, 100);
+//		
+//		//current trial / total trial
+//		fill(120);
+//		text("Trial " + trial + " / " + totalTrials , 400, 100);
+//		
+//		//ready?
+//		if(rendering == 0)
+//		{
+//			fill(200, 0, 0);
+//		}else if(rendering == 1)
+//		{
+//			fill(200, 200, 0);
+//		}else if(rendering == 2)
+//		{
+//			fill(0, 200, 0);
+//		}
+//		noStroke();
+//		ellipse(800, 85, 100, 100);
+//		
+//		
+//		
+//		//choices
+//		for(int itr = 0; itr < levels; itr++)
+//		{
+//			if(mouseTriggered.get(itr) == 1)
+//			{
+//				fill(rectHighlight);
+//			}else
+//			{
+//				fill(rectColor);
+//			}
+//			
+//			rect(rectXs.get(itr), rectY, rectWidth, rectHeight);
+//			
+//			fill(0, 102, 153);
+//			textSize(32);
+//			String textShown = "" + (itr + 1);
+//			text(textShown, rectXs.get(itr) + rectWidth/ 2 - textWidth(textShown) / 2, rectY + 2 * rectHeight / 3); 
+//			
+//		}
+//		
+//		textSize(24);
+//		fill(120);
+//		text(promp, windowWidth/2 - textWidth(promp)/2, 180);
+//		
+//		
 		//timeSeriesPlot.draw();
 		seriesPlot.draw();
 		
-		if(sensation == 3)
-		{
-			sliderP.update(mouseX, mouseY);
-			sliderP.draw();
-			
-			sliderI.update(mouseX, mouseY);
-			sliderI.draw();
-			
-			sliderD.update(mouseX, mouseY);
-			sliderD.draw();
-		}
+//		if(sensation == 3)
+//		{
+//			sliderP.update(mouseX, mouseY);
+//			sliderP.draw();
+//			
+//			sliderI.update(mouseX, mouseY);
+//			sliderI.draw();
+//			
+//			sliderD.update(mouseX, mouseY);
+//			sliderD.draw();
+//		}
 
 		
 		//show target and actual temperature
@@ -312,7 +321,7 @@ public class Monitor extends PApplet{
 	
 	public void keyPressed() {
 		if (key == 'q') {
-			dataStorage.save();
+//			dataStorage.save();
 			server.onDestroy();
 			exit();
 		}else if(key == 's')

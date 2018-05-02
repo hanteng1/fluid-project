@@ -402,15 +402,15 @@ public class TimeSeriesPlot {
 	public void draw()
 	{
 		
-		app.fill(colorValue);
-		app.noStroke();
-		app.rect(centerX - plotWidth / 2, centerY, plotWidth, plotHeight);
+		//app.fill(colorValue);
+		//app.noStroke();
+		//app.rect(centerX - plotWidth / 2, centerY, plotWidth, plotHeight);
 		
 		//min and max values
 		app.textSize(32);
-		app.fill(200, 100, 100);
-		app.text("" + yMin, 100, centerY + plotHeight );
-		app.text("" + yMax, 100, centerY + 30);
+		app.fill(100, 100, 200);
+		app.text("" + yMin + " g", 50, centerY + plotHeight );
+		app.text("" + yMax + " g", 50, centerY + 30);
 		
 		
 		//show frequency
@@ -424,7 +424,7 @@ public class TimeSeriesPlot {
 		
 		if(!drawFilter)
 		{
-			app.text("" + lastValue + "", 800, centerY + 30);
+			app.text("" + lastValue + " g", 1000, centerY + 30);
 			
 			app.stroke(200, 100, 100);
 			app.noFill();

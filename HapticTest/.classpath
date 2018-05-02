@@ -2,16 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/t_hant/Downloads/processing-3.3.6/core/library/core.jar"/>
-	<classpathentry kind="lib" path="C:/Users/t_hant/Downloads/mfz-rxtx-2.2-20081207-win-x64/RXTXcomm.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/t_hant/Downloads/mfz-rxtx-2.2-20081207-win-x64"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/t_hant/Downloads/LeapDeveloperKit_3.2.1+45911_win/LeapSDK/lib/LeapJava.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/t_hant/Downloads/LeapDeveloperKit_3.2.1+45911_win/LeapSDK/lib/x64"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="lib" path="/Users/hanteng/Documents/Github/fluid-project/HapticTest/core.jar"/>
+	<classpathentry kind="lib" path="/Users/hanteng/Downloads/rxtx-2.1-7-bins-r2/RXTXcomm.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
